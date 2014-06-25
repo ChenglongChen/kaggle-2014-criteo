@@ -8,7 +8,7 @@ parser.add_argument('csv_path', type=str, nargs=1, help='set path to the csv fil
 parser.add_argument('svm_path', type=str, nargs=1, help='set path to the svm file')
 args = parser.parse_args()
 
-NR_BINS, CSV_PATH, SVM_PATH = args.n, args.csv_path[0], args.svm_path[0]
+NR_BINS, CSV_PATH, SVM_PATH = args.n[0], args.csv_path[0], args.svm_path[0]
 
 def hashstr(str):
     return int(hashlib.md5(str.encode('utf8')).hexdigest(), 16)%NR_BINS
