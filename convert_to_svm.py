@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse, csv, hashlib
+import argparse, csv, hashlib, sys
+
+if len(sys.argv) == 1:
+    sys.argv.append('-h')
 
 parser = argparse.ArgumentParser(description='process some integers')
 parser.add_argument('-n', type=int, nargs=1, default=1000000, help='set number of bins for hashing trick')
