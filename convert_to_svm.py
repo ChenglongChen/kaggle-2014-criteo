@@ -22,16 +22,14 @@ with open(SVM_PATH, 'w') as f:
             continue
         feats = []
         for i, element in enumerate(row):
-            if i == 0:
+            if i == 0 or element == '':
                 continue
             elif i == 1:
                 label = element 
             elif i <= 14:
-                if element == '':
-                   element = '0' 
                 feats.append((i-1, element))
             else:
-                bin = hashstr(str(i)+element)+40 if element != '' else i-1
+                bin = hashstr(str(i)+element)+14
                 feats.append((bin, 1))
         feats.sort()
         feats = ['{0}:{1}'.format(idx, val) for (idx, val) in feats]
