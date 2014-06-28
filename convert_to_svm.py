@@ -20,17 +20,18 @@ with open(SVM_PATH, 'w') as f:
     for i, row in enumerate(csv.reader(open(CSV_PATH))):
         if i == 0:
             continue
-        feats = []
+        feats = set()
         for i, element in enumerate(row):
             if i == 0 or element == '':
                 continue
             elif i == 1:
                 label = element 
             elif i <= 14:
-                feats.append((i-1, element))
+                feats.add((i-1, element))
             else:
                 bin = hashstr(str(i)+element)+14
-                feats.append((bin, 1))
+                feats.add((bin, 1))
+        feats = list(feats)
         feats.sort()
         feats = ['{0}:{1}'.format(idx, val) for (idx, val) in feats]
         f.write(label + ' ' + ' '.join(feats) + '\n')
