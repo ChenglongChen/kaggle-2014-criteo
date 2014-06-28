@@ -6,12 +6,12 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser(description='process some integers')
-parser.add_argument('-n', type=int, nargs=1, default=1000000, help='set number of bins for hashing trick')
-parser.add_argument('csv_path', type=str, nargs=1, help='set path to the csv file')
-parser.add_argument('svm_path', type=str, nargs=1, help='set path to the svm file')
+parser.add_argument('-n', action='store', default=1000000, help='set number of bins for hashing trick', type=int)
+parser.add_argument('csv_path', type=str, help='set path to the csv file')
+parser.add_argument('svm_path', type=str, help='set path to the svm file')
 args = parser.parse_args()
 
-NR_BINS, CSV_PATH, SVM_PATH = args.n[0], args.csv_path[0], args.svm_path[0]
+NR_BINS, CSV_PATH, SVM_PATH = args.n, args.csv_path, args.svm_path
 
 def hashstr(str):
     return int(hashlib.md5(str.encode('utf8')).hexdigest(), 16)%NR_BINS
