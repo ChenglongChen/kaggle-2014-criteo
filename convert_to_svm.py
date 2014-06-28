@@ -6,7 +6,7 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser(description='process some integers')
-parser.add_argument('-n', action='store', default=1000000, help='set number of bins for hashing trick', type=int)
+parser.add_argument('-n', action='store', default=10000000, help='set number of bins for hashing trick', type=int)
 parser.add_argument('csv_path', type=str, help='set path to the csv file')
 parser.add_argument('svm_path', type=str, help='set path to the svm file')
 args = parser.parse_args()
