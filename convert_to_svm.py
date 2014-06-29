@@ -27,9 +27,10 @@ with open(SVM_PATH, 'w') as f:
             elif i == 1:
                 label = element 
             elif i <= 14:
-                feats.add((i-1, element))
+                bin = hashstr(str(i)+str(element))+1
+                feats.add((bin, 1))
             else:
-                bin = hashstr(str(i)+element)+14
+                bin = hashstr(str(i)+element)+1
                 feats.add((bin, 1))
         feats = list(feats)
         feats.sort()
