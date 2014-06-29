@@ -17,5 +17,3 @@ with open(SUB_PATH, 'w') as f:
     f.write('Id,Predicted\n')
     for i, line in enumerate(open(OUT_PATH)):
         f.write('{0},{1}'.format(i+60000000, line))
-    if i != 66042134:
-        print('incorrect number of lines')
