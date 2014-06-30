@@ -42,8 +42,8 @@ class Worker(threading.Thread):
         self.lock.release()
 
     def get_cmd(self, spec):
-        cmd = './convert_to_svm.v2.py -i {0} -- tr.1m.csv tr.1m.v4.i{0}.svm;'.format(spec['field'])
-        cmd += './convert_to_svm.v2.py -i {0} -- va.1m.csv va.1m.v4.i{0}.svm'.format(spec['field'])
+        #cmd = './convert_to_svm.v2.py -i {0} -- tr.1m.csv tr.1m.v4.i{0}.svm;'.format(spec['field'])
+        cmd = './convert_to_svm.v2.py -i {0} -- va.100k.csv va.100k.v4.i{0}.svm'.format(spec['field'])
         return cmd
 
     def __del__(self):

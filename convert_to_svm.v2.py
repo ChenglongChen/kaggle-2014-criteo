@@ -31,14 +31,17 @@ with open(args['svm_path'], 'w') as f:
                 label = element 
             elif i <= 14:
                 key = i-1
-                if key in args['i']:
+                if key != 5:
+                    bin = hashstr(str(i)+str(element))+14
+                    feats.add((bin, 1))
+                else:
                     value = float(element)/max_values[key]
                     if value != 0:
                         feats.add((key, str(round(value, 5))))
-                else:
-                    bin = hashstr(str(i)+str(element))+14
-                    feats.add((bin, 1))
             else:
+                key = i-14
+                if key in set([3, 4, 12, 16, 21]):
+                    continue
                 bin = hashstr(str(i)+element)+14
                 feats.add((bin, 1))
         feats = list(feats)
