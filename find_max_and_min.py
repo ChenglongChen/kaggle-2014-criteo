@@ -15,14 +15,13 @@ min_values = collections.defaultdict(lambda: float('inf'))
 for i, row in enumerate(csv.reader(open(args['path']))):
     if i == 0:
         continue
-    for i, element in enumerate(row):
-        if 2 <= i and i <= 14:
-            if element == '':
-                continue
-            value = float(element)
-            key = i-1
-            min_values[key] = min(value, min_values[key])
-            max_values[key] = max(value, max_values[key])
+    for i in range(2, 15):
+        if row[i] == '':
+            continue
+        value = float(row[i])
+        key = i-1
+        min_values[key] = min(value, min_values[key])
+        max_values[key] = max(value, max_values[key])
 
 print(max_values)
 print(min_values)
