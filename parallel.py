@@ -4,7 +4,7 @@
 import threading, subprocess, uuid, random, queue
 
 WORKERS = ['linux7']
-MAX_WORKERS = 1
+MAX_WORKERS = 12
 
 class Worker(threading.Thread):
     def __init__(self, host, task_queue, best, lock):
@@ -30,7 +30,6 @@ class Worker(threading.Thread):
 
     def run_one(self, spec):
         cmd = "{0}".format(self.get_cmd(spec))
-        print(cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         p.communicate()
