@@ -4,7 +4,7 @@
 import threading, subprocess, uuid, random, queue
 
 WORKERS = ['linux7']
-MAX_WORKERS = 12
+MAX_WORKERS = 13
 
 class Worker(threading.Thread):
     def __init__(self, host, task_queue, best, lock):
