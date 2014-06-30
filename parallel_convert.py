@@ -4,7 +4,7 @@
 import threading, subprocess, uuid, random, queue
 
 WORKERS = ['linux7']
-MAX_WORKERS = 13
+MAX_WORKERS = 14
 
 class Worker(threading.Thread):
     def __init__(self, host, task_queue, best, lock):
@@ -43,7 +43,7 @@ class Worker(threading.Thread):
 
     def get_cmd(self, spec):
         cmd = './convert_to_svm.v2.py -i {0} -- tr.1m.csv tr.1m.v4.i{0}.svm;'.format(spec['field'])
-        cmd += './convert_to_svm.v2.py -i {0} -- va.100k.csv va.100k.v4.i{0}.svm'.format(spec['field'])
+        cmd += './convert_to_svm.v2.py -i {0} -- va.1m.csv va.1m.v4.i{0}.svm'.format(spec['field'])
         return cmd
 
     def __del__(self):
@@ -56,7 +56,7 @@ def main():
     best = {'logloss': float('Inf'), 'field': -1}
 
     task_queue = queue.Queue()
-    for field in range(1, 14):
+    for field in range(1, 15):
         task_queue.put({'field':field})
     task_queue.put(None)
 

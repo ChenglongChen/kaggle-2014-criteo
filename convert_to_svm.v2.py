@@ -7,7 +7,7 @@ if len(sys.argv) == 1:
 
 parser = argparse.ArgumentParser(description='convert to svm')
 parser.add_argument('-n', action='store', default=10000000, help='set number of bins for hashing trick', type=int)
-parser.add_argument('-i', nargs='+', default=[], help='set numerical fields that are to be treated as categorical', type=int)
+parser.add_argument('-i', nargs='+', default=[], help='set numerical fields that are not to be treated as categorical', type=int)
 parser.add_argument('--', dest='dummy', action='store_true', help='stop parsing optional arguments')
 parser.add_argument('csv_path', type=str, help='set path to the csv file')
 parser.add_argument('svm_path', type=str, help='set path to the svm file')
@@ -32,12 +32,12 @@ with open(args['svm_path'], 'w') as f:
             elif i <= 14:
                 key = i-1
                 if key in args['i']:
-                    bin = hashstr(str(i)+str(element))+14
-                    feats.add((bin, 1))
-                else:
                     value = float(element)/max_values[key]
                     if value != 0:
                         feats.add((key, str(round(value, 5))))
+                else:
+                    bin = hashstr(str(i)+str(element))+14
+                    feats.add((bin, 1))
             else:
                 bin = hashstr(str(i)+element)+14
                 feats.add((bin, 1))
