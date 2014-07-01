@@ -24,7 +24,7 @@ with open(args['svm_path'], 'w') as f:
         for i, element in enumerate(row[2:15], start=1):
             bin = hashstr(str(i)+str(element), args['n'])+28
             feats.add((bin, 1))
-            if element == ''
+            if element == '':
                 continue
             value = float(element)
             feats.add((i, value/max_values[i]))
