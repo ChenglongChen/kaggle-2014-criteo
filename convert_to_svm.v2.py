@@ -22,17 +22,18 @@ with open(args['svm_path'], 'w') as f:
         feats = set()
         label = row[1]
         for i, element in enumerate(row[2:15], start=1):
-            bin = hashstr(str(i)+str(element), args['n'])+14
+            bin = hashstr(str(i)+str(element), args['n'])+28
             feats.add((bin, 1))
-            if element == '':
+            if element == ''
                 continue
             value = float(element)
+            feats.add((i, value/max_values[i]))
             if value < 1:
                 continue
             value = math.log(float(element))
-            feats.add((i, value))
+            feats.add((i+14, value))
         for i, element in enumerate(row[15:], start=1):
-            bin = hashstr(str(i)+element, args['n'])+14
+            bin = hashstr(str(i)+element, args['n'])+28
             feats.add((bin, 1))
         feats = list(feats)
         feats.sort()
