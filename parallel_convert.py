@@ -2,21 +2,6 @@
 
 import threading, subprocess, uuid, random, queue, argparse, sys, math, os
 
-class Worker(threading.Thread):
-    def __init__(self, cvt_path, src_path, dst_path, lock):
-        threading.Thread.__init__(self)
-        self.cvt_path = cvt_path
-        self.src_path = src_path
-        self.dst_path = dst_path
-        self.lock = lock
-        
-    def run(self):
-        cmd = '{0} {1} {2}'.\
-            format(os.path.join('.', self.cvt_path), self.src_path, self.dst_path)
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE)
-        p.communicate()
-
 def split(path, nr_threads):
 
     def open_skip_first_line(path):
@@ -64,17 +49,15 @@ def parallel_convert(args):
 
     workers, lock = [], threading.Lock()
     for i in range(args['n']):
-        worker = Worker(
-            args['cvt_path'], 
+        cmd = '{0} {1} {2}'.format(
+            os.path.join('.', args['cvt_path']),
             args['csv_path']+'.__tmp__.{0}'.format(i),
-            args['svm_path']+'.__tmp__.{0}'.format(i),
-            lock)
+            args['svm_path']+'.__tmp__.{0}'.format(i))
+        worker = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE)
         workers.append(worker)
-
     for worker in workers:
-        worker.start()
-    for worker in workers:
-        worker.join()
+        worker.communicate()
 
 def cat_svm_files(args):
     
