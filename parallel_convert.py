@@ -37,7 +37,7 @@ def parse_args():
         sys.argv.append('-h')
 
     parser = argparse.ArgumentParser(description='parallel convert')
-    parser.add_argument('-n', default=12, type=int, help='set number of path')
+    parser.add_argument('-n', default=24, type=int, help='set number of path')
     parser.add_argument('cvt_path', type=str, help='set the path to your desired converter')
     parser.add_argument('csv_path', type=str, help='set path to the csv file')
     parser.add_argument('svm_path', type=str, help='set path to the svm file')
@@ -53,8 +53,7 @@ def parallel_convert(args):
             os.path.join('.', args['cvt_path']),
             args['csv_path']+'.__tmp__.{0}'.format(i),
             args['svm_path']+'.__tmp__.{0}'.format(i))
-        worker = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE)
+        worker = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         workers.append(worker)
     for worker in workers:
         worker.communicate()
