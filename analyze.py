@@ -12,5 +12,5 @@ args = vars(parser.parse_args())
 df = pandas.io.parsers.read_csv(args['csv_path'])
 for i in range(1, 14):
     print('{0:3} {1:>10}'.format('I'+str(i), len(set(df['I{0}'.format(i)]))))
-for i in range(1, 26):
+for i in range(1, 27):
     print('{0:3} {1:>10}'.format('C'+str(i), len(set(df['C{0}'.format(i)]))))
