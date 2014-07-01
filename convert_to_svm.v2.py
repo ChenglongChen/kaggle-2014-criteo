@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, csv, sys, math
+import argparse, csv, sys, math, itertools
 
 from common import *
 
@@ -9,9 +9,13 @@ if len(sys.argv) == 1:
 
 parser = argparse.ArgumentParser(description='convert to svm')
 parser.add_argument('-n', default=10000000, type=int, help='set number of bins for hashing trick')
+parser.add_argument('-i', nargs='+', default=[], help='set numerical fields that are to be include in poly2', type=int)
+parser.add_argument('-c', nargs='+', default=[], help='set catogorical fields that are to be include in poly2', type=int)
 parser.add_argument('csv_path', type=str, help='set path to the csv file')
 parser.add_argument('svm_path', type=str, help='set path to the svm file')
 args = vars(parser.parse_args())
+args['i'] = set(args['i'])
+args['c'] = set(args['c'])
 
 max_values = {1: 5775.0, 2: 257675.0, 3: 65535.0, 4: 969.0, 5: 23159456.0, 6: 431037.0, 7: 56311.0, 8: 6047.0, 9: 29019.0, 10: 11.0, 11: 231.0, 12: 4008.0, 13: 7393.0}
 
@@ -21,8 +25,11 @@ with open(args['svm_path'], 'w') as f:
             continue
         feats = set()
         label = row[1]
+        poly2 = []
         for i, element in enumerate(row[2:15], start=1):
             bin = hashstr(str(i)+str(element), args['n'])+28
+            if i in args['i']:
+                poly2.append(bin)    
             feats.add((bin, 1))
             if element == '':
                 continue
@@ -34,7 +41,11 @@ with open(args['svm_path'], 'w') as f:
             feats.add((i+14, value))
         for i, element in enumerate(row[15:], start=1):
             bin = hashstr(str(i)+element, args['n'])+28
+            if i in args['c']:
+                poly2.append(bin)    
             feats.add((bin, 1))
+        for feat in itertools.combinations(poly2, 2):
+            feats.add((hashstr(str(feat), args['n']), 1))
         feats = list(feats)
         feats.sort()
         feats = ['{0}:{1}'.format(idx, val) for (idx, val) in feats]
