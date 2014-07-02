@@ -17,7 +17,7 @@ def split(path, nr_threads):
     def calc_nr_lines_per_thread():
         nr_lines = int(list(subprocess.Popen('wc -l {0}'.format(path), shell=True, 
             stdout=subprocess.PIPE).stdout)[0].split()[0])
-        return math.ceil(float(nr_lines-1)/nr_threads)
+        return math.ceil(float(nr_lines+1)/nr_threads)
 
     nr_lines_per_thread = calc_nr_lines_per_thread()
 
