@@ -1,4 +1,4 @@
-__all__ = ['hashstr']
+__all__ = ['hashstr', 'open_skip_first_line']
 
 import hashlib
 
