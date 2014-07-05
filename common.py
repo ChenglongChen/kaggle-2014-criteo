@@ -1,9 +1,12 @@
-__all__ = ['hashstr', 'open_skip_first_line']
-
-import hashlib
+import hashlib, csv
 
 def open_skip_first_line(path):
     f = open(path)
+    next(f)
+    return f
+
+def open_csv_skip_first_line(path):
+    f = csv.reader(open(path))
     next(f)
     return f
 
