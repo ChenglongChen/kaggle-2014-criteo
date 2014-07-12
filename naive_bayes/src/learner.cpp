@@ -24,4 +24,4 @@ std::vector<double> const &Learner::get_W()
     return W;
 }
 
-std::string const Learner::model_path = ".online_model.bin";
+std::string const Learner::model_path = ".naive_beyes.bin";

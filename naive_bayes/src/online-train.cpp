@@ -95,7 +95,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-void learn(Learner * const learner, std::string const tr_path)
+void learn(FTRL * const learner, std::string const tr_path)
 {
     uint const kMaxLineSize = 1000000;
 	FILE *f = open_c_file(tr_path.c_str(), "r");
@@ -140,7 +140,7 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    FTRL learner(FTRLParameter(opt.alpha, opt.beta, opt.lambda1, opt.lambda2));
+    FTRL learner;
 
     if(!opt.force)
     {
