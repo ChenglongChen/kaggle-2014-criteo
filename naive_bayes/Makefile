@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x 
-MAIN = train extract predict
+MAIN = online-train online-extract online-predict
 FILES = ftrl.cpp learner.cpp common.cpp eval.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)
@@ -8,13 +8,13 @@ HEADERS = $(FILES:%.cpp=src/%.h)
 
 all: $(MAIN)
 
-train: src/train.cpp $(SRCS) $(HEADERS)
+online-train: src/online-train.cpp $(SRCS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(SRCS)
 
-extract: src/extract.cpp $(SRCS) $(HEADERS)
+online-extract: src/online-extract.cpp $(SRCS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(SRCS)
 
-predict: src/predict.cpp $(SRCS) $(HEADERS)
+online-predict: src/online-predict.cpp $(SRCS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(SRCS)
 
 clean:
