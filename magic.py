@@ -21,16 +21,9 @@ for line in open(args['tr_path']):
         else:
             records[idx][1] += 1 
 
-#frequency = []
 useful_feat = set()
 for key, val in records.items():
-    total = records[key][0] + records[key][1]
-    #if total < 100:
-    #    continue
-    #rate = float(records[key][0])/total
-    #if rate < 0.25 or rate > 0.45:
     useful_feat.add(key) 
-    #frequency.append((key, records[key][0], total, rate))
 
 def write_file(path):
     with open(path+'.tmp', 'w') as f:
@@ -46,6 +39,3 @@ def write_file(path):
 
 write_file(args['tr_path'])
 write_file(args['va_path'])
-#frequency.sort(key=lambda x: x[3])
-#for e in frequency:
-#    print('{0} ({1}/{2}) ({3})'.format(e[3], e[1], e[2], e[0]))
