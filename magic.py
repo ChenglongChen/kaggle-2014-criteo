@@ -21,21 +21,24 @@ for line in open(args['tr_path']):
         else:
             records[idx][1] += 1 
 
-useful_feat = set()
+freqencies = {}
 for key, val in records.items():
-    useful_feat.add(key) 
+    freqencies[key] = (float(val[0]) / (val[0] + val[1]))
 
 def write_file(path):
     with open(path+'.tmp', 'w') as f:
-        for line in open(args['tr_path']):
+        for line in open(path):
             line = line.strip().split()
             f.write(line[0])
             for feat in line[1:]:
                 idx, val = feat.split(':')
-                if idx not in useful_feat:
+                f.write(' {0}:1'.format(idx))
+            for feat in line[1:]:
+                idx, val = feat.split(':')
+                if idx not in freqencies:
                     continue
-                f.write(' '+idx+':1')
-            f.write(' 10000500:1\n')
+                f.write(' {0}:{1}'.format(int(idx)+10000000, round(freqencies[idx],3)))
+            f.write(' 20000500:1\n')
 
 write_file(args['tr_path'])
 write_file(args['va_path'])

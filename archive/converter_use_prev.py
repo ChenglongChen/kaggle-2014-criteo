@@ -23,7 +23,7 @@ with open(args['svm_path'], 'w') as f:
         window.put(label)
         if i > args['window_size']:
             label1 = window.get()
-            feats.add((args['nr_bins']+1000, float(head-tail)/args['window_size']))
+            feats.add((args['nr_bins']+1000, float(head-tail)/args['window_size']-0.2))
             if label1 == '1':
                 tail += 1
         if label == '1':
