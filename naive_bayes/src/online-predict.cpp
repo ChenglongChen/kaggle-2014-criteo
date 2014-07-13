@@ -12,7 +12,8 @@
 void
 predict(std::string const &te_path, 
         std::string const &out_path, 
-        FTRL const &learner)
+        FTRL const &learner, 
+        int const threshold)
 {
     uint const kMaxLineSize = 1000000;
     FILE *f = open_c_file(te_path.c_str(), "r");
@@ -36,21 +37,24 @@ predict(std::string const &te_path,
             if(val_char == nullptr || *val_char == '\n')
                 break;
 
-            size_t const idx1 = atoi(idx_char);
+            size_t const idx1 = atoi(idx_char)-1;
 
-            if(idx1 > learner.likelihood.size())
+            if(idx1 >= learner.likelihood.size())
                 continue;
 
             double const likelihood = 
-                static_cast<double>(learner.likelihood[idx1-1]) /
+                static_cast<double>(learner.likelihood[idx1]) /
                 static_cast<double>(learner.pos);
 
             double const evidence = 
-                static_cast<double>(learner.evidence[idx1-1]) /
+                static_cast<double>(learner.evidence[idx1]) /
                 static_cast<double>(learner.pos+learner.neg);
 
-            prob *= likelihood / evidence;
+            if(likelihood != 0 && learner.evidence[idx1] > threshold)
+                prob *= likelihood / evidence;
+            //std::cout << likelihood << ", " << evidence << ", " << prob << "\n";
         }
+        //std::cout << "---------------\n";
         fprintf(f_out, "%lf\n", prob);
     }
 
@@ -68,17 +72,25 @@ double calc_density(std::vector<double> const &W)
 
 int main(const int argc, char * const * const argv) 
 {
-    if(argc != 3)
+    if(argc != 3 && argc != 5)
     {
-        std::cout << "usage: online-predict [-r <sample rate>] test_path output_path"
+        std::cout << "usage: online-predict [-r threshold] test_path output_path"
                   << std::endl;
         return EXIT_FAILURE;
     }
     std::string te_path, out_path;
+
+    int threshold = 0;
     if(argc == 3)
     {
         te_path = std::string(argv[1]);
         out_path = std::string(argv[2]);
+    }
+    else
+    {
+        threshold = atoi(argv[2]);
+        te_path = std::string(argv[3]);
+        out_path = std::string(argv[4]);
     }
 
     std::vector<int> y;
@@ -95,7 +107,7 @@ int main(const int argc, char * const * const argv)
         return EXIT_FAILURE;
     }
 
-    predict(te_path, out_path, learner);
+    predict(te_path, out_path, learner, threshold);
 
     return EXIT_SUCCESS;
 }

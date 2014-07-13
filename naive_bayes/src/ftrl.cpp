@@ -51,7 +51,7 @@ void FTRL::update(int const y, std::vector<uint> const &idx, std::vector<double>
             evidence.resize(*i+1, 0);
         }
         if(y == 1)
-            likelihood[*i] += 1;
-        evidence[*i] += 1;
+            ++likelihood[*i];
+        ++evidence[*i];
     }
 }
