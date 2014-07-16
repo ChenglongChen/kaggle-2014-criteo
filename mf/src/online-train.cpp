@@ -63,7 +63,7 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.iter = std::stoi(args[++i]);
         }
-        else if(args[i].compare("-t") == 0)
+        else if(args[i].compare("-r") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");

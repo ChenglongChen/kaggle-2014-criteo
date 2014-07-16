@@ -27,15 +27,15 @@ Option parse_option(std::vector<std::string> const &args)
     size_t const argc = args.size();
 
     Option opt;
-    if(argc != 4)
+    if(argc != 3)
     {
         throw std::invalid_argument(train_help());
     }
     else
     {
-        opt.te_path = args[1];
-        opt.model_path = args[2];
-        opt.output_path = args[3];
+        opt.te_path = args[0];
+        opt.model_path = args[1];
+        opt.output_path = args[2];
     }
 
     return opt;
