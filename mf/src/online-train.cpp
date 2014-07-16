@@ -4,16 +4,17 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "ftrl.h"
 #include "common.h"
 
 struct Option 
 {
-    Option() : alpha(0.1), beta(1), lambda1(1), lambda2(0), force(false) {} ;
+    Option() : c(1.0f), eta(0.01f), k(2) {} ;
     std::string tr_path, model_path;
-    double alpha, beta, lambda1, lambda2;
-    bool force;
+    float c, eta;
+    int k, iter;
 };
 
 std::string train_help()
@@ -22,14 +23,12 @@ std::string train_help()
 "usage: online-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-a <alpha>: set alpha\n"
-"-b <beta>: set beta\n"
-"-l <lambda1>: set lambda for L1 regularization\n"
-"-c <lambda2>: set lambda for L2 regularization\n"
-"-f: discard an existing model\n"
+"-k <dim>: you know\n"
+"-c <penalty>: you know\n"
+"-t <iteration>: you know\n"
+"-r <eta>: you know\n"
 "\n"
-"The model is stored in \".online_model\".\n"
-"Use \"online-extract\" to convert it to a LIBLINEAR compatible model.\n");
+"Warning: current I supports only binary features\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -44,33 +43,29 @@ Option parse_option(std::vector<std::string> const &args)
     size_t i = 0;
     for(; i < argc; ++i)
     {
-        if(args[i].compare("-a") == 0)
+        if(args[i].compare("-k") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.alpha = std::stof(args[++i]);
-        }
-        else if(args[i].compare("-b") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            option.beta = std::stof(args[++i]);
-        }
-        else if(args[i].compare("-l") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            option.lambda1 = std::stof(args[++i]);
+            option.k = std::stoi(args[++i]);
         }
         else if(args[i].compare("-c") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.lambda2 = std::stof(args[++i]);
+            option.c = std::stof(args[++i]);
         }
-        else if(args[i].compare("-f") == 0)
+        else if(args[i].compare("-t") == 0)
         {
-            option.force = true;
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.iter = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-t") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.eta = std::stof(args[++i]);
         }
         else
         {
@@ -82,6 +77,24 @@ Option parse_option(std::vector<std::string> const &args)
         throw std::invalid_argument("training data not specified");
 
     option.tr_path = args[i];
+
+    if(i < argc)
+    {
+        option.model_path = std::string(args[i]);
+    }
+    else if(i == argc)
+    {
+        const char *ptr = strrchr(&*option.tr_path.begin(),'/');
+        if(!ptr)
+            ptr = option.tr_path.c_str();
+        else
+            ++ptr;
+        option.model_path = std::string(ptr) + ".model";
+    }
+    else
+    {
+        throw std::invalid_argument("invalid argument");
+    }
 
     return option;
 }
@@ -95,36 +108,88 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-void learn(Learner * const learner, std::string const tr_path)
+SpMat read_data(std::string const tr_path)
 {
-    uint const kMaxLineSize = 1000000;
-	FILE *f = open_c_file(tr_path.c_str(), "r");
+    int const kMaxLineSize = 1000000;
+    FILE *f = open_c_file(tr_path.c_str(), "r");
     char line[kMaxLineSize];
 
-    std::vector<uint> idx;
-    std::vector<double> val;
-	while(fgets(line, kMaxLineSize, f) != nullptr)
-	{
-		char *p = strtok(line, " \t");
-        int const y = (atoi(p)>0)? 1 : 0;
-
-        idx.clear();
-        val.clear();
-		while(1)
-		{
-			char *idx1 = strtok(nullptr,":");
-			char *val1 = strtok(nullptr," \t");
-
-			if(val1 == nullptr || *val1 == '\n')
-				break;
-
-            idx.push_back(static_cast<uint>(atoi(idx1))-1);
-            val.push_back(static_cast<double>(atof(val1)));
-		}
-        learner->update(y, idx, val);
-	}
+    SpMat spmat;
+    spmat.pv.push_back(0);
+    while(fgets(line, kMaxLineSize, f) != nullptr)
+    {
+        char *p = strtok(line, " \t");
+        int const y = (atoi(p)>0)? 1 : -1;
+        while(1)
+        {
+            char *idx_char = strtok(nullptr,":");
+            char *val_char = strtok(nullptr," \t");
+            if(val_char == nullptr || *val_char == '\n')
+                break;
+            size_t idx = static_cast<size_t>(atoi(idx_char));
+            spmat.n = std::max(spmat.n, idx);
+            spmat.jv.push_back(idx-1);
+        }
+        spmat.pv.push_back(spmat.jv.size());
+        spmat.yv.push_back(y);
+    }
 
     fclose(f);
+
+    return spmat;
+}
+
+Model train(SpMat const spmat, Option const opt)
+{
+    size_t const k = opt.k;
+
+    Model model(k, spmat.n);
+    float * const P = model.P.data();
+    for(size_t i = 0; i < k*spmat.n; ++i)
+        P[i] = 0.1f*static_cast<float>(drand48());
+
+
+    std::vector<float> g(k, 0);
+    for(int t = 0; t < opt.iter; ++t)
+    {
+        auto y = spmat.yv.begin();
+        for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p, ++y)
+        {
+            size_t const * const jv_begin = spmat.jv.data()+(*p);
+            size_t const * const jv_end = spmat.jv.data()+(*(p+1));
+            
+            double r = 0;
+            for(size_t const *u = jv_begin; u != jv_end; ++u)
+            {
+                float const * const pu = P+(*u)*k;
+                for(size_t const *v = u; v != jv_end; ++v) 
+                {
+                    float const * const pv = P+(*v)*k;
+                    for(size_t d = 0; d < k; ++d)
+                        r += (*(pu+d))*(*(pv+d));
+                }
+            }
+
+            float const alpha = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
+
+            g.assign(k, 0);
+            for(size_t const *u = jv_begin; u != jv_end; ++u)
+            {
+                float const * const pu = P+(*u)*k;
+                for(size_t d = 0; d < k; ++d)
+                    g[d] += pu[d];
+            }
+
+            for(size_t const *u = jv_begin; u != jv_end; ++u)
+            {
+                float * const pu = P+(*u)*k;
+                for(size_t d = 0; d < k; ++d)
+                    pu[d] = pu[d] - opt.eta*alpha*(g[d]-pu[d]);
+            }
+        }
+    }
+
+    return model;
 }
 
 int main(int const argc, char const * const * const argv)
@@ -140,28 +205,9 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    FTRL learner(FTRLParameter(opt.alpha, opt.beta, opt.lambda1, opt.lambda2));
+    SpMat Tr = read_data(opt.tr_path);
 
-    if(!opt.force)
-    {
-        try
-        {
-            learner.load();
-        }
-        catch(std::runtime_error const &e)
-        {
-            printf("[warning] no previous model exists."
-                "using a brand new model\n");
-        }
-    }
-    else
-    {
-        printf("[warning] using a brand new model\n");
-    }
-
-    learn(&learner, opt.tr_path);
-
-    learner.save();
+    Model model = train(Tr, opt);
 
     return EXIT_SUCCESS;
 }
