@@ -64,9 +64,13 @@ predict(SpMat const &spmat, Model const &model, std::string const &output_path)
         double r = 0;
         for(size_t const *u = jv_begin; u != jv_end; ++u)
         {
+            if(*u >= model.n)
+                continue;
             float const * const pu = P+(*u)*k;
             for(size_t const *v = u; v != jv_end; ++v) 
             {
+                if(*v >= model.n)
+                    continue;
                 float const * const pv = P+(*v)*k;
                 for(size_t d = 0; d < k; ++d)
                     r += (*(pu+d))*(*(pv+d));
