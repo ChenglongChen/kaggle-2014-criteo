@@ -105,7 +105,7 @@ Model train(SpMat const &spmat, Option const &opt)
 {
     size_t const k = opt.k;
 
-    Model model(k, spmat.n);
+    Model model(spmat.n, k);
     float * const P = model.P.data();
     for(size_t i = 0; i < k*spmat.n; ++i)
         P[i] = 0.1f*static_cast<float>(drand48());

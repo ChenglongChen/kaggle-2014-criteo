@@ -73,6 +73,7 @@ predict(SpMat const &spmat, Model const &model, std::string const &output_path)
             }
         }
 
+
         fprintf(f, "%f\n", r);
     }
 }
