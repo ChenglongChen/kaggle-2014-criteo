@@ -2,116 +2,101 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <tuple>
+#include <string>
+#include <vector>
 #include <cmath>
 
-#include "common.h"
 #include "ftrl.h"
-#include "eval.h"
+#include "common.h"
 
-std::tuple<std::vector<int>, std::vector<double>> 
-predict(std::string const &te_path, 
-        std::string const &out_path, 
-        std::vector<double> const &W)
+namespace {
+
+struct Option 
 {
-    uint const kMaxLineSize = 1000000;
-    FILE *f = open_c_file(te_path.c_str(), "r");
-    FILE *f_out = open_c_file(out_path.c_str(), "w");
-    char line[kMaxLineSize];
+    std::string te_path, model_path, output_path;
+};
 
-    std::vector<int> y;
-    std::vector<double> dec_vals;
-    while(fgets(line, kMaxLineSize, f) != nullptr)
-    {
-        char *p = strtok(line, " \t");
-        int const y1 = (atoi(p)>0)? 1 : 0;
-
-        double dec_val1 = 0;
-
-        while(1)
-        {
-            char *idx_char = strtok(nullptr,":");
-            char *val_char = strtok(nullptr," \t");
-
-            if(val_char == nullptr || *val_char == '\n')
-                break;
-
-            size_t const idx1 = atoi(idx_char);
-            double const val1 = atof(val_char);
-
-            if(idx1 > W.size())
-                continue;
-
-            dec_val1 += W[idx1-1]*(val1);
-        }
-
-        fprintf(f_out, "%lf\n", 1/(1+exp(-dec_val1)));
-
-        y.push_back(y1);
-        dec_vals.push_back(dec_val1);
-    }
-
-    fclose(f);
-
-    return std::make_tuple(y, dec_vals);
+std::string train_help()
+{
+    return std::string(
+"usage: online-predict test_path model_path output_path\n");
 }
 
-double calc_density(std::vector<double> const &W)
+Option parse_option(std::vector<std::string> const &args)
 {
-    uint nnz = 0;
-    for (auto w : W)
-        if (w != 0)
-            ++nnz;
-    return (double)nnz/(double)W.size();
-}
+    size_t const argc = args.size();
 
-int main(const int argc, char * const * const argv) 
-{
-    if(argc != 3 && argc != 5)
+    Option opt;
+    if(argc != 4)
     {
-        std::cout << "usage: online-predict [-r <sample rate>] test_path output_path"
-                  << std::endl;
-        return EXIT_FAILURE;
-    }
-    double rate = 1.0;
-    std::string te_path, out_path;
-    if(argc == 3)
-    {
-        te_path = std::string(argv[1]);
-        out_path = std::string(argv[2]);
+        throw std::invalid_argument(train_help());
     }
     else
     {
-        rate = atof(argv[2]);
-        te_path = std::string(argv[3]);
-        out_path = std::string(argv[4]);
+        opt.te_path = args[1];
+        opt.model_path = args[2];
+        opt.output_path = args[3];
     }
 
-    std::vector<int> y;
-    std::vector<double> dec_vals;
+    return opt;
+}
 
-    FTRL learner;
+void 
+predict(SpMat const &spmat, Model const &model, std::string const &output_path)
+{
+    size_t const k = model.k;
+    
+    FILE *f = open_c_file(output_path, "w");     
+
+    float const * const P = model.P.data();
+    for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p)
+    {
+        size_t nnz = *(p+1)-(*p);
+        if(nnz <= 1)
+        {
+            fprintf(f, "0\n");
+            continue;
+        }
+
+        size_t const * const jv_begin = spmat.jv.data()+(*p);
+        size_t const * const jv_end = spmat.jv.data()+(*(p+1));
+        
+        double r = 0;
+        for(size_t const *u = jv_begin; u != jv_end; ++u)
+        {
+            float const * const pu = P+(*u)*k;
+            for(size_t const *v = u; v != jv_end; ++v) 
+            {
+                float const * const pv = P+(*v)*k;
+                for(size_t d = 0; d < k; ++d)
+                    r += (*(pu+d))*(*(pv+d));
+            }
+        }
+
+        fprintf(f, "%f\n", r);
+    }
+}
+
+} //unnamed namespace
+
+int main(int const argc, char const * const * const argv)
+{
+    Option opt;
     try
     {
-        learner.load();
+        opt = parse_option(argv_to_args(argc, argv));
     }
-    catch(std::runtime_error const &e)
+    catch(std::invalid_argument const &e)
     {
-        printf("[warning] model not exists");
+        std::cout << "\n" << e.what() << "\n";
         return EXIT_FAILURE;
     }
 
-    std::tie(y, dec_vals) = predict(te_path, out_path, learner.get_W());
+    SpMat const Te = read_data(opt.te_path);
 
-    for(auto &y1 : y)
-        if(y1 == 0)
-            y1 = -1;
+    Model const model = read_model(opt.model_path);
 
-    std::cout << "AUC: " << calc_auc(dec_vals, y) << std::endl;
-    std::cout << "Acc: " << calc_accuracy(dec_vals, y) << std::endl;
-    std::cout << "CTR MAE: " << calc_ctr_mae(dec_vals, y, rate) << std::endl;
-    std::cout << "log loss: " << calc_log_loss(dec_vals, y, rate) << std::endl;
-    std::cout << "density: " << calc_density(learner.get_W()) << std::endl;
-
+    predict(Te, model, opt.output_path);
+    
     return EXIT_SUCCESS;
 }

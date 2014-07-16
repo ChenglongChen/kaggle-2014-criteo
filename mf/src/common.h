@@ -29,4 +29,13 @@ struct Model
     std::vector<float> P;
 };
 
+void save_model(Model const &model, std::string const &path);
+
+Model read_model(std::string const &path);
+
+SpMat read_data(std::string const tr_path);
+
+std::vector<std::string> 
+argv_to_args(int const argc, char const * const * const argv);
+
 #endif // _UTIL_H_

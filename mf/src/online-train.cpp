@@ -9,9 +9,11 @@
 #include "ftrl.h"
 #include "common.h"
 
+namespace {
+
 struct Option 
 {
-    Option() : c(1.0f), eta(0.01f), k(2) {} ;
+    Option() : c(1.0f), eta(0.01f), k(2), iter(10) {} ;
     std::string tr_path, model_path;
     float c, eta;
     int k, iter;
@@ -76,7 +78,7 @@ Option parse_option(std::vector<std::string> const &args)
     if(i >= argc)
         throw std::invalid_argument("training data not specified");
 
-    option.tr_path = args[i];
+    option.tr_path = args[i++];
 
     if(i < argc)
     {
@@ -99,47 +101,7 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-std::vector<std::string> 
-argv_to_args(int const argc, char const * const * const argv)
-{
-    std::vector<std::string> args;
-    for(int i = 1; i < argc; ++i)
-        args.emplace_back(argv[i]);
-    return args;
-}
-
-SpMat read_data(std::string const tr_path)
-{
-    int const kMaxLineSize = 1000000;
-    FILE *f = open_c_file(tr_path.c_str(), "r");
-    char line[kMaxLineSize];
-
-    SpMat spmat;
-    spmat.pv.push_back(0);
-    while(fgets(line, kMaxLineSize, f) != nullptr)
-    {
-        char *p = strtok(line, " \t");
-        int const y = (atoi(p)>0)? 1 : -1;
-        while(1)
-        {
-            char *idx_char = strtok(nullptr,":");
-            char *val_char = strtok(nullptr," \t");
-            if(val_char == nullptr || *val_char == '\n')
-                break;
-            size_t idx = static_cast<size_t>(atoi(idx_char));
-            spmat.n = std::max(spmat.n, idx);
-            spmat.jv.push_back(idx-1);
-        }
-        spmat.pv.push_back(spmat.jv.size());
-        spmat.yv.push_back(y);
-    }
-
-    fclose(f);
-
-    return spmat;
-}
-
-Model train(SpMat const spmat, Option const opt)
+Model train(SpMat const &spmat, Option const &opt)
 {
     size_t const k = opt.k;
 
@@ -149,12 +111,16 @@ Model train(SpMat const spmat, Option const opt)
         P[i] = 0.1f*static_cast<float>(drand48());
 
 
-    std::vector<float> g(k, 0);
+    std::vector<float> sum(k, 0);
     for(int t = 0; t < opt.iter; ++t)
     {
         auto y = spmat.yv.begin();
         for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p, ++y)
         {
+            size_t nnz = *(p+1)-(*p);
+            if(nnz <= 1)
+                continue;
+
             size_t const * const jv_begin = spmat.jv.data()+(*p);
             size_t const * const jv_end = spmat.jv.data()+(*(p+1));
             
@@ -170,27 +136,30 @@ Model train(SpMat const spmat, Option const opt)
                 }
             }
 
-            float const alpha = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
+            float const alpha 
+                = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
 
-            g.assign(k, 0);
+            sum.assign(k, 0);
             for(size_t const *u = jv_begin; u != jv_end; ++u)
             {
                 float const * const pu = P+(*u)*k;
                 for(size_t d = 0; d < k; ++d)
-                    g[d] += pu[d];
+                    sum[d] += pu[d];
             }
 
             for(size_t const *u = jv_begin; u != jv_end; ++u)
             {
                 float * const pu = P+(*u)*k;
                 for(size_t d = 0; d < k; ++d)
-                    pu[d] = pu[d] - opt.eta*alpha*(g[d]-pu[d]);
+                    pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(nnz)*opt.c*pu[d]);
             }
         }
     }
 
     return model;
 }
+
+} //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
 {
@@ -208,6 +177,8 @@ int main(int const argc, char const * const * const argv)
     SpMat Tr = read_data(opt.tr_path);
 
     Model model = train(Tr, opt);
+
+    save_model(model, opt.model_path);
 
     return EXIT_SUCCESS;
 }
