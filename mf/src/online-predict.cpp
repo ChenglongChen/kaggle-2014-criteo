@@ -67,7 +67,7 @@ predict(SpMat const &spmat, Model const &model, std::string const &output_path)
             if(*u >= model.n)
                 continue;
             float const * const pu = P+(*u)*k;
-            for(size_t const *v = u; v != jv_end; ++v) 
+            for(size_t const *v = u+1; v != jv_end; ++v) 
             {
                 if(*v >= model.n)
                     continue;

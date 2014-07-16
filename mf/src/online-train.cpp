@@ -128,7 +128,7 @@ Model train(SpMat const &spmat, Option const &opt)
             for(size_t const *u = jv_begin; u != jv_end; ++u)
             {
                 float const * const pu = P+(*u)*k;
-                for(size_t const *v = u; v != jv_end; ++v) 
+                for(size_t const *v = u+1; v != jv_end; ++v) 
                 {
                     float const * const pv = P+(*v)*k;
                     for(size_t d = 0; d < k; ++d)
