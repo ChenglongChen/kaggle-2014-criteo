@@ -14,7 +14,7 @@ namespace {
 struct Option 
 {
     Option() : c(1.0f), eta(0.01f), k(2), iter(10) {} ;
-    std::string tr_path, model_path;
+    std::string tr_path, model_path, va_path;
     float c, eta;
     int k, iter;
 };
@@ -29,6 +29,7 @@ std::string train_help()
 "-c <penalty>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
+"-v <path>: you know\n"
 "\n"
 "Warning: current I supports only binary features\n");
 }
@@ -69,6 +70,12 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.eta = std::stof(args[++i]);
         }
+        else if(args[i].compare("-v") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.va_path = args[++i];
+        }
         else
         {
             break;
@@ -101,46 +108,37 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-Model train(SpMat const &spmat, Option const &opt)
+Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     size_t const k = opt.k;
+    size_t const n = Tr.n;
 
-    Model model(spmat.n, k);
+    Model model(n, k);
     float * const P = model.P.data();
-    for(size_t i = 0; i < k*spmat.n; ++i)
+    for(size_t i = 0; i < k*n; ++i)
         P[i] = 0.1f*static_cast<float>(drand48());
 
 
     std::vector<float> sum(k, 0);
     for(int t = 0; t < opt.iter; ++t)
     {
-        double loss = 0;
-        auto y = spmat.yv.begin();
-        for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p, ++y)
+        double Tr_loss = 0;
+        auto y = Tr.yv.begin();
+        for(auto p = Tr.pv.begin(); p < Tr.pv.end()-1; ++p, ++y)
         {
             size_t nnz = *(p+1)-(*p);
             if(nnz <= 1)
                 continue;
 
-            size_t const * const jv_begin = spmat.jv.data()+(*p);
-            size_t const * const jv_end = spmat.jv.data()+(*(p+1));
+            size_t const * const jv_begin = Tr.jv.data()+(*p);
+            size_t const * const jv_end = Tr.jv.data()+(*(p+1));
             
-            double r = 0;
-            for(size_t const *u = jv_begin; u != jv_end; ++u)
-            {
-                float const * const pu = P+(*u)*k;
-                for(size_t const *v = u+1; v != jv_end; ++v) 
-                {
-                    float const * const pv = P+(*v)*k;
-                    for(size_t d = 0; d < k; ++d)
-                        r += (*(pu+d))*(*(pv+d));
-                }
-            }
+            double const r = calc_rate(k, n, jv_begin, jv_end, P);
 
             float const alpha 
                 = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
 
-            loss += log(1+exp(-(*y)*r));
+            Tr_loss += log(1+exp(-(*y)*r));
 
             sum.assign(k, 0);
             for(size_t const *u = jv_begin; u != jv_end; ++u)
@@ -157,7 +155,29 @@ Model train(SpMat const &spmat, Option const &opt)
                     pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(opt.c*pu[d]));
             }
         }
-        printf("%3d %7.5f\n", t, loss/static_cast<double>(spmat.pv.size()-1));
+
+        printf("%3d %7.5f", t, Tr_loss/static_cast<double>(Tr.pv.size()-1));
+
+        if(Va.n != 0)
+        {
+            double Va_loss = 0;
+            auto y = Va.yv.begin();
+            for(auto p = Va.pv.begin(); p < Va.pv.end()-1; ++p, ++y)
+            {
+                size_t nnz = *(p+1)-(*p);
+                if(nnz <= 1)
+                    continue;
+
+                size_t const * const jv_begin = Va.jv.data()+(*p);
+                size_t const * const jv_end = Va.jv.data()+(*(p+1));
+                
+                double const r = calc_rate(k, n, jv_begin, jv_end, P);
+
+                Va_loss += log(1+exp(-(*y)*r));
+            }
+            printf(" %7.5f", Va_loss/static_cast<double>(Va.pv.size()-1));
+        }
+        printf("\n");
     }
 
     return model;
@@ -180,7 +200,11 @@ int main(int const argc, char const * const * const argv)
 
     SpMat Tr = read_data(opt.tr_path);
 
-    Model model = train(Tr, opt);
+    SpMat Va;
+    if(!opt.va_path.empty())
+        Va = read_data(opt.va_path);
+
+    Model model = train(Tr, Va, opt);
 
     save_model(model, opt.model_path);
 

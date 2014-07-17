@@ -38,4 +38,30 @@ SpMat read_data(std::string const tr_path);
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
 
+inline float calc_rate(
+    size_t const k,
+    size_t const n,
+    size_t const * const jv_begin,
+    size_t const * const jv_end,
+    float const * const P)
+{
+    float r = 0;
+    for(size_t const *u = jv_begin; u != jv_end; ++u)
+    {
+        float const * const pu = P+(*u)*k;
+        if(*u >= n)
+            continue;
+        for(size_t const *v = u+1; v != jv_end; ++v) 
+        {
+            if(*v >= n)
+                continue;
+            float const * const pv = P+(*v)*k;
+            for(size_t d = 0; d < k; ++d)
+                r += (*(pu+d))*(*(pv+d));
+        }
+    }
+
+    return r;
+}
+
 #endif // _UTIL_H_
