@@ -1,7 +1,7 @@
 #pragma GCC diagnostic ignored "-Wunused-result"
 
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef _COMMON_H_
+#define _COMMON_H_
 
 #define flag { printf("\nLINE: %d\n", __LINE__); fflush(stdout); }
 
@@ -64,4 +64,4 @@ inline float calc_rate(
     return r;
 }
 
-#endif // _UTIL_H_
+#endif // _COMMON_H_

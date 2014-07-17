@@ -6,7 +6,6 @@
 #include <vector>
 #include <cmath>
 
-#include "ftrl.h"
 #include "common.h"
 
 namespace {
