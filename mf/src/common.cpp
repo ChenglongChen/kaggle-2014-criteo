@@ -17,6 +17,7 @@ void save_model(Model const &model, std::string const &path)
     fwrite(&model.n, sizeof(size_t), 1, f);
     fwrite(&model.k, sizeof(size_t), 1, f);
     fwrite(model.P.data(), sizeof(float), model.n*model.k, f);
+    fwrite(model.W.data(), sizeof(float), model.n, f);
     fclose(f);
 }
 
@@ -28,6 +29,7 @@ Model read_model(std::string const &path)
     fread(&k, sizeof(size_t), 1, f);
     Model model(n, k);
     fread(model.P.data(), sizeof(float), model.n*model.k, f);
+    fread(model.W.data(), sizeof(float), model.n, f);
     fclose(f);
 
     return model;

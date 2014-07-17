@@ -13,7 +13,7 @@ namespace {
 struct Option 
 {
     Option() : c(1.0f), eta(0.01f), k(2), iter(10) {} ;
-    std::string tr_path, model_path, va_path;
+    std::string tr_path, model_path, Va_path;
     float c, eta;
     int k, iter;
 };
@@ -73,7 +73,7 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.va_path = args[++i];
+            option.Va_path = args[++i];
         }
         else
         {
@@ -210,8 +210,8 @@ int main(int const argc, char const * const * const argv)
     SpMat Tr = read_data(opt.tr_path);
 
     SpMat Va;
-    if(!opt.va_path.empty())
-        Va = read_data(opt.va_path);
+    if(!opt.Va_path.empty())
+        Va = read_data(opt.Va_path);
 
     Model model = train(Tr, Va, opt);
 
