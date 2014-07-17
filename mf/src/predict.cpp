@@ -50,7 +50,7 @@ predict(SpMat const &Te, Model const &model, std::string const &output_path)
         size_t nnz = Te.pv[i+1]-Te.pv[i];
         if(nnz <= 1)
         {
-            fprintf(f, "0\n");
+            fprintf(f, "0.5\n");
             continue;
         }
 
@@ -59,7 +59,9 @@ predict(SpMat const &Te, Model const &model, std::string const &output_path)
 
         double const r = calc_rate(i, model, jv_begin, jv_end);
 
-        fprintf(f, "%f\n", r);
+        double const prob = 1/(1+exp(-r));
+
+        fprintf(f, "%f\n", prob);
     }
 }
 

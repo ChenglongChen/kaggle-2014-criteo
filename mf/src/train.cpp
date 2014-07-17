@@ -128,7 +128,10 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t nnz = Tr.pv[i+1]-Tr.pv[i];
             if(nnz <= 1)
+            {
+                Tr_loss += log(2);
                 continue;
+            }
 
             size_t const * const jv_begin = Tr.jv.data()+Tr.pv[i];
             size_t const * const jv_end = Tr.jv.data()+Tr.pv[i+1];
@@ -169,7 +172,10 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 size_t nnz = Va.pv[i+1]-Va.pv[i];
                 if(nnz <= 1)
+                {
+                    Va_loss += log(2);
                     continue;
+                }
 
                 size_t const * const jv_begin = Va.jv.data()+Va.pv[i];
                 size_t const * const jv_end = Va.jv.data()+Va.pv[i+1];
