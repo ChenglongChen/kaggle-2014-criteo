@@ -14,7 +14,6 @@ with open(sys.argv[3], 'r') as f_in:
 		index, count = line.rstrip().split(':')
 		if(int(count) >= threshold):
 			counts.add(index)
-print('hello')
 
 with open(sys.argv[2], 'r') as f_in, open(sys.argv[4], 'w') as f_out:
 	for line in f_in:
