@@ -39,12 +39,15 @@ std::vector<std::string>
 argv_to_args(int const argc, char const * const * const argv);
 
 inline float calc_rate(
-    size_t const k,
-    size_t const n,
-    size_t const * const jv_begin,
-    size_t const * const jv_end,
-    float const * const P)
+    size_t const i, 
+    Model const &model, 
+    size_t const * const jv_begin, 
+    size_t const * const jv_end)
 {
+    size_t const k = model.k;
+    size_t const n = model.n;
+    float const * const P = model.P.data();
+    
     float r = 0;
     for(size_t const *u = jv_begin; u != jv_end; ++u)
     {

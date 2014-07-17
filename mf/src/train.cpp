@@ -123,16 +123,16 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     {
         double Tr_loss = 0;
         auto y = Tr.yv.begin();
-        for(auto p = Tr.pv.begin(); p < Tr.pv.end()-1; ++p, ++y)
+        for(size_t i = 0; i < Tr.pv.size()-1; ++i, ++y)
         {
-            size_t nnz = *(p+1)-(*p);
+            size_t nnz = Tr.pv[i+1]-Tr.pv[i];
             if(nnz <= 1)
                 continue;
 
-            size_t const * const jv_begin = Tr.jv.data()+(*p);
-            size_t const * const jv_end = Tr.jv.data()+(*(p+1));
+            size_t const * const jv_begin = Tr.jv.data()+Tr.pv[i];
+            size_t const * const jv_end = Tr.jv.data()+Tr.pv[i+1];
             
-            double const r = calc_rate(k, n, jv_begin, jv_end, P);
+            double const r = calc_rate(i, model, jv_begin, jv_end);
 
             float const alpha 
                 = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
@@ -161,16 +161,16 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             double Va_loss = 0;
             auto y = Va.yv.begin();
-            for(auto p = Va.pv.begin(); p < Va.pv.end()-1; ++p, ++y)
+            for(size_t i = 0; i < Tr.pv.size()-1; ++i, ++y)
             {
-                size_t nnz = *(p+1)-(*p);
+                size_t nnz = Va.pv[i+1]-Va.pv[i];
                 if(nnz <= 1)
                     continue;
 
-                size_t const * const jv_begin = Va.jv.data()+(*p);
-                size_t const * const jv_end = Va.jv.data()+(*(p+1));
-                
-                double const r = calc_rate(k, n, jv_begin, jv_end, P);
+                size_t const * const jv_begin = Va.jv.data()+Va.pv[i];
+                size_t const * const jv_end = Va.jv.data()+Va.pv[i+1];
+            
+                double const r = calc_rate(i, model, jv_begin, jv_end);
 
                 Va_loss += log(1+exp(-(*y)*r));
             }

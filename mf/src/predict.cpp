@@ -41,27 +41,23 @@ Option parse_option(std::vector<std::string> const &args)
 }
 
 void 
-predict(SpMat const &spmat, Model const &model, std::string const &output_path)
+predict(SpMat const &Te, Model const &model, std::string const &output_path)
 {
-    size_t const k = model.k;
-    size_t const n = model.n;
-    
     FILE *f = open_c_file(output_path, "w");     
 
-    float const * const P = model.P.data();
-    for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p)
+    for(size_t i = 0; i < Te.pv.size()-1; ++i)
     {
-        size_t nnz = *(p+1)-(*p);
+        size_t nnz = Te.pv[i+1]-Te.pv[i];
         if(nnz <= 1)
         {
             fprintf(f, "0\n");
             continue;
         }
 
-        size_t const * const jv_begin = spmat.jv.data()+(*p);
-        size_t const * const jv_end = spmat.jv.data()+(*(p+1));
-        
-        double const r = calc_rate(k, n, jv_begin, jv_end, P);
+        size_t const * const jv_begin = Te.jv.data()+Te.pv[i];
+        size_t const * const jv_end = Te.jv.data()+Te.pv[i+1];
+
+        double const r = calc_rate(i, model, jv_begin, jv_end);
 
         fprintf(f, "%f\n", r);
     }
