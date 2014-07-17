@@ -155,7 +155,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(opt.c*pu[d]));
 
                 float * const wu = W+(*u);
-                //*wu = *wu - opt.eta*(1+opt.c*(*wu));
+                *wu = *wu - opt.eta*(alpha+opt.c*(*wu));
             }
         }
 
