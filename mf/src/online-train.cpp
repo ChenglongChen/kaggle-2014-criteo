@@ -114,6 +114,7 @@ Model train(SpMat const &spmat, Option const &opt)
     std::vector<float> sum(k, 0);
     for(int t = 0; t < opt.iter; ++t)
     {
+        double loss = 0;
         auto y = spmat.yv.begin();
         for(auto p = spmat.pv.begin(); p < spmat.pv.end()-1; ++p, ++y)
         {
@@ -139,6 +140,8 @@ Model train(SpMat const &spmat, Option const &opt)
             float const alpha 
                 = static_cast<float>(-(*y)*exp(-(*y)*r)/(1+exp(-(*y)*r)));
 
+            loss += log(1+exp(-(*y)*r));
+
             sum.assign(k, 0);
             for(size_t const *u = jv_begin; u != jv_end; ++u)
             {
@@ -151,9 +154,10 @@ Model train(SpMat const &spmat, Option const &opt)
             {
                 float * const pu = P+(*u)*k;
                 for(size_t d = 0; d < k; ++d)
-                    pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(nnz)*opt.c*pu[d]);
+                    pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(opt.c*pu[d]));
             }
         }
+        printf("%3d %7.5f\n", t, loss/static_cast<double>(spmat.pv.size()-1));
     }
 
     return model;
