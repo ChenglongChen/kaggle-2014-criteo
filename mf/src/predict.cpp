@@ -44,6 +44,7 @@ void
 predict(SpMat const &spmat, Model const &model, std::string const &output_path)
 {
     size_t const k = model.k;
+    size_t const n = model.n;
     
     FILE *f = open_c_file(output_path, "w");     
 
@@ -60,22 +61,7 @@ predict(SpMat const &spmat, Model const &model, std::string const &output_path)
         size_t const * const jv_begin = spmat.jv.data()+(*p);
         size_t const * const jv_end = spmat.jv.data()+(*(p+1));
         
-        double r = 0;
-        for(size_t const *u = jv_begin; u != jv_end; ++u)
-        {
-            if(*u >= model.n)
-                continue;
-            float const * const pu = P+(*u)*k;
-            for(size_t const *v = u+1; v != jv_end; ++v) 
-            {
-                if(*v >= model.n)
-                    continue;
-                float const * const pv = P+(*v)*k;
-                for(size_t d = 0; d < k; ++d)
-                    r += (*(pu+d))*(*(pv+d));
-            }
-        }
-
+        double const r = calc_rate(k, n, jv_begin, jv_end, P);
 
         fprintf(f, "%f\n", r);
     }
