@@ -24,9 +24,9 @@ struct SpMat
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : n(n), k(k), P(n*k) {} 
+    Model(size_t const n, size_t const k) : n(n), k(k), P(n*k), W(n, 0) {} 
     size_t const n, k; 
-    std::vector<float> P;
+    std::vector<float> P, W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -47,6 +47,7 @@ inline float calc_rate(
     size_t const k = model.k;
     size_t const n = model.n;
     float const * const P = model.P.data();
+    float const * const W = model.W.data();
     
     float r = 0;
     for(size_t const *u = jv_begin; u != jv_end; ++u)
@@ -62,6 +63,9 @@ inline float calc_rate(
             for(size_t d = 0; d < k; ++d)
                 r += (*(pu+d))*(*(pv+d));
         }
+
+        float const * const wu = W+(*u);
+        r += (*wu);
     }
 
     return r;

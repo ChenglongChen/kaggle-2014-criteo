@@ -114,6 +114,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
     Model model(n, k);
     float * const P = model.P.data();
+    float * const W = model.W.data();
     for(size_t i = 0; i < k*n; ++i)
         P[i] = 0.1f*static_cast<float>(drand48());
 
@@ -152,6 +153,9 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 float * const pu = P+(*u)*k;
                 for(size_t d = 0; d < k; ++d)
                     pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(opt.c*pu[d]));
+
+                float * const wu = W+(*u);
+                //*wu = *wu - opt.eta*(1+opt.c*(*wu));
             }
         }
 
@@ -161,7 +165,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             double Va_loss = 0;
             auto y = Va.yv.begin();
-            for(size_t i = 0; i < Tr.pv.size()-1; ++i, ++y)
+            for(size_t i = 0; i < Va.pv.size()-1; ++i, ++y)
             {
                 size_t nnz = Va.pv[i+1]-Va.pv[i];
                 if(nnz <= 1)
