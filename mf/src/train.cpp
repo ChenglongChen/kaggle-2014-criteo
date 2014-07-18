@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 #include "common.h"
 
@@ -116,16 +117,22 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     float * const P = model.P.data();
     float * const W = model.W.data();
     for(size_t i = 0; i < k*n; ++i)
-        P[i] = 0.1f*static_cast<float>(drand48());
+        P[i] = 0.01f*static_cast<float>(drand48());
 
+    std::vector<size_t> order(Tr.pv.size()-1);
+    for(size_t i = 0; i < Tr.pv.size()-1; ++i)
+        order[i] = i;
 
     std::vector<float> sum(k, 0);
     for(int t = 0; t < opt.iter; ++t)
     {
         double Tr_loss = 0;
-        auto y = Tr.yv.begin();
-        for(size_t i = 0; i < Tr.pv.size()-1; ++i, ++y)
+        std::random_shuffle(order.begin(), order.end());
+        for(size_t x = 0; x < Tr.pv.size()-1; ++x)
         {
+            size_t const i = order[x];//rand()%(Tr.pv.size()-1);
+
+            auto y = Tr.yv.begin()+i;
             size_t nnz = Tr.pv[i+1]-Tr.pv[i];
             if(nnz <= 1)
             {
