@@ -136,11 +136,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             size_t const * const jv_begin = Tr.jv.data()+Tr.pv[i];
             size_t const * const jv_end = Tr.jv.data()+Tr.pv[i+1];
             
-            double const r = calc_rate(i, model, jv_begin, jv_end);
-            double const expyr = exp(-(*y)*r);
+            float const r = calc_rate(i, model, jv_begin, jv_end);
+            float const expyr = 
+                static_cast<float>(exp(-static_cast<float>(*y)*r));
 
-            float const alpha 
-                = static_cast<float>(-(*y)*expyr/(1+expyr));
+            float const alpha = -static_cast<float>(*y)*expyr/(1+expyr);
 
             Tr_loss += log(1+expyr);
 

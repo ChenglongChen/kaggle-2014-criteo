@@ -52,9 +52,9 @@ inline float calc_rate(
     float r = 0;
     for(size_t const *u = jv_begin; u != jv_end; ++u)
     {
-        float const * const pu = P+(*u)*k;
         if(*u >= n)
             continue;
+        float const * const pu = P+(*u)*k;
         for(size_t const *v = u+1; v != jv_end; ++v) 
         {
             if(*v >= n)
