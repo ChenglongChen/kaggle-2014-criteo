@@ -21,7 +21,10 @@ with open(args['svm_path'], 'w') as f:
             feats.add((bin, 1))
 
         for i, element in enumerate(row[15:], start=1):
-            bin = hashstr(str(i+20)+element, args['nr_bins'])
+            if element == '':
+                bin = hashstr(str(i+14), args['nr_bins'])
+            else:
+                bin = int(element, 32)%args['nr_bins']
             feats.add((bin, 1))
 
         feats = list(feats)
