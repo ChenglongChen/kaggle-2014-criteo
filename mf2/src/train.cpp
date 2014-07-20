@@ -13,10 +13,10 @@ namespace {
 
 struct Option 
 {
-    Option() : c(1.0f), eta(0.01f), k(2), iter(10) {} ;
+    Option() : c(1.0f), eta(0.01f), k(2), iter(10), n_bar(39) {} ;
     std::string tr_path, model_path, Va_path;
     float c, eta;
-    int k, iter;
+    int k, iter, n_bar;
 };
 
 std::string train_help()
@@ -30,6 +30,7 @@ std::string train_help()
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n"
+"-n <n_bar>: you know\n"
 "\n"
 "Warning: current I supports only binary features\n");
 }
@@ -76,6 +77,12 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.Va_path = args[++i];
         }
+        else if(args[i].compare("-n") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.n_bar = std::stoi(args[++i]);
+        }
         else
         {
             break;
@@ -113,11 +120,14 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     size_t const k = opt.k;
     size_t const n = Tr.n;
 
-    Model model(n, k);
+    Model model(n, k, opt.n_bar);
     float * const P = model.P.data();
-    float * const W = model.W.data();
-    for(size_t i = 0; i < k*n; ++i)
-        P[i] = 0.01f*static_cast<float>(drand48());
+    float * const Q = model.Q.data();
+
+    for(auto &p : model.P)
+        p = 0.01f*static_cast<float>(drand48());
+    for(auto &q : model.Q)
+        q = 0.01f*static_cast<float>(drand48());
 
     std::vector<size_t> order(Tr.pv.size()-1);
     for(size_t i = 0; i < Tr.pv.size()-1; ++i)
@@ -151,22 +161,21 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
             Tr_loss += log(1+expyr);
 
-            sum.assign(k, 0);
+            size_t cell_idx = 0;
             for(size_t const *u = jv_begin; u != jv_end; ++u)
             {
-                float const * const pu = P+(*u)*k;
-                for(size_t d = 0; d < k; ++d)
-                    sum[d] += pu[d];
-            }
-
-            for(size_t const *u = jv_begin; u != jv_end; ++u)
-            {
-                float * const pu = P+(*u)*k;
-                for(size_t d = 0; d < k; ++d)
-                    pu[d] = pu[d] - opt.eta*(alpha*(sum[d]-pu[d])+static_cast<float>(opt.c*pu[d]));
-
-                float * const wu = W+(*u);
-                *wu = *wu - opt.eta*(alpha+opt.c*(*wu));
+                for(size_t const *v = u+1; v != jv_end; ++v, ++cell_idx) 
+                {
+                    size_t const offset = cell_idx*n*k;
+                    float * const pu = P+offset+(*u)*k;
+                    float * const qv = Q+offset+(*v)*k;
+                    for(size_t d = 0; d < k; ++d)
+                    {
+                        float const tmp = pu[d];
+                        pu[d] = pu[d] - opt.eta*(alpha*qv[d]+static_cast<float>(opt.c*pu[d]));
+                        qv[d] = qv[d] - opt.eta*(alpha*tmp  +static_cast<float>(opt.c*qv[d]));
+                    }
+                }
             }
         }
 

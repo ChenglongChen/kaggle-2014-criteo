@@ -24,9 +24,9 @@ struct SpMat
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : n(n), k(k), P(n*k), W(n, 0) {} 
-    size_t const n, k; 
-    std::vector<float> P, W;
+    Model(size_t const n, size_t const k, size_t n_bar) : n(n), k(k), n_bar(n_bar), P(n*k*n_bar*(n_bar-1)/2), Q(n*k*n_bar*(n_bar-1)/2), W(n, 0) {} 
+    size_t const n, k, n_bar; 
+    std::vector<float> P, Q, W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -47,21 +47,24 @@ inline float calc_rate(
     size_t const k = model.k;
     size_t const n = model.n;
     float const * const P = model.P.data();
+    float const * const Q = model.Q.data();
     float const * const W = model.W.data();
     
     float r = 0;
+    size_t cell_idx = 0;
     for(size_t const *u = jv_begin; u != jv_end; ++u)
     {
         if(*u >= n)
             continue;
-        float const * const pu = P+(*u)*k;
-        for(size_t const *v = u+1; v != jv_end; ++v) 
+        for(size_t const *v = u+1; v != jv_end; ++v, ++cell_idx) 
         {
             if(*v >= n)
                 continue;
-            float const * const pv = P+(*v)*k;
+            size_t const offset = cell_idx*n*k;
+            float const * const pu = P+offset+(*u)*k;
+            float const * const qv = Q+offset+(*v)*k;
             for(size_t d = 0; d < k; ++d)
-                r += (*(pu+d))*(*(pv+d));
+                r += (*(pu+d))*(*(qv+d));
         }
 
         float const * const wu = W+(*u);

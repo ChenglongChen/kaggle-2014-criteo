@@ -13,26 +13,26 @@ FILE *open_c_file(std::string const &path, std::string const &mode)
 
 void save_model(Model const &model, std::string const &path)
 {
-    FILE *f = open_c_file(path, "wb");
-    fwrite(&model.n, sizeof(size_t), 1, f);
-    fwrite(&model.k, sizeof(size_t), 1, f);
-    fwrite(model.P.data(), sizeof(float), model.n*model.k, f);
-    fwrite(model.W.data(), sizeof(float), model.n, f);
-    fclose(f);
+    //FILE *f = open_c_file(path, "wb");
+    //fwrite(&model.n, sizeof(size_t), 1, f);
+    //fwrite(&model.k, sizeof(size_t), 1, f);
+    //fwrite(model.P.data(), sizeof(float), model.n*model.k, f);
+    //fwrite(model.W.data(), sizeof(float), model.n, f);
+    //fclose(f);
 }
 
 Model read_model(std::string const &path)
 {
-    FILE *f = open_c_file(path, "rb");
-    size_t n, k;
-    fread(&n, sizeof(size_t), 1, f);
-    fread(&k, sizeof(size_t), 1, f);
-    Model model(n, k);
-    fread(model.P.data(), sizeof(float), model.n*model.k, f);
-    fread(model.W.data(), sizeof(float), model.n, f);
-    fclose(f);
+    //FILE *f = open_c_file(path, "rb");
+    //size_t n, k;
+    //fread(&n, sizeof(size_t), 1, f);
+    //fread(&k, sizeof(size_t), 1, f);
+    //Model model(n, k);
+    //fread(model.P.data(), sizeof(float), model.n*model.k, f);
+    //fread(model.W.data(), sizeof(float), model.n, f);
+    //fclose(f);
 
-    return model;
+    return Model(0, 0, 0);
 }
 
 SpMat read_data(std::string const tr_path)
