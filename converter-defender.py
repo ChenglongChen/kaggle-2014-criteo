@@ -24,7 +24,7 @@ with open(args['svm_path'], 'w') as f:
             if element == '':
                 bin = hashstr(str(i+14), args['nr_bins'])
             else:
-                bin = int(element, 32)%args['nr_bins']
+                bin = int(element, 32)%args['nr_bins']+1
             feats.add((bin, 1))
 
         feats = list(feats)
