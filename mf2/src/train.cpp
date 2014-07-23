@@ -148,11 +148,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
             Tr_loss += log(1+expyr);
 
-            for(auto f : A)
-            {
-                float * const w = &model.W[f][x[f]];
-                *w -= opt.eta*(alpha+opt.lambda*(*w));
-            }
+            //for(auto f : A)
+            //{
+            //    float * const w = &model.W[f][x[f]];
+            //    *w -= opt.eta*(alpha+opt.lambda*(*w));
+            //}
 
             size_t cell = 0;
             for(size_t u = 0; u < B.size(); ++u)
@@ -163,7 +163,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     float * const q = &model.Q[cell][x[B[v]]];
                     for(size_t d = 0; d < model.k; ++d)
                     {
-                        float const t = (*p);
+                        float const t = (*(p+d));
                         *(p+d) -= opt.eta*(alpha*(*(q+d))+opt.lambda*(*(p+d)));
                         *(q+d) -= opt.eta*(alpha*t+opt.lambda*(*(q+d)));
                     }
