@@ -116,9 +116,9 @@ void rand_init_model(Model &model)
         for(size_t v = u+1; v < FieldSizes.size(); ++v, ++cell)
         {
             for(auto &p : model.P[cell])
-                p = 0.01f*static_cast<float>(drand48());
+                p = 0.1f*static_cast<float>(drand48());
             for(auto &q : model.Q[cell])
-                q = 0.01f*static_cast<float>(drand48());
+                q = 0.1f*static_cast<float>(drand48());
         }
     }
 }
@@ -164,8 +164,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     for(size_t d = 0; d < model.k; ++d)
                     {
                         float const t = (*(p+d));
-                        *(p+d) -= opt.eta*(alpha*(*(q+d))+opt.lambda*(*(p+d)));
-                        *(q+d) -= opt.eta*(alpha*t+opt.lambda*(*(q+d)));
+                        *(p+d) -= 10*opt.eta*(alpha*(*(q+d))+opt.lambda*(*(p+d)));
+                        *(q+d) -= 10*opt.eta*(alpha*t+opt.lambda*(*(q+d)));
                     }
                 }
             }
