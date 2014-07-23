@@ -123,6 +123,17 @@ void rand_init_model(Model &model)
     }
 }
 
+float qrsqrt(float x)
+{
+  float xhalf = 0.5f*x;
+  uint32_t i;
+  std::memcpy(&i, &x, sizeof(i));
+  i = 0x5f375a86 - (i>>1);
+  std::memcpy(&x, &i, sizeof(i));
+  x = x*(1.5f - xhalf*x*x);
+  return x;
+}
+
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     Model model(opt.k, FieldSizes);
@@ -151,7 +162,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             for(auto f : A)
             {
                 float * const w = &model.W[f][x[f]];
-                *w -= opt.eta*(alpha+opt.lambda*(*w));
+                float * const wG = &model.WG[f][x[f]];
+                float const g = alpha+opt.lambda*(*w);
+                *wG += g*g;
+                float const eta = opt.eta*qrsqrt(*wG);
+                *w -= eta*g;
             }
 
             size_t cell = 0;
@@ -160,12 +175,22 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 for(size_t v = u+1; v < B.size(); ++v, ++cell)
                 {
                     float * const p = &model.P[cell][x[B[u]]*model.k];
+                    float * const pG = &model.PG[cell][x[B[u]]*model.k];
                     float * const q = &model.Q[cell][x[B[v]]*model.k];
+                    float * const qG = &model.QG[cell][x[B[v]]*model.k];
                     for(size_t d = 0; d < model.k; ++d)
                     {
-                        float const t = (*(p+d));
-                        *(p+d) -= 10*opt.eta*(alpha*(*(q+d))+opt.lambda*(*(p+d)));
-                        *(q+d) -= 10*opt.eta*(alpha*t+opt.lambda*(*(q+d)));
+                        float const pg = alpha*(*(q+d))+opt.lambda*(*(p+d));
+                        float const qg = alpha*(*(p+d))+opt.lambda*(*(q+d));
+
+                        *(pG+d) += pg*pg;
+                        *(qG+d) += qg*qg;
+
+                        float const eta_p = opt.eta*qrsqrt(*(pG+d));
+                        float const eta_q = opt.eta*qrsqrt(*(qG+d));
+
+                        *(p+d) -= eta_p*pg;
+                        *(q+d) -= eta_q*qg;
                     }
                 }
             }

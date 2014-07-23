@@ -27,18 +27,23 @@ struct Model
         : k(k)
     {
         for(auto size : fields_sizes)
+        {
             W.emplace_back(size, 0); 
+            WG.emplace_back(size, 0); 
+        }
         for(size_t u = 0; u < fields_sizes.size(); ++u)
         {
             for(size_t v = u+1; v < fields_sizes.size(); ++v)
             {
                 P.emplace_back(fields_sizes[u]*k);
+                PG.emplace_back(fields_sizes[u]*k, 0);
                 Q.emplace_back(fields_sizes[v]*k);
+                QG.emplace_back(fields_sizes[v]*k, 0);
             }
         }
     }
     size_t const k; 
-    std::vector<std::vector<float>> W, P, Q;
+    std::vector<std::vector<float>> W, WG, P, PG, Q, QG;
 };
 
 void save_model(Model const &model, std::string const &path);
