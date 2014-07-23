@@ -9,69 +9,60 @@
 #include <string>
 #include <vector>
 
-typedef unsigned int uint;
-typedef unsigned long long ull;
-
-FILE *open_c_file(std::string const &path, std::string const &mode);
+extern std::vector<size_t> const FieldSizes;
+extern std::vector<size_t> const A;
+extern std::vector<size_t> const B;
 
 struct SpMat
 {
-    SpMat() : n(0) {}
-    std::vector<int> yv;
-    std::vector<size_t> pv, jv;
-    size_t n;
+    std::vector<int> Y;
+    std::vector<size_t> X;
 };
+
+SpMat read_data(std::string const tr_path);
 
 struct Model
 {
-    Model(size_t const n, size_t const k, size_t n_bar) : n(n), k(k), n_bar(n_bar), P(n*k*n_bar*(n_bar-1)/2), Q(n*k*n_bar*(n_bar-1)/2), W(n, 0) {} 
-    size_t const n, k, n_bar; 
-    std::vector<float> P, Q, W;
+    Model(size_t const k, std::vector<size_t> const &fields_sizes) 
+        : k(k)
+    {
+        for(auto size : fields_sizes)
+            W.emplace_back(size, 0); 
+        for(size_t u = 0; u < fields_sizes.size(); ++u)
+        {
+            for(size_t v = u+1; v < fields_sizes.size(); ++v)
+            {
+                P.emplace_back(fields_sizes[u]*k);
+                Q.emplace_back(fields_sizes[v]*k);
+            }
+        }
+    }
+    size_t const k; 
+    std::vector<std::vector<float>> W, P, Q;
 };
 
 void save_model(Model const &model, std::string const &path);
 
 Model read_model(std::string const &path);
 
-SpMat read_data(std::string const tr_path);
+inline float calc_rate(
+    Model const &model,
+    size_t const * const x)
+{
+    float r = 0;
+    for(auto f : A)
+        r += model.W[f][x[f]]; 
+    size_t cell = 0;
+    for(size_t u = 0; u < B.size(); ++u)
+        for(size_t v = u+1; v < B.size(); ++v, ++cell)
+            for(size_t d = 0; d < model.k; ++d)
+                r += model.P[cell][x[B[u]]]*model.Q[cell][x[B[v]]];
+    return r;
+}
+
+FILE *open_c_file(std::string const &path, std::string const &mode);
 
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
-
-inline float calc_rate(
-    size_t const i, 
-    Model const &model, 
-    size_t const * const jv_begin, 
-    size_t const * const jv_end)
-{
-    size_t const k = model.k;
-    size_t const n = model.n;
-    float const * const P = model.P.data();
-    float const * const Q = model.Q.data();
-    float const * const W = model.W.data();
-    
-    float r = 0;
-    size_t cell_idx = 0;
-    for(size_t const *u = jv_begin; u != jv_end; ++u)
-    {
-        if(*u >= n)
-            continue;
-        for(size_t const *v = u+1; v != jv_end; ++v, ++cell_idx) 
-        {
-            if(*v >= n)
-                continue;
-            size_t const offset = cell_idx*n*k;
-            float const * const pu = P+offset+(*u)*k;
-            float const * const qv = Q+offset+(*v)*k;
-            for(size_t d = 0; d < k; ++d)
-                r += (*(pu+d))*(*(qv+d));
-        }
-
-        float const * const wu = W+(*u);
-        r += (*wu);
-    }
-
-    return r;
-}
 
 #endif // _COMMON_H_

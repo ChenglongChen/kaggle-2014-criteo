@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x 
-MAIN = mf-train mf-predict
+MAIN = mf-train #mf-predict
 FILES = common.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)
