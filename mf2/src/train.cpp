@@ -30,7 +30,6 @@ std::string train_help()
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n"
-"-m <path>: you know\n"
 "\n"
 "Warning: current I supports only binary features\n");
 }
@@ -77,12 +76,6 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.Va_path = args[++i];
         }
-        else if(args[i].compare("-m") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            option.meta_path = args[++i];
-        }
         else
         {
             break;
@@ -111,9 +104,6 @@ Option parse_option(std::vector<std::string> const &args)
     {
         throw std::invalid_argument("invalid argument");
     }
-
-    if(option.meta_path.empty())
-        throw std::invalid_argument("please specify meta path");
 
     return option;
 }
@@ -145,13 +135,13 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     for(size_t t = 0; t < opt.iter; ++t)
     {
         double Tr_loss = 0;
-        std::random_shuffle(order.begin(), order.end());
+        //std::random_shuffle(order.begin(), order.end());
         for(size_t i_ = 0; i_ < Tr.Y.size(); ++i_)
         {
-            size_t const i = order[i_];
+            size_t const i = i_;
             size_t const * const x = Tr.X.data()+i*FieldSizes.size();
             float const y = static_cast<float>(Tr.Y[i]);
-            
+
             float const r = calc_rate(model, x);
             float const expyr = static_cast<float>(exp(-y*r));
             float const alpha = -y*expyr/(1+expyr);
