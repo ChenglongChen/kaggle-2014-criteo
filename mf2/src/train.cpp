@@ -135,10 +135,10 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     for(size_t t = 0; t < opt.iter; ++t)
     {
         double Tr_loss = 0;
-        //std::random_shuffle(order.begin(), order.end());
+        std::random_shuffle(order.begin(), order.end());
         for(size_t i_ = 0; i_ < Tr.Y.size(); ++i_)
         {
-            size_t const i = i_;
+            size_t const i = order[i_];
             size_t const * const x = Tr.X.data()+i*FieldSizes.size();
             float const y = static_cast<float>(Tr.Y[i]);
 
@@ -151,7 +151,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             for(auto f : A)
             {
                 float * const w = &model.W[f][x[f]];
-                *w -= opt.eta*(alpha+opt.lambda+(*w));
+                *w -= opt.eta*(alpha+opt.lambda*(*w));
             }
 
             size_t cell = 0;
