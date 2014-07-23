@@ -56,7 +56,7 @@ inline float calc_rate(
     for(size_t u = 0; u < B.size(); ++u)
         for(size_t v = u+1; v < B.size(); ++v, ++cell)
             for(size_t d = 0; d < model.k; ++d)
-                r += model.P[cell][x[B[u]]]*model.Q[cell][x[B[v]]];
+                r += model.P[cell][x[B[u]]*model.k+d]*model.Q[cell][x[B[v]]*model.k+d];
     return r;
 }
 

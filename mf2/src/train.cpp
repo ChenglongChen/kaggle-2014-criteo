@@ -159,8 +159,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 for(size_t v = u+1; v < B.size(); ++v, ++cell)
                 {
-                    float * const p = &model.P[cell][x[B[u]]];
-                    float * const q = &model.Q[cell][x[B[v]]];
+                    float * const p = &model.P[cell][x[B[u]]*model.k];
+                    float * const q = &model.Q[cell][x[B[v]]*model.k];
                     for(size_t d = 0; d < model.k; ++d)
                     {
                         float const t = (*(p+d));
