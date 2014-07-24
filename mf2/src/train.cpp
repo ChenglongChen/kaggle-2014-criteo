@@ -116,9 +116,9 @@ void rand_init_model(Model &model)
         for(size_t v = u+1; v < FieldSizes.size(); ++v, ++cell)
         {
             for(auto &p : model.P[cell])
-                p = 0.1f*static_cast<float>(drand48());
+                p = 0.01f*static_cast<float>(drand48());
             for(auto &q : model.Q[cell])
-                q = 0.1f*static_cast<float>(drand48());
+                q = 0.01f*static_cast<float>(drand48());
         }
     }
 }
