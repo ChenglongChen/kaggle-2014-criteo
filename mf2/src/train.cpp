@@ -155,7 +155,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
             float const r = calc_rate(model, x);
             float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*y*r)));
-            float const kappa = static_cast<float>(ALPHA*BETA*GAMMA*exp(-BETA*exp(-GAMMA*y*r)-GAMMA*y*r));
+            float const kappa = static_cast<float>(ALPHA*BETA*GAMMA*y*exp(-BETA*exp(-GAMMA*y*r)-GAMMA*y*r));
 
             Tr_loss += log(1+expyr);
 
