@@ -13,6 +13,10 @@ extern std::vector<size_t> const FieldSizes;
 extern std::vector<size_t> const A;
 extern std::vector<size_t> const B;
 
+extern float const ALPHA;
+extern float const BETA;
+extern float const GAMMA;
+
 struct SpMat
 {
     std::vector<int> Y;

@@ -154,8 +154,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             float const y = static_cast<float>(Tr.Y[i]);
 
             float const r = calc_rate(model, x);
-            float const expyr = static_cast<float>(exp(-y*r));
-            float const alpha = -y*expyr/(1+expyr);
+            float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*y*r)));
+            float const kappa = static_cast<float>(ALPHA*BETA*GAMMA*exp(-BETA*exp(-GAMMA*y*r)-GAMMA*y*r));
 
             Tr_loss += log(1+expyr);
 
@@ -163,7 +163,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 float * const w = &model.W[f][x[f]];
                 float * const wG = &model.WG[f][x[f]];
-                float const g = alpha+opt.lambda*(*w);
+                float const g = kappa+opt.lambda*(*w);
                 *wG += g*g;
                 float const eta = opt.eta*qrsqrt(*wG);
                 *w -= eta*g;
@@ -180,8 +180,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     float * const qG = &model.QG[cell][x[B[v]]*model.k];
                     for(size_t d = 0; d < model.k; ++d)
                     {
-                        float const pg = alpha*(*(q+d))+opt.lambda*(*(p+d));
-                        float const qg = alpha*(*(p+d))+opt.lambda*(*(q+d));
+                        float const pg = kappa*(*(q+d))+opt.lambda*(*(p+d));
+                        float const qg = kappa*(*(p+d))+opt.lambda*(*(q+d));
 
                         *(pG+d) += pg*pg;
                         *(qG+d) += qg*qg;
@@ -208,7 +208,9 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
                 float const r = calc_rate(model, x);
 
-                Va_loss += log(1+exp(-y*r));
+                float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*y*r)));
+
+                Va_loss += log(1+expyr);
             }
             printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }
