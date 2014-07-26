@@ -154,10 +154,10 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             float const y = static_cast<float>(Tr.Y[i]);
 
             float const r = calc_rate(model, x);
-            float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*y*r)));
+            float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*r)));
             float const kappa = static_cast<float>(ALPHA*BETA*GAMMA*y*exp(-BETA*exp(-GAMMA*y*r)-GAMMA*y*r));
 
-            Tr_loss += log(1+expyr);
+            Tr_loss -= (y==1)? log(1-expyr) : log(expyr);
 
             for(auto f : A)
             {
@@ -208,9 +208,9 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
                 float const r = calc_rate(model, x);
 
-                float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*y*r)));
+                float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*r)));
 
-                Va_loss += log(1+expyr);
+                Va_loss -= (y==1)? log(1-expyr) : log(expyr);
             }
             printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }

@@ -16,7 +16,7 @@ std::vector<size_t> const A = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
 std::vector<size_t> const B = {};
 
 float const ALPHA = 1;
-float const BETA = 1;
+float const BETA = 2;
 float const GAMMA = 1;
 
 SpMat read_data(std::string const tr_path)
