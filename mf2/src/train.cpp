@@ -11,12 +11,12 @@
 
 namespace {
 
-struct Option 
+struct Option
 {
-    Option() : c(1.0f), eta(0.01f), k(2), iter(10), n_bar(39) {} ;
-    std::string tr_path, model_path, Va_path;
-    float c, eta;
-    int k, iter, n_bar;
+    Option() : lambda(1.0f), eta(0.01f), k(2), iter(10) {}
+    std::string tr_path, model_path, meta_path, Va_path;
+    float lambda, eta;
+    size_t k, iter;
 };
 
 std::string train_help()
@@ -26,11 +26,10 @@ std::string train_help()
 "\n"
 "options:\n"
 "-k <dim>: you know\n"
-"-c <penalty>: you know\n"
+"-l <penalty>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n"
-"-n <n_bar>: you know\n"
 "\n"
 "Warning: current I supports only binary features\n");
 }
@@ -53,11 +52,11 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.k = std::stoi(args[++i]);
         }
-        else if(args[i].compare("-c") == 0)
+        else if(args[i].compare("-l") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.c = std::stof(args[++i]);
+            option.lambda = std::stof(args[++i]);
         }
         else if(args[i].compare("-t") == 0)
         {
@@ -76,12 +75,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             option.Va_path = args[++i];
-        }
-        else if(args[i].compare("-n") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            option.n_bar = std::stoi(args[++i]);
         }
         else
         {
@@ -115,93 +108,111 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
+void rand_init_model(Model &model)
+{
+    size_t cell = 0;
+    for(size_t u = 0; u < FieldSizes.size(); ++u)
+    {
+        for(size_t v = u+1; v < FieldSizes.size(); ++v, ++cell)
+        {
+            for(auto &p : model.P[cell])
+                p = 0.01f*static_cast<float>(drand48());
+            for(auto &q : model.Q[cell])
+                q = 0.01f*static_cast<float>(drand48());
+        }
+    }
+}
+
+float qrsqrt(float x)
+{
+  float xhalf = 0.5f*x;
+  uint32_t i;
+  std::memcpy(&i, &x, sizeof(i));
+  i = 0x5f375a86 - (i>>1);
+  std::memcpy(&x, &i, sizeof(i));
+  x = x*(1.5f - xhalf*x*x);
+  return x;
+}
+
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    size_t const k = opt.k;
-    size_t const n = Tr.n;
+    Model model(opt.k, FieldSizes);
+    rand_init_model(model);
 
-    Model model(n, k, opt.n_bar);
-    float * const P = model.P.data();
-    float * const Q = model.Q.data();
-
-    for(auto &p : model.P)
-        p = 0.01f*static_cast<float>(drand48());
-    for(auto &q : model.Q)
-        q = 0.01f*static_cast<float>(drand48());
-
-    std::vector<size_t> order(Tr.pv.size()-1);
-    for(size_t i = 0; i < Tr.pv.size()-1; ++i)
+    std::vector<size_t> order(Tr.Y.size());
+    for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
 
-    std::vector<float> sum(k, 0);
-    for(int t = 0; t < opt.iter; ++t)
+    for(size_t t = 0; t < opt.iter; ++t)
     {
         double Tr_loss = 0;
         std::random_shuffle(order.begin(), order.end());
-        for(size_t x = 0; x < Tr.pv.size()-1; ++x)
+        for(size_t i_ = 0; i_ < Tr.Y.size(); ++i_)
         {
-            size_t const i = order[x];//rand()%(Tr.pv.size()-1);
+            size_t const i = order[i_];
+            size_t const * const x = Tr.X.data()+i*FieldSizes.size();
+            float const y = static_cast<float>(Tr.Y[i]);
 
-            auto y = Tr.yv.begin()+i;
-            size_t nnz = Tr.pv[i+1]-Tr.pv[i];
-            if(nnz <= 1)
+            float const r = calc_rate(model, x);
+            float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*r)));
+            float const kappa = static_cast<float>(ALPHA*BETA*GAMMA*y*exp(-BETA*exp(-GAMMA*y*r)-GAMMA*y*r));
+
+            Tr_loss -= (y==1)? log(1-expyr) : log(expyr);
+
+            for(auto f : A)
             {
-                Tr_loss += log(2);
-                continue;
+                float * const w = &model.W[f][x[f]];
+                float * const wG = &model.WG[f][x[f]];
+                float const g = kappa+opt.lambda*(*w);
+                *wG += g*g;
+                float const eta = opt.eta*qrsqrt(*wG);
+                *w -= eta*g;
             }
 
-            size_t const * const jv_begin = Tr.jv.data()+Tr.pv[i];
-            size_t const * const jv_end = Tr.jv.data()+Tr.pv[i+1];
-            
-            float const r = calc_rate(i, model, jv_begin, jv_end);
-            float const expyr = 
-                static_cast<float>(exp(-static_cast<float>(*y)*r));
-
-            float const alpha = -static_cast<float>(*y)*expyr/(1+expyr);
-
-            Tr_loss += log(1+expyr);
-
-            size_t cell_idx = 0;
-            for(size_t const *u = jv_begin; u != jv_end; ++u)
+            size_t cell = 0;
+            for(size_t u = 0; u < B.size(); ++u)
             {
-                for(size_t const *v = u+1; v != jv_end; ++v, ++cell_idx) 
+                for(size_t v = u+1; v < B.size(); ++v, ++cell)
                 {
-                    size_t const offset = cell_idx*n*k;
-                    float * const pu = P+offset+(*u)*k;
-                    float * const qv = Q+offset+(*v)*k;
-                    for(size_t d = 0; d < k; ++d)
+                    float * const p = &model.P[cell][x[B[u]]*model.k];
+                    float * const pG = &model.PG[cell][x[B[u]]*model.k];
+                    float * const q = &model.Q[cell][x[B[v]]*model.k];
+                    float * const qG = &model.QG[cell][x[B[v]]*model.k];
+                    for(size_t d = 0; d < model.k; ++d)
                     {
-                        float const tmp = pu[d];
-                        pu[d] = pu[d] - opt.eta*(alpha*qv[d]+static_cast<float>(opt.c*pu[d]));
-                        qv[d] = qv[d] - opt.eta*(alpha*tmp  +static_cast<float>(opt.c*qv[d]));
+                        float const pg = kappa*(*(q+d))+opt.lambda*(*(p+d));
+                        float const qg = kappa*(*(p+d))+opt.lambda*(*(q+d));
+
+                        *(pG+d) += pg*pg;
+                        *(qG+d) += qg*qg;
+
+                        float const eta_p = opt.eta*qrsqrt(*(pG+d));
+                        float const eta_q = opt.eta*qrsqrt(*(qG+d));
+
+                        *(p+d) -= eta_p*pg;
+                        *(q+d) -= eta_q*qg;
                     }
                 }
             }
         }
 
-        printf("%3d %7.5f", t, Tr_loss/static_cast<double>(Tr.pv.size()-1));
+        printf("%3ld %7.5f", t, Tr_loss/static_cast<double>(Tr.Y.size()));
 
-        if(Va.n != 0)
+        if(Va.Y.size() != 0)
         {
             double Va_loss = 0;
-            auto y = Va.yv.begin();
-            for(size_t i = 0; i < Va.pv.size()-1; ++i, ++y)
+            for(size_t i = 0; i < Va.Y.size(); ++i)
             {
-                size_t nnz = Va.pv[i+1]-Va.pv[i];
-                if(nnz <= 1)
-                {
-                    Va_loss += log(2);
-                    continue;
-                }
+                size_t const * const x = Va.X.data()+i*FieldSizes.size();
+                float const y = static_cast<float>(Va.Y[i]);
 
-                size_t const * const jv_begin = Va.jv.data()+Va.pv[i];
-                size_t const * const jv_end = Va.jv.data()+Va.pv[i+1];
-            
-                double const r = calc_rate(i, model, jv_begin, jv_end);
+                float const r = calc_rate(model, x);
 
-                Va_loss += log(1+exp(-(*y)*r));
+                float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*r)));
+
+                Va_loss -= (y==1)? log(1-expyr) : log(expyr);
             }
-            printf(" %7.5f", Va_loss/static_cast<double>(Va.pv.size()-1));
+            printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }
         printf("\n");
     }
@@ -224,7 +235,7 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    SpMat Tr = read_data(opt.tr_path);
+    SpMat const Tr = read_data(opt.tr_path);
 
     SpMat Va;
     if(!opt.Va_path.empty())
@@ -232,7 +243,7 @@ int main(int const argc, char const * const * const argv)
 
     Model model = train(Tr, Va, opt);
 
-    save_model(model, opt.model_path);
+    //save_model(model, opt.model_path);
 
     return EXIT_SUCCESS;
 }
