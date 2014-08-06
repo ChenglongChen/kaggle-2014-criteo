@@ -101,12 +101,12 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-inline double calc_prob(double const t)
+double logistic_func(double const t)
 {
     return 1/(1+exp(-t));
 }
 
-inline double calc_prob_dt(double const t)
+double logistic_func_dt(double const t)
 {
     double const expt = exp(-t);
     return expt/((1+expt)*(1+expt));
@@ -125,6 +125,9 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
+    double (*calc_prob) (double const t) = &logistic_func;
+    double (*calc_prob_dt) (double const t) = &logistic_func_dt;
+
     Model model(Tr.n);
 
     std::vector<size_t> order(Tr.Y.size());
