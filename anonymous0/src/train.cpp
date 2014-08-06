@@ -167,13 +167,15 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     double (*calc_prob) (double const t) = &normal_dist;
     double (*calc_prob_dt) (double const t) = &normal_dist_dt;
 
+    FILE *f = open_c_file("out.txt", "w");
+
     Model model(Tr.n);
 
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
 
-    for(size_t t = 0; t < opt.iter; ++t)
+    for(size_t iter = 0; iter < opt.iter; ++iter)
     {
         double Tr_loss = 0;
         std::random_shuffle(order.begin(), order.end());
@@ -203,7 +205,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             }
         }
 
-        printf("%3ld %7.5f", t, Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %7.5f", iter, Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
         {
@@ -219,11 +221,16 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 double const prob = calc_prob(t);
 
                 Va_loss -= y*log(prob) + (1-y)*log(1-prob);
+
+                if(iter == opt.iter-1)
+                    fprintf(f, "%lf\n", prob);
             }
             printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }
         printf("\n");
     }
+
+    fclose(f);
 
     return model;
 }
