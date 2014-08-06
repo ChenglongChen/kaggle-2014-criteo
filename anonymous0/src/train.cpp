@@ -128,15 +128,13 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t const i = order[i_];
 
-            int const y = Tr.Y[i];
+            double const y = static_cast<double>(Tr.Y[i]);
             
             double t = 0;
             for(size_t idx = Tr.P[i]; idx < Tr.P[i+1]; ++idx)
                 t += model.W[Tr.J[idx]];
             
             double const prob = calc_prob(t);
-
-            //printf("DB1: %lf, %lf\n", t, prob);
 
             Tr_loss -= y*log(prob) + (1-y)*log(1-prob);
                
@@ -152,22 +150,23 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
         printf("%3ld %7.5f", t, Tr_loss/static_cast<double>(Tr.Y.size()));
 
-        //if(Va.Y.size() != 0)
-        //{
-        //    double Va_loss = 0;
-        //    for(size_t i = 0; i < Va.Y.size(); ++i)
-        //    {
-        //        size_t const * const x = Va.X.data()+i*FieldSizes.size();
-        //        float const y = static_cast<float>(Va.Y[i]);
+        if(Va.Y.size() != 0)
+        {
+            double Va_loss = 0;
+            for(size_t i = 0; i < Va.Y.size(); ++i)
+            {
+                double const y = static_cast<double>(Va.Y[i]);
 
-        //        float const r = calc_rate(model, x);
+                double t = 0;
+                for(size_t idx = Va.P[i]; idx < Va.P[i+1]; ++idx)
+                    t += model.W[Va.J[idx]];
+                
+                double const prob = calc_prob(t);
 
-        //        float const expyr = static_cast<float>(ALPHA*exp(-BETA*exp(-GAMMA*r)));
-
-        //        Va_loss -= (y==1)? log(1-expyr) : log(expyr);
-        //    }
-        //    printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
-        //}
+                Va_loss -= y*log(prob) + (1-y)*log(1-prob);
+            }
+            printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
+        }
         printf("\n");
     }
 
