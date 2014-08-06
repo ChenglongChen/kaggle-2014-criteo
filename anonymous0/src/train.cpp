@@ -112,6 +112,17 @@ inline double calc_prob_dt(double const t)
     return expt/((1+expt)*(1+expt));
 }
 
+inline float qrsqrt(float x)
+{
+  float xhalf = 0.5f*x;
+  uint32_t i;
+  std::memcpy(&i, &x, sizeof(i));
+  i = 0x5f375a86 - (i>>1);
+  std::memcpy(&x, &i, sizeof(i));
+  x = x*(1.5f - xhalf*x*x);
+  return x;
+}
+
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     Model model(Tr.n);
@@ -143,8 +154,10 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             for(size_t idx = Tr.P[i]; idx < Tr.P[i+1]; ++idx)
             {
                 double &w = model.W[Tr.J[idx]];
+                double &wG = model.WG[Tr.J[idx]];
                 double const g = opt.lambda*w + kappa;
-                w = w - opt.eta*g;
+                wG += g*g;
+                w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
             }
         }
 
