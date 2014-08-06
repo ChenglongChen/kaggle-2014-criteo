@@ -164,8 +164,8 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    double (*calc_prob) (double const t) = &normal_dist;
-    double (*calc_prob_dt) (double const t) = &normal_dist_dt;
+    double (*calc_prob) (double const t) = &logistic_func;
+    double (*calc_prob_dt) (double const t) = &logistic_func_dt;
 
     FILE *f = open_c_file("out.txt", "w");
 
