@@ -112,6 +112,45 @@ double logistic_func_dt(double const t)
     return expt/((1+expt)*(1+expt));
 }
 
+size_t const kSize = 100;
+
+inline double sum1(double const t)
+{
+    double value = t;
+    double sum = t;
+    for(size_t i = 1; i <= kSize; ++i)
+    {
+        value = value*t*t/(2*static_cast<double>(i)+1);
+        sum += value;
+    }
+
+    return sum;
+}
+
+inline double sum2(double const t)
+{
+    double value = 1;
+    double sum = 1;
+    for(size_t i = 1; i < kSize; ++i)
+    {
+        value = value*t*t/(2*static_cast<double>(i-1)+1);
+        sum += value;
+    }
+
+    return sum;
+}
+
+double normal_dist(double const t)
+{
+    return 0.5+(1/(sqrt(2*3.1416)))*exp(-t*t/2)*sum1(t);
+}
+
+double normal_dist_dt(double const t)
+{
+    return (1/(sqrt(2*3.1416)))*(exp(-t*t/2)*(-t)*sum1(t)+exp(-t*t/2)*sum2(t));
+}
+
+
 inline float qrsqrt(float x)
 {
   float xhalf = 0.5f*x;
@@ -125,8 +164,8 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    double (*calc_prob) (double const t) = &logistic_func;
-    double (*calc_prob_dt) (double const t) = &logistic_func_dt;
+    double (*calc_prob) (double const t) = &normal_dist;
+    double (*calc_prob_dt) (double const t) = &normal_dist_dt;
 
     Model model(Tr.n);
 
