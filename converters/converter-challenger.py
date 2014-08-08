@@ -15,6 +15,13 @@ args = vars(parser.parse_args())
 
 NR_BINS = args['nr_bins']
 
+frequent_feats = set()
+for row in csv.DictReader(open('tmp.txt')):
+    total = int(row['Total'])
+    if total < 3:
+        continue
+    frequent_feats.add(row['Field']+row['Value'])
+
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = set()
@@ -27,19 +34,21 @@ with open(args['svm_path'], 'w') as f:
                 value = int(math.log(float(value)+1))
             elif j in [2, 3, 6, 7, 9] and value != '':
                 value = int(float(value)/10)
-            bin = hashstr(str(j)+str(value), NR_BINS)+1
+            bin = hashstr(str(j)+str(value), NR_BINS)
             feats.add((bin, 0.16))
 
         for j in range(1, 27):
             if j in [11, 21]:
                 continue
-            value = row['C{0}'.format(j)]
+            field = 'C{0}'.format(j)
+            value = row[field]
             if value == '':
-                if j in [4, 12, 16, 21, 24, 20, 25, 26]:
-                    continue
-                bin = hashstr(str(j)+str(value), NR_BINS)+1
+                bin = hashstr(str(j)+str(value), NR_BINS)
             else:
-                bin = int(value, 32)%NR_BINS+1
+                if field+value in frequent_feats:
+                    bin = int(value, 32)%NR_BINS
+                else:
+                    bin = hashstr(str(j)+'XXXXX', NR_BINS)
             feats.add((bin, 0.16))
 
         feats = list(feats)

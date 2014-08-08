@@ -11,4 +11,4 @@ def open_csv_skip_first_line(path):
     return f
 
 def hashstr(str, nr_bins):
-    return int(hashlib.md5(str.encode('utf8')).hexdigest(), 16)%nr_bins
+    return int(hashlib.md5(str.encode('utf8')).hexdigest(), 16)%(nr_bins-1)+1
