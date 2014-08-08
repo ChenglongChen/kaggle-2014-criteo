@@ -35,6 +35,8 @@ with open(args['svm_path'], 'w') as f:
                 continue
             value = row['C{0}'.format(j)]
             if value == '':
+                if j in [4, 12, 16, 21, 24, 20, 25, 26]:
+                    continue
                 bin = hashstr(str(j)+str(value), NR_BINS)+1
             else:
                 bin = int(value, 32)%NR_BINS+1
