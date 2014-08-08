@@ -25,5 +25,5 @@ for row in csv.DictReader(open(args['csv_path'])):
         counts[field+','+value][2] += 1
 
 print('Field,Value,Neg,Pos,Total')
-for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1]):
+for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
     print(key+','+str(neg)+','+str(pos)+','+str(total))
