@@ -37,7 +37,7 @@ with open(args['svm_path'], 'w') as f:
             if value == '':
                 bin = hashstr(str(j)+str(value), NR_BINS)
             else:
-                bin = int(value, 32)%NR_BINS
+                bin = int(value, 32)%NR_BINS+1
             feats.add((bin, 0.16))
 
         feats = list(feats)
