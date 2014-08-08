@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, multiprocessing
+import subprocess, sys, multiprocessing, argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', '--size', type=int, default=100)
+args = vars(parser.parse_args())
 
 def run(c, queue):
-    cmd = './supertrain -s 7 -c {0} tr.r{1}.svm model.{0} && ./superpredict va.r{1}.svm model.{0} /dev/null'.format(c, 100)
+    cmd = './supertrain -s 7 -c {0} tr.r{1}.svm model.{0} && ./superpredict va.r{1}.svm model.{0} /dev/null'.format(c, args['size'])
     output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
     for line in output:
         line = line.decode('utf-8')
