@@ -13,21 +13,23 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
+NR_BINS = args['nr_bins']
+
 with open(args['svm_path'], 'w') as f:
-    for i, row in enumerate(open_csv_skip_first_line(args['csv_path'])):
+    for row in csv.DictReader(open(args['csv_path'])):
         feats = set()
-        for i, element in enumerate(row[2:15], start=1):
-            bin = hashstr(str(i)+str(element), args['nr_bins'])
+        for j in range(1, 14):
+            value = row['I{0}'.format(j)]
+            bin = hashstr(str(j)+str(value), NR_BINS)+1
             feats.add((bin, 1))
-
-        for i, element in enumerate(row[15:], start=1):
-            if element == '':
-                bin = hashstr(str(i+14), args['nr_bins'])
+        for j in range(1, 27):
+            value = row['C{0}'.format(j)]
+            if value == '':
+                bin = hashstr(str(j)+str(value), NR_BINS)+1
             else:
-                bin = int(element, 32)%args['nr_bins']+1
+                bin = int(value, 32)%NR_BINS+1
             feats.add((bin, 1))
-
         feats = list(feats)
         feats.sort()
         feats = ['{0}:{1}'.format(idx, val) for (idx, val) in feats]
-        f.write(row[1] + ' ' + ' '.join(feats) + '\n')
+        f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
