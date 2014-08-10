@@ -18,7 +18,7 @@ for row in csv.DictReader(open('logs/trva.feature_counts.t{0}.log'.format(args['
     valid_feats.add(row['Field']+'-'+row['Value'])
 
 poly2_counts = collections.defaultdict(lambda : [0, 0, 0])
-for row in csv.DictReader(open(args['csv_path'])):
+for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
     feats = gen_feats(row)
     for feat1, feat2 in itertools.combinations(feats, 2):
         if feat1 not in valid_feats or feat2 not in valid_feats:
@@ -29,6 +29,8 @@ for row in csv.DictReader(open(args['csv_path'])):
         else:
             poly2_counts[feat][1] += 1
         poly2_counts[feat][2] += 1
+    if i % 100000 == 0:
+        print('{0}k'.format(int(i/1000)))
 
 print('Key,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(poly2_counts.items(), key=lambda x: x[1][2]):
