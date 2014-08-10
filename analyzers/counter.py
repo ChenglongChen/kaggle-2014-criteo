@@ -24,6 +24,7 @@ for row in csv.DictReader(open(args['csv_path'])):
             counts[field+','+value][1] += 1
         counts[field+','+value][2] += 1
 
-print('Field,Value,Neg,Pos,Total')
+print('Field,Value,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
-    print(key+','+str(neg)+','+str(pos)+','+str(total))
+    ratio = round(float(pos)/total, 5)
+    print(key+','+str(neg)+','+str(pos)+','+str(total)+','+str(ratio))
