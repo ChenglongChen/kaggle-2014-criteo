@@ -20,9 +20,13 @@ for row in csv.DictReader(open('logs/trva.feature_counts.t{0}.log'.format(args['
 poly2_counts = collections.defaultdict(lambda : [0, 0, 0])
 for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
     feats = gen_feats(row)
-    for feat1, feat2 in itertools.combinations(feats, 2):
-        if feat1 not in valid_feats or feat2 not in valid_feats:
+    tmp = []
+    for feat in feats:
+        if feat not in valid_feats:
             continue
+        tmp.append(feat)
+    feats = tmp
+    for feat1, feat2 in itertools.combinations(feats, 2):
         feat = feat1 + '-' + feat2
         if row['Label'] == '0':
             poly2_counts[feat][0] += 1
