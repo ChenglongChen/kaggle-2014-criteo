@@ -26,14 +26,14 @@ def gen_feats(row):
             value = int(math.log(float(value)+1))
         elif j in [2, 3, 6, 7, 9] and value != '':
             value = int(float(value)/10)
-        key = field + ',' + str(value)
+        key = field + '-' + str(value)
         feats.append(key)
     for j in range(1, 27):
         if j in [11, 21]:
             continue
         field = 'C{0}'.format(j)
         value = row[field]
-        key = field + ',' + value
+        key = field + '-' + value
         feats.append(key)
     return feats
 
