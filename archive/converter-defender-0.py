@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, csv, hashlib, sys, math
+import argparse, csv, hashlib, sys
 
 from common import *
 
@@ -18,28 +18,17 @@ NR_BINS = args['nr_bins']
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = set()
-
         for j in range(1, 14):
-            if j in [1]:
-                continue
             value = row['I{0}'.format(j)]
-            if j == 5 and value != '':
-                value = int(math.log(float(value)+1))
-            elif j in [2, 3, 6, 7, 9] and value != '':
-                value = int(float(value)/10)
-            bin = hashstr(str(j)+str(value), NR_BINS)
-            feats.add((bin, 0.16))
-
+            bin = hashstr(str(j)+str(value), NR_BINS)+1
+            feats.add((bin, 1))
         for j in range(1, 27):
-            if j in [11, 21]:
-                continue
             value = row['C{0}'.format(j)]
             if value == '':
-                bin = hashstr(str(j)+str(value), NR_BINS)
+                bin = hashstr(str(j)+str(value), NR_BINS)+1
             else:
-                bin = int(value, 32)%(NR_BINS-1)+1
-            feats.add((bin, 0.16))
-
+                bin = int(value, 32)%NR_BINS+1
+            feats.add((bin, 1))
         feats = list(feats)
         feats.sort()
         feats = ['{0}:{1}'.format(idx, val) for (idx, val) in feats]
