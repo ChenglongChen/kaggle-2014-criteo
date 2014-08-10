@@ -30,7 +30,7 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
             poly2_counts[feat][1] += 1
         poly2_counts[feat][2] += 1
     if i % 100000 == 0:
-        print('{0}k'.format(int(i/1000)))
+        sys.stderr.write('{0}k\n'.format(int(i/1000)))
 
 print('Key,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(poly2_counts.items(), key=lambda x: x[1][2]):
