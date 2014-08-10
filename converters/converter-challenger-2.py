@@ -19,6 +19,7 @@ with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = set()
 
+        poly2 = []
         for j in range(1, 14):
             if j in [1]:
                 continue
@@ -27,10 +28,8 @@ with open(args['svm_path'], 'w') as f:
                 value = int(math.log(float(value)+1))
             elif j in [2, 3, 6, 7, 9] and value != '':
                 value = int(float(value)/10)
-            bin = hashstr(str(j)+str(value), NR_BINS)
-            feats.add(bin)
+            poly2.append(str('I'+str(j)+str(value)))
 
-        poly2 = []
         for j in range(1, 27):
             if j in [11, 21]:
                 continue
