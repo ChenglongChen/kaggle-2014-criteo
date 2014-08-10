@@ -3,11 +3,12 @@
 import subprocess, sys, multiprocessing, argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--size', type=int, default=100)
+parser.add_argument('tr_path', type=str)
+parser.add_argument('va_path', type=str)
 args = vars(parser.parse_args())
 
 def run(c, queue):
-    cmd = './supertrain -s 7 -c {0} tr.r{1}.svm model.{0} && ./superpredict va.r{1}.svm model.{0} /dev/null'.format(c, args['size'])
+    cmd = './supertrain -s 7 -c {0} {1} model.{0} && ./superpredict {2} model.{0} /dev/null'.format(c, args['tr_path'], args['va_path'])
     output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
     for line in output:
         line = line.decode('utf-8')
