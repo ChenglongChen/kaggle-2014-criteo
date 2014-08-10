@@ -37,7 +37,7 @@ def parse_args():
         sys.argv.append('-h')
 
     parser = argparse.ArgumentParser(description='parallel convert')
-    parser.add_argument('-n', default=8, type=int, help='set number of threads')
+    parser.add_argument('-n', default=12, type=int, help='set number of threads')
     parser.add_argument('cvt_path', type=str, help='set the path to your desired converter')
     parser.add_argument('csv_path', type=str, help='set path to the csv file')
     parser.add_argument('svm_path', type=str, help='set path to the svm file')
