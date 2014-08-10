@@ -24,6 +24,8 @@ with open(args['svm_path'], 'w') as f:
             if j in [1]:
                 continue
             value = row['I{0}'.format(j)]
+            if value == '':
+                continue
             if j == 5 and value != '':
                 value = int(math.log(float(value)+1))
             elif j in [2, 3, 6, 7, 9] and value != '':
