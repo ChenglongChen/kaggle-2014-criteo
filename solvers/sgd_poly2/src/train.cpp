@@ -162,6 +162,14 @@ inline float qrsqrt(float x)
   return x;
 }
 
+inline double wTx(SpMat const &problem, Model const &model, size_t const i)
+{
+    double t = 0;
+    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+        t += model.W[problem.J[idx]]*problem.X[idx];
+    return t;
+}
+
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     double (*calc_prob) (double const t) = &logistic_func;
@@ -185,10 +193,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
             double const y = static_cast<double>(Tr.Y[i]);
             
-            double t = 0;
-            for(size_t idx = Tr.P[i]; idx < Tr.P[i+1]; ++idx)
-                t += model.W[Tr.J[idx]]*Tr.X[idx];
-            
+            double const t = wTx(Tr, model, i);
+
             double const prob = calc_prob(t);
 
             Tr_loss -= y*log(prob) + (1-y)*log(1-prob);
@@ -214,9 +220,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 double const y = static_cast<double>(Va.Y[i]);
 
-                double t = 0;
-                for(size_t idx = Va.P[i]; idx < Va.P[i+1]; ++idx)
-                    t += model.W[Va.J[idx]]*Va.X[idx];
+                double const t = wTx(Va, model, i);
                 
                 double const prob = calc_prob(t);
 
