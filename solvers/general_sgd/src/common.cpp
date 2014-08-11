@@ -22,8 +22,10 @@ SpMat read_data(std::string const tr_path)
             if(val_char == nullptr || *val_char == '\n')
                 break;
             size_t idx = static_cast<size_t>(atoi(idx_char));
+            double const val = atof(val_char);
             spmat.n = std::max(spmat.n, idx);
             spmat.J.push_back(idx-1);
+            spmat.X.push_back(val);
         }
         spmat.P.push_back(spmat.J.size());
         spmat.Y.push_back(y);
@@ -33,7 +35,6 @@ SpMat read_data(std::string const tr_path)
 
     return spmat;
 }
-
 
 FILE *open_c_file(std::string const &path, std::string const &mode)
 {

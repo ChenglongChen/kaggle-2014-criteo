@@ -187,7 +187,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             
             double t = 0;
             for(size_t idx = Tr.P[i]; idx < Tr.P[i+1]; ++idx)
-                t += model.W[Tr.J[idx]];
+                t += model.W[Tr.J[idx]]*Tr.X[idx];
             
             double const prob = calc_prob(t);
 
@@ -199,7 +199,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 double &w = model.W[Tr.J[idx]];
                 double &wG = model.WG[Tr.J[idx]];
-                double const g = opt.lambda*w + kappa;
+                double const g = opt.lambda*w + kappa*Tr.X[idx];
                 wG += g*g;
                 w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
             }
@@ -216,7 +216,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
                 double t = 0;
                 for(size_t idx = Va.P[i]; idx < Va.P[i+1]; ++idx)
-                    t += model.W[Va.J[idx]];
+                    t += model.W[Va.J[idx]]*Va.X[idx];
                 
                 double const prob = calc_prob(t);
 

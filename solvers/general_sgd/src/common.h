@@ -14,6 +14,7 @@ struct SpMat
     SpMat() : n(0) {}
     std::vector<int> Y;
     std::vector<size_t> P, J;
+    std::vector<double> X;
     size_t n;
 };
 
