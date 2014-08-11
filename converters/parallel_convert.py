@@ -2,12 +2,9 @@
 
 import threading, subprocess, uuid, random, queue, argparse, sys, math, os
 
-def split(path, nr_threads):
+from common import *
 
-    def open_skip_first_line(path):
-        f = open(path)
-        next(f)
-        return f
+def split(path, nr_threads):
 
     def open_with_header_witten(path):
         f = open(path+'.__tmp__.{0}'.format(idx), 'w')
@@ -23,7 +20,7 @@ def split(path, nr_threads):
 
     idx = 0
     f = open_with_header_witten(path)
-    for i, line in enumerate(open_skip_first_line(path), start=1):
+    for i, line in enumerate(open_with_first_line_skipped(path), start=1):
         if i%nr_lines_per_thread == 0:
             f.close()
             idx += 1
