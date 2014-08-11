@@ -2,7 +2,12 @@
 
 cd ~/work2/kaggle.2014.criteo/
 make -C solvers/superliblinear/
-ln -s solvers/superliblinear/train supertrain
-ln -s solvers/superliblinear/predict superpredict
+ln -sf solvers/superliblinear/train supertrain
+ln -sf solvers/superliblinear/predict superpredict
 make -C solvers/sgd_poly2/
-ln -s solvers/sgd_poly2/sgd-poly2-train .
+ln -sf solvers/sgd_poly2/sgd-poly2-train .
+
+if [[ "$(hostname)" == linux* ]]; then
+ln -sf /tmp2/r01922136/depo/data/criteo/* .
+rm -f defender.txt
+fi
