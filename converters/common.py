@@ -37,10 +37,13 @@ def gen_feats(row):
         feats.append(key)
     return feats
 
-def gen_hashed_svm_feats(feats, nr_bins):
+def gen_hashed_svm_feats(feats, nr_bins, force_one=False):
     feats = [hashstr(feat, nr_bins) for feat in feats]
     feats = list(set(feats))
     feats.sort()
-    val = 1/math.sqrt(float(len(feats)))
+    if force_one:
+        val = 1
+    else:
+        val = 1/math.sqrt(float(len(feats)))
     feats = ['{0}:{1}'.format(idx, val) for idx in feats]
     return feats
