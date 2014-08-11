@@ -22,15 +22,13 @@ struct Option
 std::string train_help()
 {
     return std::string(
-"usage: online-train [<options>] <train_path>\n"
+"usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
 "-l <penalty>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
-"-v <path>: you know\n"
-"\n"
-"Warning: current I supports only binary features\n");
+"-v <path>: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -101,55 +99,11 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-double logistic_func(double const t)
-{
-    return 1/(1+exp(-t));
-}
-
-double logistic_func_dt(double const t)
+inline double logistic_func_dt(double const t)
 {
     double const expt = exp(-t);
     return expt/((1+expt)*(1+expt));
 }
-
-size_t const kSize = 100;
-
-inline double sum1(double const t)
-{
-    double value = t;
-    double sum = t;
-    for(size_t i = 1; i <= kSize; ++i)
-    {
-        value = value*t*t/(2*static_cast<double>(i)+1);
-        sum += value;
-    }
-
-    return sum;
-}
-
-inline double sum2(double const t)
-{
-    double value = 1;
-    double sum = 1;
-    for(size_t i = 1; i < kSize; ++i)
-    {
-        value = value*t*t/(2*static_cast<double>(i-1)+1);
-        sum += value;
-    }
-
-    return sum;
-}
-
-double normal_dist(double const t)
-{
-    return 0.5+(1/(sqrt(2*3.1416)))*exp(-t*t/2)*sum1(t);
-}
-
-double normal_dist_dt(double const t)
-{
-    return (1/(sqrt(2*3.1416)))*(exp(-t*t/2)*(-t)*sum1(t)+exp(-t*t/2)*sum2(t));
-}
-
 
 inline float qrsqrt(float x)
 {
@@ -162,27 +116,8 @@ inline float qrsqrt(float x)
   return x;
 }
 
-inline double wTx(SpMat const &problem, Model const &model, size_t const i)
-{
-    double t = 0;
-    //size_t const nnz = problem.P[i+1] - problem.P[i];
-    //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
-    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
-    {
-        for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
-        {
-            size_t const w_idx = (problem.J[idx1]*problem.J[idx2])%kW_SIZE;
-            t += model.W[w_idx]*problem.X[idx1]*problem.X[idx2];
-        }
-    }
-    return t;
-}
-
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    double (*calc_prob) (double const t) = &logistic_func;
-    double (*calc_prob_dt) (double const t) = &logistic_func_dt;
-
     FILE *f = open_c_file("out.txt", "w");
 
     Model model;
@@ -203,11 +138,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             
             double const t = wTx(Tr, model, i);
 
-            double const prob = calc_prob(t);
+            double const prob = logistic_func(t);
 
             Tr_loss -= y*log(prob) + (1-y)*log(1-prob);
                
-            double const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*calc_prob_dt(t);
+            double const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*logistic_func_dt(t);
 
             //size_t const nnz = Tr.P[i+1] - Tr.P[i];
             //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
@@ -236,7 +171,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
                 double const t = wTx(Va, model, i);
                 
-                double const prob = calc_prob(t);
+                double const prob = logistic_func(t);
 
                 Va_loss -= y*log(prob) + (1-y)*log(1-prob);
 
@@ -275,6 +210,8 @@ int main(int const argc, char const * const * const argv)
         Va = read_data(opt.Va_path);
 
     Model model = train(Tr, Va, opt);
+
+    save_model(model, opt.model_path);
 
     return EXIT_SUCCESS;
 }
