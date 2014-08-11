@@ -164,7 +164,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             }
         }
 
-        printf("%3ld %7.3f %7.5f ", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %7.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
         {
@@ -179,7 +179,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
                 Va_loss -= y*log(prob) + (1-y)*log(1-prob);
             }
-            printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
+            printf(" %10.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }
         printf("\n");
     }
