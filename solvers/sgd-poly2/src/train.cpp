@@ -8,6 +8,7 @@
 #include <algorithm>
 
 #include "common.h"
+#include "timer.h"
 
 namespace {
 
@@ -126,8 +127,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
 
+    Timer timer;
     for(size_t iter = 0; iter < opt.iter; ++iter)
     {
+        timer.tic();
+
         double Tr_loss = 0;
         std::random_shuffle(order.begin(), order.end());
         for(size_t i_ = 0; i_ < order.size(); ++i_)
@@ -160,7 +164,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             }
         }
 
-        printf("%3ld %7.5f", iter, Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %7.3f %7.5f ", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
         {

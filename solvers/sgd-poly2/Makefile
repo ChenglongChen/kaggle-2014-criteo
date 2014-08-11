@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x 
 MAIN = sgd-poly2-train sgd-poly2-predict
-FILES = common.cpp
+FILES = common.cpp timer.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)
 
