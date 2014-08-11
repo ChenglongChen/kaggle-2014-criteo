@@ -36,9 +36,14 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
     if i % 100000 == 0:
         sys.stderr.write('{0}k\n'.format(int(i/1000)))
 
-print('Key,Neg,Pos,Total,Ratio')
-for key, (neg, pos, total) in sorted(poly2_counts.items(), key=lambda x: x[1][2]):
+tmp_dict = {}
+for key, (neg, pos, total) in poly2_counts.items():
     if total < args['poly2_threshold']:
         continue
+    tmp_dict[key] = [neg, pos, total]
+poly2_counts = tmp_dict
+
+print('Key,Neg,Pos,Total,Ratio')
+for key, (neg, pos, total) in sorted(poly2_counts.items(), key=lambda x: x[1][2]):
     ratio = round(float(pos)/total, 5)
     print(key+','+str(neg)+','+str(pos)+','+str(total)+','+str(ratio))

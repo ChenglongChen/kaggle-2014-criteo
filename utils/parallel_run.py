@@ -17,7 +17,7 @@ def run(c, queue):
     queue.put((c,logloss))
 
 queue, workers = multiprocessing.Queue(), []
-for c in [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5]:
+for c in [0.5, 1, 2, 4]:
     workers.append(multiprocessing.Process(target=run, args=(c, queue)))
 
 for worker in workers:
