@@ -52,7 +52,7 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
             poly2_counts[feat][1] += 1
         poly2_counts[feat][2] += 1
     if i % 100000 == 0:
-        sys.stderr.write('{0}k, {1}k\n'.format(int(i/1000), len(poly2_counts)/1000))
+        sys.stderr.write('{0}k, {1}k\n'.format(int(i/1000), int(len(poly2_counts)/1000)))
 
 tmp_dict = {}
 for key, (neg, pos, total) in poly2_counts.items():
