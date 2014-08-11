@@ -20,9 +20,11 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
+size_t const kW_SIZE = 1e+7;
+
 struct Model
 {
-    Model(size_t const n) : W(n, 0), WG(n, 0) {}
+    Model() : W(kW_SIZE, 0), WG(kW_SIZE, 0) {}
     std::vector<double> W, WG;
 };
 

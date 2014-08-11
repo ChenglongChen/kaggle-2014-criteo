@@ -165,8 +165,14 @@ inline float qrsqrt(float x)
 inline double wTx(SpMat const &problem, Model const &model, size_t const i)
 {
     double t = 0;
-    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
-        t += model.W[problem.J[idx]]*problem.X[idx];
+    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
+    {
+        for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
+        {
+            size_t const w_idx = (problem.J[idx1]*problem.J[idx2])%kW_SIZE;
+            t += model.W[w_idx]*problem.X[idx1]*problem.X[idx2];
+        }
+    }
     return t;
 }
 
@@ -177,7 +183,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
     FILE *f = open_c_file("out.txt", "w");
 
-    Model model(Tr.n);
+    Model model;
 
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
@@ -201,13 +207,17 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                
             double const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*calc_prob_dt(t);
 
-            for(size_t idx = Tr.P[i]; idx < Tr.P[i+1]; ++idx)
+            for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
             {
-                double &w = model.W[Tr.J[idx]];
-                double &wG = model.WG[Tr.J[idx]];
-                double const g = opt.lambda*w + kappa*Tr.X[idx];
-                wG += g*g;
-                w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
+                for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
+                {
+                    size_t const w_idx = (Tr.J[idx1]*Tr.J[idx2])%kW_SIZE;
+                    double &w = model.W[w_idx];
+                    double &wG = model.WG[w_idx];
+                    double const g = opt.lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];
+                    wG += g*g;
+                    w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
+                }
             }
         }
 
