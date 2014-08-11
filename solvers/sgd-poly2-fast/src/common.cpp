@@ -22,7 +22,7 @@ SpMat read_data(std::string const tr_path)
             if(val_char == nullptr || *val_char == '\n')
                 break;
             size_t idx = static_cast<size_t>(atoi(idx_char));
-            double const val = atof(val_char);
+            float const val = static_cast<float>(atof(val_char));
             spmat.n = std::max(spmat.n, idx);
             spmat.J.push_back(idx-1);
             spmat.X.push_back(val);

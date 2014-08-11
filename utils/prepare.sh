@@ -7,6 +7,9 @@ ln -sf solvers/superliblinear/predict superpredict
 make -C solvers/sgd-poly2/
 ln -sf solvers/sgd-poly2/sgd-poly2-train .
 ln -sf solvers/sgd-poly2/sgd-poly2-predict .
+make -C solvers/sgd-poly2-fast/
+ln -sf solvers/sgd-poly2-fast/sgd-poly2-train-fast .
+ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
 
 if [[ "$(hostname)" == linux* ]]; then
 ln -sf /tmp2/r01922136/depo/data/criteo/* .

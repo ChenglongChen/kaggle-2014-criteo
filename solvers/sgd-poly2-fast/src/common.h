@@ -15,7 +15,7 @@ struct SpMat
     SpMat() : n(0) {}
     std::vector<int> Y;
     std::vector<size_t> P, J;
-    std::vector<double> X;
+    std::vector<float> X;
     size_t n;
 };
 
@@ -26,7 +26,7 @@ size_t const kW_SIZE = 1e+7;
 struct Model
 {
     Model() : W(kW_SIZE, 0), WG(kW_SIZE, 0) {}
-    std::vector<double> W, WG;
+    std::vector<float> W, WG;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -38,16 +38,14 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
 
-inline double logistic_func(double const t)
+inline float logistic_func(float const t)
 {
-    return 1/(1+exp(-t));
+    return 1/(1+static_cast<float>(exp(-t)));
 }
 
-inline double wTx(SpMat const &problem, Model const &model, size_t const i)
+inline float wTx(SpMat const &problem, Model const &model, size_t const i)
 {
-    double t = 0;
-    //size_t const nnz = problem.P[i+1] - problem.P[i];
-    //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
+    float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)

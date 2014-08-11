@@ -49,11 +49,11 @@ void predict(SpMat const &Te, Model const &model, std::string const &output_path
     double Te_loss = 0;
     for(size_t i = 0; i < Te.Y.size(); ++i)
     {
-        double const y = static_cast<double>(Te.Y[i]);
+        float const y = static_cast<float>(Te.Y[i]);
 
-        double const t = wTx(Te, model, i);
+        float const t = wTx(Te, model, i);
         
-        double const prob = logistic_func(t);
+        float const prob = logistic_func(t);
 
         Te_loss -= y*log(prob) + (1-y)*log(1-prob);
 
