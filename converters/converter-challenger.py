@@ -21,5 +21,5 @@ with open(args['svm_path'], 'w') as f:
             if feat.startswith('C') and feat not in frequent_feats:
                 continue
             feats.append(feat)
-        feats = gen_hashed_svm_feats(feats, args['nr_bins'], False)
+        feats = gen_hashed_svm_feats(feats, args['nr_bins'], True)
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
