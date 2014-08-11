@@ -10,4 +10,7 @@ ln -sf solvers/sgd-poly2/sgd-poly2-train .
 if [[ "$(hostname)" == linux* ]]; then
 ln -sf /tmp2/r01922136/depo/data/criteo/* .
 rm -f defender.txt
+elif [[ "$(hostname)" == optima ]]; then
+ln -sf /tmp2/criteo/* .
+rm -f defender.txt
 fi
