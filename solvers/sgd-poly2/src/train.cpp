@@ -118,7 +118,7 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    FILE *f = open_c_file("out.txt", "w");
+    double const lambda = opt.lambda/static_cast<double>(Tr.Y.size());
 
     Model model;
 
@@ -153,7 +153,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     size_t const w_idx = (Tr.J[idx1]*Tr.J[idx2])%kW_SIZE;
                     double &w = model.W[w_idx];
                     double &wG = model.WG[w_idx];
-                    double const g = opt.lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];
+                    double const g = lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];
                     wG += g*g;
                     w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
                 }
@@ -174,16 +174,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 double const prob = logistic_func(t);
 
                 Va_loss -= y*log(prob) + (1-y)*log(1-prob);
-
-                if(iter == opt.iter-1)
-                    fprintf(f, "%lf\n", prob);
             }
             printf(" %7.5f", Va_loss/static_cast<double>(Va.Y.size()));
         }
         printf("\n");
     }
-
-    fclose(f);
 
     return model;
 }
