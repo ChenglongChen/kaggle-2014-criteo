@@ -13,8 +13,18 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
+frequent_feats = set()
+for row in csv.DictReader(open('stats/fc.trva.r1.p1.t10.txt')):
+    if int(row['Total']) < 100:
+        continue
+    frequent_feats.add(row['Field']+'-'+row['Value'])
+
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
-        feats = gen_feats(row)
+        feats = []
+        for feat in gen_feats(row):
+            if feat.startswith('C') and feat not in frequent_feats:
+                continue
+            feats.append(feat)
         feats = gen_hashed_svm_feats(feats, args['nr_bins'])
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
