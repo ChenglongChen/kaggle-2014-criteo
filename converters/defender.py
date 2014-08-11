@@ -13,11 +13,7 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-frequent_feats = set()
-for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
-    if int(row['Total']) < 100:
-        continue
-    frequent_feats.add(row['Field']+'-'+row['Value'])
+frequent_feats = read_freqent_feats(100)
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):

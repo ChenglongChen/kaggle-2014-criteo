@@ -14,9 +14,9 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(0.0), eta(0.1), iter(10) {}
+    Option() : lambda(0.0f), eta(0.1f), iter(10) {}
     std::string Tr_path, model_path, Va_path;
-    double lambda, eta;
+    float lambda, eta;
     size_t iter;
 };
 
@@ -100,9 +100,9 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-inline double logistic_func_dt(double const t)
+inline float logistic_func_dt(float const t)
 {
-    double const expt = exp(-t);
+    float const expt = static_cast<float>(exp(-t));
     return expt/((1+expt)*(1+expt));
 }
 
@@ -119,7 +119,8 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    double const lambda = opt.lambda/static_cast<double>(Tr.Y.size());
+    float const lambda = 
+        static_cast<float>(opt.lambda/static_cast<double>(Tr.Y.size()));
 
     Model model;
 
@@ -138,28 +139,26 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t const i = order[i_];
 
-            double const y = static_cast<double>(Tr.Y[i]);
+            float const y = static_cast<float>(Tr.Y[i]);
             
-            double const t = wTx(Tr, model, i);
+            float const t = wTx(Tr, model, i);
 
-            double const prob = logistic_func(t);
+            float const prob = logistic_func(t);
 
             Tr_loss -= y*log(prob) + (1-y)*log(1-prob);
                
-            double const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*logistic_func_dt(t);
+            float const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*logistic_func_dt(t);
 
-            //size_t const nnz = Tr.P[i+1] - Tr.P[i];
-            //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
             for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
             {
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
                 {
                     size_t const w_idx = (Tr.J[idx1]*Tr.J[idx2])%kW_SIZE;
-                    double &w = model.W[w_idx];
-                    double &wG = model.WG[w_idx];
-                    double const g = lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];
+                    float &w = model.W[w_idx];
+                    float &wG = model.WG[w_idx];
+                    float const g = lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];
                     wG += g*g;
-                    w = w - opt.eta*qrsqrt(static_cast<float>(wG))*g;
+                    w = w - opt.eta*qrsqrt(wG)*g;
                 }
             }
         }
@@ -171,11 +170,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             double Va_loss = 0;
             for(size_t i = 0; i < Va.Y.size(); ++i)
             {
-                double const y = static_cast<double>(Va.Y[i]);
+                float const y = static_cast<float>(Va.Y[i]);
 
-                double const t = wTx(Va, model, i);
+                float const t = wTx(Va, model, i);
                 
-                double const prob = logistic_func(t);
+                float const prob = logistic_func(t);
 
                 Va_loss -= y*log(prob) + (1-y)*log(1-prob);
             }
