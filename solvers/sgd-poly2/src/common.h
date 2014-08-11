@@ -28,6 +28,10 @@ struct Model
     std::vector<double> W, WG;
 };
 
+void save_model(Model const &model, std::string const &path);
+
+Model load_model(std::string const &path);
+
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
 std::vector<std::string> 

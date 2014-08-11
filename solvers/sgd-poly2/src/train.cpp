@@ -165,6 +165,8 @@ inline float qrsqrt(float x)
 inline double wTx(SpMat const &problem, Model const &model, size_t const i)
 {
     double t = 0;
+    //size_t const nnz = problem.P[i+1] - problem.P[i];
+    //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
@@ -207,6 +209,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                
             double const kappa = -(y*(1/prob)+(y-1)*(1/(1-prob)))*calc_prob_dt(t);
 
+            //size_t const nnz = Tr.P[i+1] - Tr.P[i];
+            //double const coef = qrsqrt(static_cast<float>(nnz*(nnz+1)/2));
             for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
             {
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)

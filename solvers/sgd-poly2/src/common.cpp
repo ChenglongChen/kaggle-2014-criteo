@@ -36,6 +36,22 @@ SpMat read_data(std::string const tr_path)
     return spmat;
 }
 
+void save_model(Model const &model, std::string const &path)
+{
+    FILE *f = fopen(path.c_str(), "wb");
+    fwrite(model.W.data(), sizeof(size_t), kW_SIZE, f);
+    fclose(f);
+}
+
+Model load_model(std::string const &path)
+{
+    Model model;
+    FILE *f = fopen(path.c_str(), "rb");
+    fread(model.W.data(), sizeof(size_t), kW_SIZE, f);
+    fclose(f);
+    return model;
+}
+
 FILE *open_c_file(std::string const &path, std::string const &mode)
 {
     FILE *f = fopen(path.c_str(), mode.c_str());
