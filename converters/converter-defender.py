@@ -14,7 +14,7 @@ parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
 frequent_feats = set()
-for row in csv.DictReader(open('stats/fc.trva.r1.p1.t10.txt')):
+for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
     if int(row['Total']) < 100:
         continue
     frequent_feats.add(row['Field']+'-'+row['Value'])
