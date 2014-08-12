@@ -24,10 +24,9 @@ SpMat read_data(std::string const tr_path)
             size_t idx = static_cast<size_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
             spmat.n = std::max(spmat.n, idx);
-            spmat.J.push_back(idx-1);
-            spmat.X.push_back(val);
+            spmat.JX.emplace_back(idx-1, val);
         }
-        spmat.P.push_back(spmat.J.size());
+        spmat.P.push_back(spmat.JX.size());
         spmat.Y.push_back(y);
     }
 

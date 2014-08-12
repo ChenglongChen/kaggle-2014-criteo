@@ -10,11 +10,19 @@
 #include <vector>
 #include <cmath>
 
+struct Node
+{
+    Node(size_t const j, float const x) : j(j), x(x) {}
+    size_t j;
+    float x;
+};
+
 struct SpMat
 {
     SpMat() : n(0) {}
-    std::vector<size_t> P, J;
-    std::vector<float> X, Y;
+    std::vector<size_t> P;
+    std::vector<Node> JX;
+    std::vector<float> Y;
     size_t n;
 };
 
@@ -52,12 +60,12 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
     float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
-        size_t const j1 = problem.J[idx1];
-        float const x1 = problem.X[idx1];
+        size_t const j1 = problem.JX[idx1].j;
+        float const x1 = problem.JX[idx1].x;
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
-            size_t const w_idx = (cantor(j1,problem.J[idx2])%kW_SIZE)*2;
-            t += model.W[w_idx]*x1*problem.X[idx2];
+            size_t const w_idx = (cantor(j1,problem.JX[idx2].j)%kW_SIZE)*2;
+            t += model.W[w_idx]*x1*problem.JX[idx2].x;
         }
     }
     return t;
