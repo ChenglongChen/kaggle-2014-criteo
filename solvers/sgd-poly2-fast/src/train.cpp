@@ -153,7 +153,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             {
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
                 {
-                    size_t const w_idx = (Tr.J[idx1]*Tr.J[idx2])%kW_SIZE;
+                    size_t const w_idx = cantor(Tr.J[idx1],Tr.J[idx2])%kW_SIZE;
                     float &w = model.W[w_idx];
                     float &wG = model.WG[w_idx];
                     float const g = lambda*w + kappa*Tr.X[idx1]*Tr.X[idx2];

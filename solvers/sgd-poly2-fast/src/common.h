@@ -38,6 +38,11 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
 
+inline size_t cantor(size_t const a, size_t const b)
+{
+    return (a+b)*(a+b+1)/2+b;
+}
+
 inline float logistic_func(float const t)
 {
     return 1/(1+static_cast<float>(exp(-t)));
@@ -50,7 +55,7 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
     {
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
-            size_t const w_idx = (problem.J[idx1]*problem.J[idx2])%kW_SIZE;
+            size_t const w_idx = cantor(problem.J[idx1],problem.J[idx2])%kW_SIZE;
             t += model.W[w_idx]*problem.X[idx1]*problem.X[idx2];
         }
     }
