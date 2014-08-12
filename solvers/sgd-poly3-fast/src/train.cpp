@@ -145,12 +145,19 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 float const x1 = Tr.JX[idx1].x;
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
                 {
-                    size_t const w_idx = (cantor(j1,Tr.JX[idx2].j)%kW_SIZE)*2;
-                    float &w = model.W[w_idx];
-                    float &wG = model.W[w_idx+1];
-                    float const g = lambda*w + kappa*x1*Tr.JX[idx2].x;
-                    wG += g*g;
-                    w = w - opt.eta*qrsqrt(wG)*g;
+                    size_t const j2 = Tr.JX[idx2].j;
+                    float const x2 = Tr.JX[idx2].x;
+                    for(size_t idx3 = idx2+1; idx3 < Tr.P[i+1]; ++idx3)
+                    {
+                        size_t const j3 = Tr.JX[idx3].j;
+                        float const x3 = Tr.JX[idx3].x;
+                        size_t const w_idx = (cantor(j1,j2,j3)%kW_SIZE)*2;
+                        float &w = model.W[w_idx];
+                        float &wG = model.W[w_idx+1];
+                        float const g = lambda*w + kappa*x1*x2*x3;
+                        wG += g*g;
+                        w = w - opt.eta*qrsqrt(wG)*g;
+                    }
                 }
             }
         }

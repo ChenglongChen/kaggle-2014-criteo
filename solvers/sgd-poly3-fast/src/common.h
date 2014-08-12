@@ -28,7 +28,7 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+8;
+size_t const kW_SIZE = 1e+9;
 
 struct Model
 {
@@ -50,6 +50,11 @@ inline size_t cantor(size_t const a, size_t const b)
     return (a+b)*(a+b+1)/2+b;
 }
 
+inline size_t cantor(size_t const a, size_t const b, size_t const c)
+{
+    return cantor(cantor(a, b), c);
+}
+
 inline float logistic_func(float const t)
 {
     return 1/(1+static_cast<float>(exp(-t)));
@@ -64,8 +69,15 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
         float const x1 = problem.JX[idx1].x;
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
-            size_t const w_idx = (cantor(j1,problem.JX[idx2].j)%kW_SIZE)*2;
-            t += model.W[w_idx]*x1*problem.JX[idx2].x;
+            size_t const j2 = problem.JX[idx2].j;
+            float const x2 = problem.JX[idx2].x;
+            for(size_t idx3 = idx2+1; idx3 < problem.P[i+1]; ++idx3)
+            {
+                size_t const j3 = problem.JX[idx3].j;
+                float const x3 = problem.JX[idx3].x;
+                size_t const w_idx = (cantor(j1,j2,j3)%kW_SIZE)*2;
+                t += model.W[w_idx]*x1*x2*x3;
+            }
         }
     }
     return t;
