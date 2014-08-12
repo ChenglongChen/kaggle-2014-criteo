@@ -14,7 +14,7 @@ SpMat read_data(std::string const tr_path)
     while(fgets(line, kMaxLineSize, f) != nullptr)
     {
         char *p = strtok(line, " \t");
-        int const y = (atoi(p)>0)? 1 : -1;
+        float const y = (atoi(p)>0)? 1.0f : -1.0f;
         while(1)
         {
             char *idx_char = strtok(nullptr,":");

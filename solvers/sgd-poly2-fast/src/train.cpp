@@ -133,7 +133,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t const i = order[i_];
 
-            float const y = static_cast<float>(Tr.Y[i]);
+            float const y = Tr.Y[i];
             
             float const t = wTx(Tr, model, i);
 
@@ -166,7 +166,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             double Va_loss = 0;
             for(size_t i = 0; i < Va.Y.size(); ++i)
             {
-                float const y = static_cast<float>(Va.Y[i]);
+                float const y = Va.Y[i];
 
                 float const t = wTx(Va, model, i);
 

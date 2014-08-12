@@ -49,7 +49,7 @@ void predict(SpMat const &Te, Model const &model, std::string const &output_path
     double Te_loss = 0;
     for(size_t i = 0; i < Te.Y.size(); ++i)
     {
-        float const y = static_cast<float>(Te.Y[i]);
+        float const y = Te.Y[i];
 
         float const t = wTx(Te, model, i);
         
