@@ -13,7 +13,7 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-frequent_feats = read_freqent_feats(100)
+frequent_feats = read_freqent_feats(10)
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
