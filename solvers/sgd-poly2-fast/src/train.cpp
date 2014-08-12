@@ -141,14 +141,14 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
             for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
             {
-                size_t const j1 = Tr.J[idx1];
-                float const x1 = Tr.X[idx1];
+                size_t const j1 = Tr.JX[idx1].j;
+                float const x1 = Tr.JX[idx1].x;
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
                 {
-                    size_t const w_idx = (cantor(j1,Tr.J[idx2])%kW_SIZE)*2;
+                    size_t const w_idx = (cantor(j1,Tr.JX[idx2].j)%kW_SIZE)*2;
                     float &w = model.W[w_idx];
                     float &wG = model.W[w_idx+1];
-                    float const g = lambda*w + kappa*x1*Tr.X[idx2];
+                    float const g = lambda*w + kappa*x1*Tr.JX[idx2].x;
                     wG += g*g;
                     w = w - opt.eta*qrsqrt(wG)*g;
                 }
@@ -158,20 +158,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
-        {
-            double Va_loss = 0;
-            for(size_t i = 0; i < Va.Y.size(); ++i)
-            {
-                float const y = Va.Y[i];
+            printf(" %10.5f", predict(Va, model));
 
-                float const t = wTx(Va, model, i);
-
-                float const expnyt = static_cast<float>(exp(-y*t));
-
-                Va_loss += log(1+expnyt);
-            }
-            printf(" %10.5f", Va_loss/static_cast<double>(Va.Y.size()));
-        }
         printf("\n");
     }
 
