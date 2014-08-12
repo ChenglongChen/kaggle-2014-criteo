@@ -28,7 +28,7 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+7;
+size_t const kW_SIZE = 1e+8;
 
 struct Model
 {
