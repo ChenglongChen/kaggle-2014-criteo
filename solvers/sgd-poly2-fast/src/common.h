@@ -24,8 +24,8 @@ size_t const kW_SIZE = 1e+7;
 
 struct Model
 {
-    Model() : W(kW_SIZE, 0), WG(kW_SIZE, 0) {}
-    std::vector<float> W, WG;
+    Model() : W(kW_SIZE*2, 0) {}
+    std::vector<float> W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -56,7 +56,7 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
         float const x1 = problem.X[idx1];
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
-            size_t const w_idx = cantor(j1,problem.J[idx2])%kW_SIZE;
+            size_t const w_idx = (cantor(j1,problem.J[idx2])%kW_SIZE)*2;
             t += model.W[w_idx]*x1*problem.X[idx2];
         }
     }
