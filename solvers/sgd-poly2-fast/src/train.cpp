@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "timer.h"
+#include <pmmintrin.h>
 
 namespace {
 
@@ -102,12 +103,7 @@ Option parse_option(std::vector<std::string> const &args)
 
 inline float qrsqrt(float x)
 {
-  float xhalf = 0.5f*x;
-  uint32_t i;
-  std::memcpy(&i, &x, sizeof(i));
-  i = 0x5f375a86 - (i>>1);
-  std::memcpy(&x, &i, sizeof(i));
-  x = x*(1.5f - xhalf*x*x);
+  _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
   return x;
 }
 
