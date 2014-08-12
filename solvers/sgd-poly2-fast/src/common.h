@@ -53,10 +53,12 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
     float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
+        size_t const j1 = problem.J[idx1];
+        float const x1 = problem.X[idx1];
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
-            size_t const w_idx = cantor(problem.J[idx1],problem.J[idx2])%kW_SIZE;
-            t += model.W[w_idx]*problem.X[idx1]*problem.X[idx2];
+            size_t const w_idx = cantor(j1,problem.J[idx2])%kW_SIZE;
+            t += model.W[w_idx]*x1*problem.X[idx2];
         }
     }
     return t;
