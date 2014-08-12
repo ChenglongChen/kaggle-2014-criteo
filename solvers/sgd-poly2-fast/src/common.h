@@ -71,4 +71,6 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
     return t;
 }
 
+float predict(SpMat const &problem, Model const &model, 
+    std::string const &output_path = std::string(""));
 #endif // _COMMON_H_

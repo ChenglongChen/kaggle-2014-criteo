@@ -67,3 +67,33 @@ argv_to_args(int const argc, char const * const * const argv)
         args.emplace_back(argv[i]);
     return args;
 }
+
+float predict(SpMat const &problem, Model const &model, 
+    std::string const &output_path)
+{
+    FILE *f = nullptr;
+    if(!output_path.empty())
+        f = open_c_file(output_path, "w");
+
+    double loss = 0;
+    for(size_t i = 0; i < problem.Y.size(); ++i)
+    {
+        float const y = problem.Y[i];
+
+        float const t = wTx(problem, model, i);
+        
+        float const prob = logistic_func(t);
+
+        float const expnyt = static_cast<float>(exp(-y*t));
+
+        loss += log(1+expnyt);
+
+        if(f)
+            fprintf(f, "%lf\n", prob);
+    }
+
+    if(f)
+        fclose(f);
+
+    return static_cast<float>(loss/static_cast<double>(problem.Y.size()));
+}

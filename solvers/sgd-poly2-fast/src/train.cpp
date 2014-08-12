@@ -158,20 +158,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
-        {
-            double Va_loss = 0;
-            for(size_t i = 0; i < Va.Y.size(); ++i)
-            {
-                float const y = Va.Y[i];
+            printf(" %10.5f", predict(Va, model));
 
-                float const t = wTx(Va, model, i);
-
-                float const expnyt = static_cast<float>(exp(-y*t));
-
-                Va_loss += log(1+expnyt);
-            }
-            printf(" %10.5f", Va_loss/static_cast<double>(Va.Y.size()));
-        }
         printf("\n");
     }
 
