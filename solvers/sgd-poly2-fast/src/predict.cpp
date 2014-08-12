@@ -55,7 +55,9 @@ void predict(SpMat const &Te, Model const &model, std::string const &output_path
         
         float const prob = logistic_func(t);
 
-        Te_loss -= y*log(prob) + (1-y)*log(1-prob);
+        float const expnyt = static_cast<float>(exp(-y*t));
+
+        Te_loss += log(1+expnyt);
 
         fprintf(f, "%lf\n", prob);
     }
