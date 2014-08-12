@@ -43,26 +43,6 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-void predict(SpMat const &Te, Model const &model, std::string const &output_path)
-{
-    FILE *f = open_c_file(output_path, "w");
-    double Te_loss = 0;
-    for(size_t i = 0; i < Te.Y.size(); ++i)
-    {
-        float const y = static_cast<float>(Te.Y[i]);
-
-        float const t = wTx(Te, model, i);
-        
-        float const prob = logistic_func(t);
-
-        Te_loss -= y*log(prob) + (1-y)*log(1-prob);
-
-        fprintf(f, "%lf\n", prob);
-    }
-    printf("logloss = %7.5f\n", Te_loss/static_cast<double>(Te.Y.size()));
-    fclose(f);
-}
-
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -82,7 +62,9 @@ int main(int const argc, char const * const * const argv)
 
     Model model = load_model(opt.model_path);
     
-    predict(Te, model, opt.output_path);
+    float const Te_loss = predict(Te, model, opt.output_path);
+
+    printf("losloss = %f\n", Te_loss);
 
     return EXIT_SUCCESS;
 }

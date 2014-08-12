@@ -14,6 +14,7 @@ parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
 frequent_feats = read_freqent_feats(100)
+
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = []
@@ -21,5 +22,5 @@ with open(args['svm_path'], 'w') as f:
             if feat.startswith('C') and feat not in frequent_feats:
                 continue
             feats.append(feat)
-        feats = gen_hashed_svm_feats(feats, args['nr_bins'], True)
+        feats = gen_hashed_svm_feats(feats, args['nr_bins'])
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
