@@ -58,11 +58,6 @@ inline size_t calc_w_idx(size_t const a, size_t const b)
     return ((a+b)*(a+b+1)/2+b)%kW_SIZE;
 }
 
-inline float logistic_func(float const t)
-{
-    return 1/(1+static_cast<float>(exp(-t)));
-}
-
 inline float qrsqrt(float x)
 {
     _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
@@ -84,7 +79,6 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     {
         size_t const j1 = problem.JX[idx1].j;
         float const x1 = problem.JX[idx1].x;
-        float const kappa_x1 = do_update? kappa*x1 : 0.0f;
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
@@ -93,7 +87,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             size_t const w_idx = calc_w_idx(j1,j2);
 
             if(do_update)
-                update(model, w_idx, kappa_x1*x2, eta);
+                update(model, w_idx, kappa*x1*x2, eta);
             else
                 t += model.W[w_idx].w*x1*x2;
         }

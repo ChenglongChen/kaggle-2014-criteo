@@ -3,6 +3,15 @@
 
 #include "common.h"
 
+namespace {
+
+inline float logistic_func(float const t)
+{
+    return 1/(1+static_cast<float>(exp(-t)));
+}
+
+} //unamed namespace
+
 SpMat read_data(std::string const tr_path)
 {
     int const kMaxLineSize = 1000000;
