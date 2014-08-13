@@ -103,10 +103,9 @@ inline float qrsqrt(float x)
 
 inline void update(Model &model, size_t const w_idx, float const g, float const eta)
 {
-    float &w = model.W[w_idx];
-    float &wG = model.W[w_idx+1];
-    wG += g*g;
-    w = w - eta*qrsqrt(wG)*g;
+    WNode &w1 = model.W[w_idx];
+    w1.wg += g*g;
+    w1.w -= eta*qrsqrt(w1.wg)*g;
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)

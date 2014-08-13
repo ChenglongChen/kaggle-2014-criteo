@@ -30,10 +30,16 @@ SpMat read_data(std::string const tr_path);
 
 size_t const kW_SIZE = 1e+8;
 
+struct WNode
+{
+    WNode() : w(0), wg(0) {}
+    float w, wg;
+};
+
 struct Model
 {
-    Model() : W(kW_SIZE*2, 0) {}
-    std::vector<float> W;
+    Model() : W(kW_SIZE) {}
+    std::vector<WNode> W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -47,7 +53,7 @@ argv_to_args(int const argc, char const * const * const argv);
 
 inline size_t calc_w_idx(size_t const a, size_t const b)
 {
-    return 2*(((a+b)*(a+b+1)/2+b)%kW_SIZE);
+    return ((a+b)*(a+b+1)/2+b)%kW_SIZE;
 }
 
 inline float logistic_func(float const t)
@@ -68,7 +74,7 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
             float const x2 = problem.JX[idx2].x;
 
             size_t const w_idx = calc_w_idx(j1,j2);
-            t += model.W[w_idx]*x1*x2;
+            t += model.W[w_idx].w*x1*x2;
         }
     }
     return t;
