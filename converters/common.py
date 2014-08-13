@@ -32,12 +32,12 @@ def gen_feats(row):
         feats.append(key)
     return feats
 
-def gen_hashed_svm_feats(feats, nr_bins, force_one=False):
+def gen_hashed_svm_feats(feats, nr_bins, coef=None):
     feats = [hashstr(feat, nr_bins) for feat in feats]
     feats = list(set(feats))
     feats.sort()
-    if force_one:
-        val = 1
+    if coef is not None:
+        val = coef
     else:
         val = 1/math.sqrt(float(len(feats)))
     feats = ['{0}:{1}'.format(idx, val) for idx in feats]
