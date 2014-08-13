@@ -16,7 +16,7 @@ namespace {
 struct Option
 {
     Option() : lambda(0.0f), eta(0.1f), iter(10) {}
-    std::string Tr_path, model_path, Va_path;
+    std::string Tr_i_path, Tr_c_path, model_path, Va_i_path, Va_c_path;
     float lambda, eta;
     size_t iter;
 };
@@ -67,7 +67,8 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.Va_path = args[++i];
+            option.Va_i_path = args[++i];
+            option.Va_c_path = args[++i];
         }
         else
         {
@@ -78,7 +79,8 @@ Option parse_option(std::vector<std::string> const &args)
     if(i >= argc)
         throw std::invalid_argument("training data not specified");
 
-    option.Tr_path = args[i++];
+    option.Tr_i_path = args[i++];
+    option.Tr_c_path = args[i++];
 
     if(i < argc)
     {
@@ -86,9 +88,9 @@ Option parse_option(std::vector<std::string> const &args)
     }
     else if(i == argc)
     {
-        const char *ptr = strrchr(&*option.Tr_path.begin(),'/');
+        const char *ptr = strrchr(&*option.Tr_i_path.begin(),'/');
         if(!ptr)
-            ptr = option.Tr_path.c_str();
+            ptr = option.Tr_i_path.c_str();
         else
             ++ptr;
         option.model_path = std::string(ptr) + ".model";
@@ -107,15 +109,16 @@ inline float qrsqrt(float x)
   return x;
 }
 
-Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
+Model train(SpMat const &Tr_i, SpMat const &Tr_c, SpMat const &Va_i, 
+    SpMat const &Va_c, Option const &opt)
 {
     float const lambda = 
-        static_cast<float>(opt.lambda/static_cast<double>(Tr.Y.size()));
+        static_cast<float>(opt.lambda/static_cast<double>(Tr_i.Y.size()));
 
     Model model;
 
-    std::vector<size_t> order(Tr.Y.size());
-    for(size_t i = 0; i < Tr.Y.size(); ++i)
+    std::vector<size_t> order(Tr_i.Y.size());
+    for(size_t i = 0; i < Tr_i.Y.size(); ++i)
         order[i] = i;
 
     Timer timer;
@@ -129,9 +132,9 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t const i = order[i_];
 
-            float const y = Tr.Y[i];
+            float const y = Tr_i.Y[i];
             
-            float const t = wTx(Tr, model, i);
+            float const t = wTx(Tr_i, Tr_c, model, i);
 
             float const expnyt = static_cast<float>(exp(-y*t));
 
@@ -139,26 +142,53 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
+            for(size_t idx1 = Tr_i.P[i]; idx1 < Tr_i.P[i+1]; ++idx1)
             {
-                size_t const j1 = Tr.JX[idx1].j;
-                float const x1 = Tr.JX[idx1].x;
-                for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
+                size_t const j1 = Tr_i.JX[idx1].j;
+                float const x1 = Tr_i.JX[idx1].x;
+
+                for(size_t idx2 = idx1+1; idx2 < Tr_i.P[i+1]; ++idx2)
                 {
-                    size_t const w_idx = (cantor(j1,Tr.JX[idx2].j)%kW_SIZE)*2;
+                    size_t const w_idx = (cantor(j1,Tr_i.JX[idx2].j)%kW_SIZE)*2;
                     float &w = model.W[w_idx];
                     float &wG = model.W[w_idx+1];
-                    float const g = lambda*w + kappa*x1*Tr.JX[idx2].x;
+                    float const g = lambda*w + kappa*x1*Tr_i.JX[idx2].x;
+                    wG += g*g;
+                    w = w - opt.eta*qrsqrt(wG)*g;
+                }
+
+                for(size_t idx2 = Tr_c.P[i]; idx2 < Tr_c.P[i+1]; ++idx2)
+                {
+                    size_t const w_cdx = (cantor(j1,Tr_c.JX[idx2].j)%kW_SIZE)*2;
+                    float &w = model.W[w_cdx];
+                    float &wG = model.W[w_cdx+1];
+                    float const g = lambda*w + kappa*x1*Tr_c.JX[idx2].x;
+                    wG += g*g;
+                    w = w - opt.eta*qrsqrt(wG)*g;
+                }
+            }
+
+            for(size_t idx1 = Tr_c.P[i]; idx1 < Tr_c.P[i+1]; ++idx1)
+            {
+                size_t const j1 = Tr_c.JX[idx1].j;
+                float const x1 = Tr_c.JX[idx1].x;
+
+                for(size_t idx2 = idx1+1; idx2 < Tr_c.P[i+1]; ++idx2)
+                {
+                    size_t const w_cdx = (cantor(j1,Tr_c.JX[idx2].j)%kW_SIZE)*2;
+                    float &w = model.W[w_cdx];
+                    float &wG = model.W[w_cdx+1];
+                    float const g = lambda*w + kappa*x1*Tr_c.JX[idx2].x;
                     wG += g*g;
                     w = w - opt.eta*qrsqrt(wG)*g;
                 }
             }
         }
 
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr_i.Y.size()));
 
-        if(Va.Y.size() != 0)
-            printf(" %10.5f", predict(Va, model));
+        if(Va_i.Y.size() != 0)
+            printf(" %10.5f", predict(Va_i, Va_c, model));
 
         printf("\n");
         fflush(stdout);
@@ -182,13 +212,16 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    SpMat const Tr = read_data(opt.Tr_path);
+    SpMat const Tr_i = read_data(opt.Tr_i_path);
+    SpMat const Tr_c = read_data(opt.Tr_c_path);
 
-    SpMat Va;
-    if(!opt.Va_path.empty())
-        Va = read_data(opt.Va_path);
+    SpMat Va_i, Va_c;
+    if(!opt.Va_i_path.empty())
+        Va_i = read_data(opt.Va_i_path);
+    if(!opt.Va_c_path.empty())
+        Va_c = read_data(opt.Va_c_path);
 
-    Model model = train(Tr, Va, opt);
+    Model model = train(Tr_i, Tr_c, Va_i, Va_c, opt);
 
     save_model(model, opt.model_path);
 
