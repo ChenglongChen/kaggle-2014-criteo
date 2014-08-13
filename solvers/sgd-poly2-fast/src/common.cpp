@@ -68,7 +68,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model const &model, 
+float predict(SpMat const &problem, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;

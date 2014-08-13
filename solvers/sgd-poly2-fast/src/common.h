@@ -10,6 +10,8 @@
 #include <vector>
 #include <cmath>
 
+#include <pmmintrin.h>
+
 struct Node
 {
     Node(size_t const j, float const x) : j(j), x(x) {}
@@ -61,7 +63,21 @@ inline float logistic_func(float const t)
     return 1/(1+static_cast<float>(exp(-t)));
 }
 
-inline float wTx(SpMat const &problem, Model const &model, size_t const i)
+inline float qrsqrt(float x)
+{
+    _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
+    return x;
+}
+
+inline void update(Model &model, size_t const w_idx, float const g, float const eta)
+{
+    WNode &w1 = model.W[w_idx];
+    w1.wg += g*g;
+    w1.w -= eta*qrsqrt(w1.wg)*g;
+}
+
+inline float wTx(SpMat const &problem, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, bool const do_update=false)
 {
     float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
@@ -74,12 +90,16 @@ inline float wTx(SpMat const &problem, Model const &model, size_t const i)
             float const x2 = problem.JX[idx2].x;
 
             size_t const w_idx = calc_w_idx(j1,j2);
-            t += model.W[w_idx].w*x1*x2;
+
+            if(do_update)
+                update(model, w_idx, kappa*x1*x2, eta);
+            else
+                t += model.W[w_idx].w*x1*x2;
         }
     }
     return t;
 }
 
-float predict(SpMat const &problem, Model const &model, 
+float predict(SpMat const &problem, Model &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_
