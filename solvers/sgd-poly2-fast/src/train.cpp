@@ -161,6 +161,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             printf(" %10.5f", predict(Va, model));
 
         printf("\n");
+        fflush(stdout);
     }
 
     return model;
