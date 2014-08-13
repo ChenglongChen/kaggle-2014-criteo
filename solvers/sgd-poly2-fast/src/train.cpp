@@ -15,9 +15,9 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(0.0f), eta(0.1f), iter(10) {}
+    Option() : eta(0.1f), iter(5) {}
     std::string Tr_path, model_path, Va_path;
-    float lambda, eta;
+    float eta;
     size_t iter;
 };
 
@@ -45,13 +45,7 @@ Option parse_option(std::vector<std::string> const &args)
     size_t i = 0;
     for(; i < argc; ++i)
     {
-        if(args[i].compare("-l") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            option.lambda = std::stof(args[++i]);
-        }
-        else if(args[i].compare("-t") == 0)
+        if(args[i].compare("-t") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
@@ -103,15 +97,20 @@ Option parse_option(std::vector<std::string> const &args)
 
 inline float qrsqrt(float x)
 {
-  _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
-  return x;
+    _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
+    return x;
+}
+
+inline void update(Model &model, size_t const w_idx, float const g, float const eta)
+{
+    float &w = model.W[w_idx];
+    float &wG = model.W[w_idx+1];
+    wG += g*g;
+    w = w - eta*qrsqrt(wG)*g;
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    float const lambda = 
-        static_cast<float>(opt.lambda/static_cast<double>(Tr.Y.size()));
-
     Model model;
 
     std::vector<size_t> order(Tr.Y.size());
@@ -145,12 +144,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                 float const x1 = Tr.JX[idx1].x;
                 for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
                 {
-                    size_t const w_idx = (cantor(j1,Tr.JX[idx2].j)%kW_SIZE)*2;
-                    float &w = model.W[w_idx];
-                    float &wG = model.W[w_idx+1];
-                    float const g = lambda*w + kappa*x1*Tr.JX[idx2].x;
-                    wG += g*g;
-                    w = w - opt.eta*qrsqrt(wG)*g;
+                    size_t const j2 = Tr.JX[idx2].j;
+                    float const x2 = Tr.JX[idx2].x;
+
+                    size_t const w_idx = calc_w_idx(j1,j2);
+                    update(model, w_idx, kappa*x1*x2, opt.eta);
                 }
             }
         }
