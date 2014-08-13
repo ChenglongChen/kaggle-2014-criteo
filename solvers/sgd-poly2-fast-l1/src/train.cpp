@@ -172,6 +172,20 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     return model;
 }
 
+float calc_density(Model const &model)
+{
+    size_t nnz = 0, total = 0;
+    for(size_t j = 0; j < kW_SIZE; j += 2)
+    {
+        if(model.W[j] != 0)
+            ++nnz;
+        if(model.W[j+1] != 0)
+            ++total;
+    }
+    return static_cast<float>(
+        static_cast<double>(nnz)/static_cast<double>(total));
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -196,6 +210,10 @@ int main(int const argc, char const * const * const argv)
     Model model = train(Tr, Va, opt);
 
     save_model(model, opt.model_path);
+
+    float const density = calc_density(model);
+
+    printf("density = %f\n", density);
 
     return EXIT_SUCCESS;
 }
