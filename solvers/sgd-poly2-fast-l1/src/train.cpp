@@ -109,8 +109,7 @@ inline float qrsqrt(float x)
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    float const lambda = 
-        static_cast<float>(opt.lambda/static_cast<double>(Tr.Y.size()));
+    float const lambda = opt.lambda;
 
     Model model;
 
@@ -148,9 +147,16 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                     size_t const w_idx = (cantor(j1,Tr.JX[idx2].j)%kW_SIZE)*2;
                     float &w = model.W[w_idx];
                     float &wG = model.W[w_idx+1];
-                    float const g = lambda*w + kappa*x1*Tr.JX[idx2].x;
+                    float const g = kappa*x1*Tr.JX[idx2].x;
                     wG += g*g;
-                    w = w - opt.eta*qrsqrt(wG)*g;
+                    if(w > 0)
+                        w = w - opt.eta*qrsqrt(wG)*(lambda+g);
+                    else if(w < 0)
+                        w = w - opt.eta*qrsqrt(wG)*(-lambda+g);
+                    else if(fabs(g) < lambda)
+                        w = 0;
+                    else
+                        w = w - opt.eta*qrsqrt(wG)*(g);
                 }
             }
         }
