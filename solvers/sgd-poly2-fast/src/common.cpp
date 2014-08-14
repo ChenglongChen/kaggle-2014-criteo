@@ -3,6 +3,15 @@
 
 #include "common.h"
 
+namespace {
+
+inline float logistic_func(float const t)
+{
+    return 1/(1+static_cast<float>(exp(-t)));
+}
+
+} //unamed namespace
+
 SpMat read_data(std::string const tr_path)
 {
     int const kMaxLineSize = 1000000;
@@ -38,7 +47,7 @@ SpMat read_data(std::string const tr_path)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
-    fwrite(model.W.data(), sizeof(float), 2*kW_SIZE, f);
+    fwrite(model.W.data(), sizeof(WNode),kW_SIZE, f);
     fclose(f);
 }
 
@@ -46,7 +55,7 @@ Model load_model(std::string const &path)
 {
     Model model;
     FILE *f = fopen(path.c_str(), "rb");
-    fread(model.W.data(), sizeof(float), 2*kW_SIZE, f);
+    fread(model.W.data(), sizeof(WNode), kW_SIZE, f);
     fclose(f);
     return model;
 }
@@ -68,7 +77,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model const &model, 
+float predict(SpMat const &problem, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;
