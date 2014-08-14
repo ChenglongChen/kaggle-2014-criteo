@@ -26,6 +26,6 @@ for size in ["x", "100", "10", "1"]:
 for worker in workers:
     worker.communicate()
 
-if UUID != 'exp.py':
+if UUID != 'exp':
     cmd = 'git add {log_dir} && git commit --allow-empty-message -m ""'.format(uuid=UUID, log_dir=LOG_DIR)
     subprocess.call(cmd, shell=True)
