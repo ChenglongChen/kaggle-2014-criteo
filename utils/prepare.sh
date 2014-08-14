@@ -19,15 +19,18 @@ ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
 #make -C solvers/sgd-poly2-fast-sp0/
 #ln -sf solvers/sgd-poly2-fast-sp0/sgd-poly2-train-fast-sp0 .
 #ln -sf solvers/sgd-poly2-fast-sp0/sgd-poly2-predict-fast-sp0 .
-make -C solvers/sgd-poly2-fast-sp1/
-ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-train-fast-sp1 .
-ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-predict-fast-sp1 .
-make -C solvers/sgd-poly2-fast-sp2/
-ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-train-fast-sp2 .
-ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-predict-fast-sp2 .
+#make -C solvers/sgd-poly2-fast-sp1/
+#ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-train-fast-sp1 .
+#ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-predict-fast-sp1 .
+#make -C solvers/sgd-poly2-fast-sp2/
+#ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-train-fast-sp2 .
+#ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-predict-fast-sp2 .
 make -C solvers/sgd-poly2-fast-sp3/
 ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-train-fast-sp3 .
 ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-predict-fast-sp3 .
+make -C solvers/superliblinear/
+ln -sf solvers/superliblinear-poly2/train supertrain-poly2
+ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv

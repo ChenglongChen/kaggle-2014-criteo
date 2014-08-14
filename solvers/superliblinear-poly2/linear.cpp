@@ -150,6 +150,13 @@ void l2r_lr_fun::Hv(double *s, double *Hs)
 	delete[] wa;
 }
 
+size_t kW_SIZE;
+
+inline size_t calc_w_idx(size_t const a, size_t const b)
+{
+    return ((a+b)*(a+b+1)/2+b)%kW_SIZE;
+}
+
 void l2r_lr_fun::Xv(double *v, double *Xv)
 {
 	int i;
@@ -158,12 +165,18 @@ void l2r_lr_fun::Xv(double *v, double *Xv)
 
 	for(i=0;i<l;i++)
 	{
-		feature_node *s=x[i];
+		feature_node *s1=x[i];
 		Xv[i]=0;
-		while(s->index!=-1)
+		while(s1->index!=-1)
 		{
-			Xv[i]+=v[s->index-1]*s->value;
-			s++;
+            feature_node *s2=s1+1;
+            while(s2->index!=-1)
+            {
+                size_t w_idx = calc_w_idx(s1->index, s2->index);
+                Xv[i]+=v[w_idx]*s1->value*s2->value;
+                s2++;
+            }
+			s1++;
 		}
 	}
 }
@@ -179,11 +192,17 @@ void l2r_lr_fun::XTv(double *v, double *XTv)
 		XTv[i]=0;
 	for(i=0;i<l;i++)
 	{
-		feature_node *s=x[i];
-		while(s->index!=-1)
+		feature_node *s1=x[i];
+		while(s1->index!=-1)
 		{
-			XTv[s->index-1]+=v[i]*s->value;
-			s++;
+            feature_node *s2=s1+1;
+            while(s2->index!=-1)
+            {
+                size_t w_idx = calc_w_idx(s1->index, s2->index);
+                XTv[s1->index-1]+=v[i]*s1->value;
+                s2++;
+            }
+            s1++;
 		}
 	}
 }
@@ -2296,6 +2315,7 @@ model* train(const problem *prob, const parameter *param)
 	int l = prob->l;
 	int n = prob->n;
 	int w_size = prob->n;
+    kW_SIZE = w_size;
 	model *model_ = Malloc(model,1);
 
 	if(prob->bias>=0)

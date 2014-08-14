@@ -418,6 +418,8 @@ void read_problem(const char *filename)
 		x_space[j++].index = -1;
 	}
 
+    max_index = int(1e+8);
+
 	if(prob.bias >= 0)
 	{
 		prob.n=max_index+1;
