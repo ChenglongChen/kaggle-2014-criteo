@@ -77,21 +77,21 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model &model, 
-    std::string const &output_path)
+float predict(SpMat const &problem_p1, SpMat const &problem_p2, 
+    Model &model, std::string const &output_path)
 {
     FILE *f = nullptr;
     if(!output_path.empty())
         f = open_c_file(output_path, "w");
 
     double loss = 0;
-    for(size_t i = 0; i < problem.Y.size(); ++i)
+    for(size_t i = 0; i < problem_p1.Y.size(); ++i)
     {
-        float const y = problem.Y[i];
+        float const y = problem_p1.Y[i];
 
         float t = 0;
-        
-        t += wTx_p2(problem, model, i);
+        t += wTx_p1(problem_p1, model, i);
+        t += wTx_p2(problem_p2, model, i);
         
         float const prob = logistic_func(t);
 
@@ -106,5 +106,5 @@ float predict(SpMat const &problem, Model &model,
     if(f)
         fclose(f);
 
-    return static_cast<float>(loss/static_cast<double>(problem.Y.size()));
+    return static_cast<float>(loss/static_cast<double>(problem_p1.Y.size()));
 }

@@ -101,6 +101,7 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
             
             float t = 0;
             
+            t += wTx_p1(Tr_p1, model, i);
             t += wTx_p2(Tr_p2, model, i);
 
             float const expnyt = static_cast<float>(exp(-y*t));
@@ -109,6 +110,7 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
                
             float const kappa = -y*expnyt/(1+expnyt);
 
+            wTx_p1(Tr_p1, model, i, kappa, opt.eta, true);
             wTx_p2(Tr_p2, model, i, kappa, opt.eta, true);
         }
 
@@ -116,7 +118,7 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
             Tr_loss/static_cast<double>(Tr_p2.Y.size()));
 
         if(Va_p2.Y.size() != 0)
-            printf(" %10.5f", predict(Va_p2, model));
+            printf(" %10.5f", predict(Va_p1, Va_p2, model));
 
         printf("\n");
         fflush(stdout);
