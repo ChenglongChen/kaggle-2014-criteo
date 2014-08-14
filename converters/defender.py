@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, csv, hashlib, sys, math
+import argparse, csv, sys
 
 from common import *
 
