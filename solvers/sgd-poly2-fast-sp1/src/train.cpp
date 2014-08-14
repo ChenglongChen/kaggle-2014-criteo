@@ -15,7 +15,7 @@ namespace {
 struct Option
 {
     Option() : eta(0.1f), iter(5) {}
-    std::string Tr_path, model_path, Va_path;
+    std::string Tr_p1_path, Tr_p2_path, model_path, Va_p1_path, Va_p2_path;
     float eta;
     size_t iter;
 };
@@ -26,7 +26,6 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-l <penalty>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n");
@@ -60,7 +59,8 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.Va_path = args[++i];
+            option.Va_p1_path = args[++i];
+            option.Va_p2_path = args[++i];
         }
         else
         {
@@ -68,28 +68,11 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc)
+    if(i >= argc-2)
         throw std::invalid_argument("training data not specified");
-
-    option.Tr_path = args[i++];
-
-    if(i < argc)
-    {
-        option.model_path = std::string(args[i]);
-    }
-    else if(i == argc)
-    {
-        const char *ptr = strrchr(&*option.Tr_path.begin(),'/');
-        if(!ptr)
-            ptr = option.Tr_path.c_str();
-        else
-            ++ptr;
-        option.model_path = std::string(ptr) + ".model";
-    }
-    else
-    {
-        throw std::invalid_argument("invalid argument");
-    }
+    option.Tr_p1_path = args[i++];
+    option.Tr_p2_path = args[i++];
+    option.model_path = std::string(args[i]);
 
     return option;
 }
@@ -153,13 +136,17 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    SpMat const Tr = read_data(opt.Tr_path);
+    SpMat const Tr_p1 = read_data(opt.Tr_p1_path);
+    SpMat const Tr_p2 = read_data(opt.Tr_p2_path);
 
-    SpMat Va;
-    if(!opt.Va_path.empty())
-        Va = read_data(opt.Va_path);
+    SpMat Va_p1, Va_p2;
+    if(!opt.Va_p1_path.empty() && !opt.Va_p2_path.empty())
+    {
+        Va_p1 = read_data(opt.Va_p1_path);
+        Va_p2 = read_data(opt.Va_p2_path);
+    }
 
-    Model model = train(Tr, Va, opt);
+    Model model = train(Tr_p1, Va_p1, opt);
 
     save_model(model, opt.model_path);
 
