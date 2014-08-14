@@ -9,11 +9,12 @@ if len(sys.argv) == 1:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--nr_bins', type=int, default=int(1e+7))
+parser.add_argument('-t', '--threshold', type=int, default=int(10))
 parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-frequent_feats = read_freqent_feats(10)
+frequent_feats = read_freqent_feats(args['threshold'])
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
