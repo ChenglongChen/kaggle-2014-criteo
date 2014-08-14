@@ -63,6 +63,11 @@ inline size_t calc_w_idx(size_t const a, size_t const b)
     return ((a+b)*(a+b+1)/2+b)%kW_SIZE;
 }
 
+inline size_t calc_w_idx(size_t const a, size_t const b, size_t const c)
+{
+    return calc_w_idx(calc_w_idx(a, b), c);
+}
+
 inline float qrsqrt(float x)
 {
     _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
@@ -114,6 +119,35 @@ inline float wTx_p2(SpMat const &problem, Model &model, size_t const i,
                 update(model, w_idx, kappa*x1*x2, eta);
             else
                 t += model.W[w_idx].w*x1*x2;
+        }
+    }
+    return t;
+}
+
+inline float wTx_p3(SpMat const &problem, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, bool const do_update=false)
+{
+    float t = 0;
+    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
+    {
+        size_t const j1 = problem.JX[idx1].j;
+        float const x1 = problem.JX[idx1].x;
+        for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
+        {
+            size_t const j2 = problem.JX[idx2].j;
+            float const x2 = problem.JX[idx2].x;
+            for(size_t idx3 = idx2+1; idx3 < problem.P[i+1]; ++idx3)
+            {
+                size_t const j3 = problem.JX[idx3].j;
+                float const x3 = problem.JX[idx3].x;
+
+                size_t const w_idx = calc_w_idx(j1,j2,j3);
+
+                if(do_update)
+                    update(model, w_idx, kappa*x1*x2*x3, eta);
+                else
+                    t += model.W[w_idx].w*x1*x2*x3;
+            }
         }
     }
     return t;
