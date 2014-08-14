@@ -16,3 +16,11 @@ losloss = 0.514066
 3     5.81    0.49200    0.51440
 4     7.30    0.48955    0.51445
 losloss = 0.514454
+
+
+$ ./utils/eval.py va.r100.svm out.r100
+AUC:    0.715976150812
+$ ./utils/eval.py va.r10.svm out.r10
+AUC:    0.719308539568
+$ ./utils/eval.py va.r1.svm out.r1
+AUC:    0.721012719063
