@@ -199,7 +199,7 @@ void l2r_lr_fun::XTv(double *v, double *XTv)
             while(s2->index!=-1)
             {
                 size_t w_idx = calc_w_idx(s1->index, s2->index);
-                XTv[s1->index-1]+=v[i]*s1->value;
+                XTv[w_idx]+=v[i]*s1->value*s2->value;
                 s2++;
             }
             s1++;
@@ -2504,7 +2504,7 @@ void cross_validation(const problem *prob, const parameter *param, int nr_fold, 
 
 double predict_values(const struct model *model_, const struct feature_node *x, double *dec_values)
 {
-	int idx;
+	size_t idx1, idx2;
 	int n;
 	if(model_->bias>=0)
 		n=model_->nr_feature+1;
@@ -2519,15 +2519,19 @@ double predict_values(const struct model *model_, const struct feature_node *x, 
 	else
 		nr_w = nr_class;
 
-	const feature_node *lx=x;
+	const feature_node *lx1=x;
 	for(i=0;i<nr_w;i++)
 		dec_values[i] = 0;
-	for(; (idx=lx->index)!=-1; lx++)
+	for(; (idx1=lx1->index)!=-1; lx1++)
 	{
+        const feature_node *lx2=lx1+1;
+        for(; (idx2=lx2->index)!=-1; lx2++)
+        {
+            size_t const w_idx = calc_w_idx(idx1, idx2);
 		// the dimension of testing data may exceed that of training
-		if(idx<=n)
-			for(i=0;i<nr_w;i++)
-				dec_values[i] += w[(idx-1)*nr_w+i]*lx->value;
+            for(i=0;i<nr_w;i++)
+                dec_values[i] += w[(w_idx)*nr_w+i]*lx1->value*lx2->value;
+        }
 	}
 
 	if(nr_class==2)
