@@ -154,5 +154,6 @@ inline float wTx_p3(SpMat const &problem, Model &model, size_t const i,
 }
 
 float predict(SpMat const &problem_p1, SpMat const &problem_p2, 
-    Model &model, std::string const &output_path = std::string(""));
+    SpMat const &problem_p3, Model &model, 
+    std::string const &output_path = std::string(""));
 #endif // _COMMON_H_

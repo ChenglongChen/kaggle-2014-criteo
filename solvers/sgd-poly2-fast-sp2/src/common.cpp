@@ -78,7 +78,7 @@ argv_to_args(int const argc, char const * const * const argv)
 }
 
 float predict(SpMat const &problem_p1, SpMat const &problem_p2, 
-    Model &model, std::string const &output_path)
+    SpMat const &problem_p3, Model &model, std::string const &output_path)
 {
     FILE *f = nullptr;
     if(!output_path.empty())
@@ -92,6 +92,7 @@ float predict(SpMat const &problem_p1, SpMat const &problem_p2,
         float t = 0;
         t += wTx_p1(problem_p1, model, i);
         t += wTx_p2(problem_p2, model, i);
+        t += wTx_p3(problem_p3, model, i);
         
         float const prob = logistic_func(t);
 
