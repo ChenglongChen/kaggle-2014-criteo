@@ -125,7 +125,8 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
             wTx(Tr, model, i, kappa, opt.eta, true);
         }
 
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)
             printf(" %10.5f", predict(Va, model));
