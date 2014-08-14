@@ -14,10 +14,11 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), iter(5) {}
+    Option() : eta(0.1f), iter(5), threshold(1) {}
     std::string Tr_path, model_path, Va_path;
     float eta;
     size_t iter;
+    int threshold;
 };
 
 std::string train_help()
@@ -27,6 +28,7 @@ std::string train_help()
 "\n"
 "options:\n"
 "-t <iteration>: you know\n"
+"-h <threshold>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n");
 }
@@ -54,6 +56,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             option.eta = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-h") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.threshold = std::stoi(args[++i]);
         }
         else if(args[i].compare("-v") == 0)
         {
@@ -100,6 +108,23 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
+
+    for(size_t i = 0; i < Tr.Y.size(); ++i)
+    {
+        for(size_t idx1 = Tr.P[i]; idx1 < Tr.P[i+1]; ++idx1)
+        {
+            size_t const j1 = Tr.JX[idx1].j;
+            for(size_t idx2 = idx1+1; idx2 < Tr.P[i+1]; ++idx2)
+            {
+                size_t const j2 = Tr.JX[idx2].j;
+                size_t const w_idx = calc_w_idx(j1,j2);
+                ++model.W[w_idx].mask;
+            }
+        }
+    }
+
+    for(auto &w1 : model.W)
+        w1.mask = w1.mask >= opt.threshold? 1 : 0;
 
     Timer timer;
     for(size_t iter = 0; iter < opt.iter; ++iter)

@@ -34,7 +34,8 @@ size_t const kW_SIZE = 1e+8;
 
 struct WNode
 {
-    WNode() : w(0), wg(0) {}
+    WNode() : mask(0), w(0), wg(0) {}
+    int mask;
     float w, wg;
 };
 
@@ -85,6 +86,9 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             float const x2 = problem.JX[idx2].x;
 
             size_t const w_idx = calc_w_idx(j1,j2);
+
+            if(model.W[w_idx].mask == 0)
+                continue;
 
             if(do_update)
                 update(model, w_idx, kappa*x1*x2, eta);
