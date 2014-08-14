@@ -19,6 +19,8 @@ with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = []
         for feat in gen_feats(row):
+            if feat.startswith('C4'):
+                continue
             if feat.startswith('C') and feat not in frequent_feats:
                 feats.append(feat.split('-')[0]+'less')
             else:
