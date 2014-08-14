@@ -15,7 +15,8 @@ namespace {
 struct Option
 {
     Option() : eta(0.1f), iter(5) {}
-    std::string Tr_p1_path, Tr_p2_path, model_path, Va_p1_path, Va_p2_path;
+    std::string Tr_p1_path, Tr_p2_path, Tr_p3_path, 
+        model_path, Va_p1_path, Va_p2_path, Va_p3_path;
     float eta;
     size_t iter;
 };
@@ -61,6 +62,7 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             option.Va_p1_path = args[++i];
             option.Va_p2_path = args[++i];
+            option.Va_p3_path = args[++i];
         }
         else
         {
@@ -72,13 +74,15 @@ Option parse_option(std::vector<std::string> const &args)
         throw std::invalid_argument("training data not specified");
     option.Tr_p1_path = args[i++];
     option.Tr_p2_path = args[i++];
+    option.Tr_p3_path = args[i++];
     option.model_path = std::string(args[i]);
 
     return option;
 }
 
-Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1, 
-    SpMat const &Va_p2, Option const &opt)
+Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Tr_p3, 
+    SpMat const &Va_p1, SpMat const &Va_p2, SpMat const &Va_p3, 
+    Option const &opt)
 {
     Model model;
 
@@ -103,6 +107,7 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
             
             t += wTx_p1(Tr_p1, model, i);
             t += wTx_p2(Tr_p2, model, i);
+            t += wTx_p3(Tr_p3, model, i);
 
             float const expnyt = static_cast<float>(exp(-y*t));
 
@@ -112,13 +117,14 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
 
             wTx_p1(Tr_p1, model, i, kappa, opt.eta, true);
             wTx_p2(Tr_p2, model, i, kappa, opt.eta, true);
+            wTx_p3(Tr_p3, model, i, kappa, opt.eta, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
             Tr_loss/static_cast<double>(Tr_p1.Y.size()));
 
         if(Va_p1.Y.size() != 0)
-            printf(" %10.5f", predict(Va_p1, Va_p2, model));
+            printf(" %10.5f", predict(Va_p1, Va_p2, Va_p3, model));
 
         printf("\n");
         fflush(stdout);
@@ -144,15 +150,17 @@ int main(int const argc, char const * const * const argv)
 
     SpMat const Tr_p1 = read_data(opt.Tr_p1_path);
     SpMat const Tr_p2 = read_data(opt.Tr_p2_path);
+    SpMat const Tr_p3 = read_data(opt.Tr_p3_path);
 
-    SpMat Va_p1, Va_p2;
+    SpMat Va_p1, Va_p2, Va_p3;
     if(!opt.Va_p1_path.empty() && !opt.Va_p2_path.empty())
     {
         Va_p1 = read_data(opt.Va_p1_path);
         Va_p2 = read_data(opt.Va_p2_path);
+        Va_p3 = read_data(opt.Va_p3_path);
     }
 
-    Model model = train(Tr_p1, Tr_p2, Va_p1, Va_p2, opt);
+    Model model = train(Tr_p1, Tr_p2, Tr_p3, Va_p1, Va_p2, Va_p3, opt);
 
     save_model(model, opt.model_path);
 
