@@ -14,7 +14,7 @@ parser.add_argument('svm1_path', type=str)
 parser.add_argument('svm2_path', type=str)
 args = vars(parser.parse_args())
 
-GROUP1 = ['3', '4', '12', '16', '21']
+GROUP1 = ['3', '12', '16']
 
 frequent_feats = read_freqent_feats(10)
 
