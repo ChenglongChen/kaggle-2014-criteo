@@ -1280,13 +1280,19 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 	for(i=0; i<l; i++)
 	{
 		xTx[i] = 0;
-		feature_node *xi = prob->x[i];
-		while (xi->index != -1)
+		feature_node *xi1 = prob->x[i];
+		while (xi1->index != -1)
 		{
-			double val = xi->value;
-			xTx[i] += val*val;
-			w[xi->index-1] += y[i]*alpha[2*i]*val;
-			xi++;
+            feature_node *xi2 = xi1+1;
+            while (xi2->index != -1)
+            {
+                double val = xi1->value*xi2->value;
+                size_t w_idx = calc_w_idx(xi1->index, xi2->index);
+                xTx[i] += val*val;
+                w[w_idx] += y[i]*alpha[2*i]*val;
+                xi2++;
+            }
+            xi1++;
 		}
 		index[i] = i;
 	}
@@ -1306,11 +1312,17 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 			schar yi = y[i];
 			double C = upper_bound[GETI(i)];
 			double ywTx = 0, xisq = xTx[i];
-			feature_node *xi = prob->x[i];
-			while (xi->index != -1)
+			feature_node *xi1 = prob->x[i];
+			while (xi1->index != -1)
 			{
-				ywTx += w[xi->index-1]*xi->value;
-				xi++;
+                feature_node *xi2 = xi1+1;
+                while (xi2->index != -1)
+                {
+                    size_t const w_idx = calc_w_idx(xi1->index, xi2->index);
+                    ywTx += w[w_idx]*xi1->value*xi2->value;
+                    xi2++;
+                }
+                xi1++;
 			}
 			ywTx *= y[i];
 			double a = xisq, b = ywTx;
@@ -1354,12 +1366,18 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 			{
 				alpha[ind1] = z;
 				alpha[ind2] = C-z;
-				xi = prob->x[i];
-				while (xi->index != -1)
-				{
-					w[xi->index-1] += sign*(z-alpha_old)*yi*xi->value;
-					xi++;
-				}
+                xi1 = prob->x[i];
+                while (xi1->index != -1)
+                {
+                    feature_node *xi2 = xi1+1;
+                    while (xi2->index != -1)
+                    {
+                        size_t const w_idx = calc_w_idx(xi1->index, xi2->index);
+                        w[w_idx] += sign*(z-alpha_old)*yi*xi1->value*xi2->value;
+                        xi2++;
+                    }
+                    xi1++;
+                }
 			}
 		}
 
