@@ -12,7 +12,7 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 workers = []
-for size in ["1"]:
+for size in ["x", "100", "10", "1"]:
     for data in ['tr', 'va']:
         cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data}.r{size}.csv {data}.r{size}.svm'\
             .format(size=size, data=data)
@@ -26,6 +26,6 @@ for size in ["1"]:
 for worker in workers:
     worker.communicate()
 
-if UUID != 'exp':
+if UUID != 'exp.py':
     cmd = 'git add {log_dir} && git commit --allow-empty-message -m ""'.format(uuid=UUID, log_dir=LOG_DIR)
     subprocess.call(cmd, shell=True)
