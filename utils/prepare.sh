@@ -29,7 +29,7 @@ ln -sf te.csv va.r0.csv
 if [[ "$(hostname)" == linux* ]]; then
 ln -sf /tmp2/r01922136/depo/data/criteo/* .
 rm -f defender.txt
-elif [[ "$(hostname)" == optima ]]; then
+elif [[ "$(hostname)" == optima ]] || [[ "$(hostname)" == schroeder ]]; then
 ln -sf /tmp2/criteo/* .
 rm -f defender.txt
 fi
