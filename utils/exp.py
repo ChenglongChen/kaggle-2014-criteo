@@ -12,7 +12,7 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 workers = []
-for size in [100]:
+for size in [100, 10, 1]:
     for data in ['tr', 'va']:
         cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data}.r{size}.csv {data}.r{size}.svm'\
             .format(size=size, data=data)
