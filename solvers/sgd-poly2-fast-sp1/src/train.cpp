@@ -77,12 +77,13 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
-Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
+Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1, 
+    SpMat const &Va_p2, Option const &opt)
 {
     Model model;
 
-    std::vector<size_t> order(Tr.Y.size());
-    for(size_t i = 0; i < Tr.Y.size(); ++i)
+    std::vector<size_t> order(Tr_p1.Y.size());
+    for(size_t i = 0; i < Tr_p1.Y.size(); ++i)
         order[i] = i;
 
     Timer timer;
@@ -96,11 +97,11 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         {
             size_t const i = order[i_];
 
-            float const y = Tr.Y[i];
+            float const y = Tr_p2.Y[i];
             
             float t = 0;
             
-            t += wTx_p2(Tr, model, i);
+            t += wTx_p2(Tr_p2, model, i);
 
             float const expnyt = static_cast<float>(exp(-y*t));
 
@@ -108,13 +109,14 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx_p2(Tr, model, i, kappa, opt.eta, true);
+            wTx_p2(Tr_p2, model, i, kappa, opt.eta, true);
         }
 
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), Tr_loss/static_cast<double>(Tr.Y.size()));
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr_p2.Y.size()));
 
-        if(Va.Y.size() != 0)
-            printf(" %10.5f", predict(Va, model));
+        if(Va_p2.Y.size() != 0)
+            printf(" %10.5f", predict(Va_p2, model));
 
         printf("\n");
         fflush(stdout);
@@ -148,7 +150,7 @@ int main(int const argc, char const * const * const argv)
         Va_p2 = read_data(opt.Va_p2_path);
     }
 
-    Model model = train(Tr_p1, Va_p1, opt);
+    Model model = train(Tr_p1, Tr_p2, Va_p1, Va_p2, opt);
 
     save_model(model, opt.model_path);
 
