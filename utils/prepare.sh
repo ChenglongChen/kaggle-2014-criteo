@@ -19,6 +19,9 @@ ln -sf solvers/sgd-poly2-fast-l1/sgd-poly2-predict-fast-l1 .
 make -C solvers/sgd-poly2-fast-sp0/
 ln -sf solvers/sgd-poly2-fast-sp0/sgd-poly2-train-fast-sp0 .
 ln -sf solvers/sgd-poly2-fast-sp0/sgd-poly2-predict-fast-sp0 .
+make -C solvers/sgd-poly2-fast-sp1/
+ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-train-fast-sp1 .
+ln -sf solvers/sgd-poly2-fast-sp1/sgd-poly2-predict-fast-sp1 .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
