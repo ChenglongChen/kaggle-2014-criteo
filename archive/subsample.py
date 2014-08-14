@@ -25,7 +25,7 @@ def parse_args():
 args = parse_args()
 
 f = open_with_header_witten(args['out_path'])
-for i, line in enumerate(open_skip_first_line(args['csv_path']), start=1):
+for i, line in enumerate(open_with_first_line_skipped(args['csv_path']), start=1):
     if random.random() > args['n']:
        continue 
     f.write(line)
