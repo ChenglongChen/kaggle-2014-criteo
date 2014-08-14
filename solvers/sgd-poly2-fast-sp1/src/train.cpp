@@ -97,7 +97,7 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
         {
             size_t const i = order[i_];
 
-            float const y = Tr_p2.Y[i];
+            float const y = Tr_p1.Y[i];
             
             float t = 0;
             
@@ -115,9 +115,9 @@ Model train(SpMat const &Tr_p1, SpMat const &Tr_p2, SpMat const &Va_p1,
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
-            Tr_loss/static_cast<double>(Tr_p2.Y.size()));
+            Tr_loss/static_cast<double>(Tr_p1.Y.size()));
 
-        if(Va_p2.Y.size() != 0)
+        if(Va_p1.Y.size() != 0)
             printf(" %10.5f", predict(Va_p1, Va_p2, model));
 
         printf("\n");
