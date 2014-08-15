@@ -32,23 +32,10 @@ SpMat read_data(std::string const tr_path);
 
 size_t const kF_SIZE = 39;
 
-struct W_Node
-{
-    W_Node() : w(0), wg(1) {}
-    float w, wg;
-};
-
-struct W_Vector
-{
-    W_Vector(size_t const k) : wv(kF_SIZE*k) {}
-    std::vector<W_Node> wv;
-    W_Node & operator [] (size_t idx) { return wv[idx]; }
-};
-
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n, k), n(n), k(k) {}
-    std::vector<W_Vector> W;
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*2, 0), n(n), k(k) {}
+    std::vector<float> W;
     const size_t n, k;
 };
 
@@ -67,23 +54,11 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline void update(W_Node &w1, W_Node &w2, 
-    float const kappa_x1_x2, float const eta, float const lambda)
-{
-    float const g1 = lambda*w1.w + kappa_x1_x2*w2.w;
-    float const g2 = lambda*w2.w + kappa_x1_x2*w1.w;
-
-    w1.wg += g1*g1;
-    w2.wg += g2*g2;
-
-    w1.w -= eta*qrsqrt(w1.wg)*g1;
-    w2.w -= eta*qrsqrt(w2.wg)*g2;
-}
-
 inline float wTx(SpMat const &problem, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
+    size_t const k = model.k;
     float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
@@ -98,24 +73,31 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             float const x2 = problem.JX[idx2].x;
             float const kappa_x1_x2 = do_update? kappa_x1*x2 : 0;
 
-            W_Node * w1 = &model.W[j1][f2*model.k];
-            W_Node * w2 = &model.W[j2][f1*model.k];
+            float * w1 = model.W.data()+j1*kF_SIZE*k*2+f2*k*2;
+            float * w2 = model.W.data()+j2*kF_SIZE*k*2+f1*k*2;
 
             if(do_update)
-                for(size_t d = 0; d < model.k; ++d, ++w1, ++w2)
+            {
+                for(size_t d = 0; d < k; ++d, ++w1, ++w2)
                 {
-                    float const g1 = lambda*w1->w + kappa_x1_x2*w2->w;
-                    float const g2 = lambda*w2->w + kappa_x1_x2*w1->w;
+                    float * const wg1 = w1+k;
+                    float * const wg2 = w2+k;
 
-                    w1->wg += g1*g1;
-                    w2->wg += g2*g2;
+                    float const g1 = lambda*(*w1) + kappa_x1_x2*(*w2);
+                    float const g2 = lambda*(*w2) + kappa_x1_x2*(*w1);
 
-                    w1->w -= eta*qrsqrt(w1->wg)*g1;
-                    w2->w -= eta*qrsqrt(w2->wg)*g2;
+                    (*wg1) += g1*g1;
+                    (*wg2) += g2*g2;
+
+                    (*w1) -= eta*qrsqrt(*wg1)*g1;
+                    (*w2) -= eta*qrsqrt(*wg2)*g2;
                 }
+            }
             else
-                for(size_t d = 0; d < model.k; ++d, ++w1, ++w2)
-                    t += w1->w*w2->w*x1*x2;
+            {
+                for(size_t d = 0; d < k; ++d, ++w1, ++w2)
+                    t += (*w1)*(*w2)*x1*x2;
+            }
         }
     }
     return t;
