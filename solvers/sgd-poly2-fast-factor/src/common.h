@@ -73,10 +73,10 @@ inline float qrsqrt(float x)
 }
 
 inline void update(W_Node &w1, W_Node &w2, 
-    float const kappa_x1_x2, float const eta)
+    float const kappa_x1_x2, float const eta, float const lambda)
 {
-    float const g1 = kappa_x1_x2*w2.w;
-    float const g2 = kappa_x1_x2*w1.w;
+    float const g1 = lambda*w1.w + kappa_x1_x2*w2.w;
+    float const g2 = lambda*w2.w + kappa_x1_x2*w1.w;
 
     w1.wg += g1*g1;
     w2.wg += g2*g2;
@@ -86,7 +86,8 @@ inline void update(W_Node &w1, W_Node &w2,
 }
 
 inline float wTx(SpMat const &problem, Model &model, size_t const i, 
-    float const kappa=0, float const eta=0, bool const do_update=false)
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
 {
     float t = 0;
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
@@ -105,7 +106,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
                 W_Node &w1 = model.W[j1%kW_SIZE].wv[f2*model.k+d];
                 W_Node &w2 = model.W[j2%kW_SIZE].wv[f1*model.k+d];
                 if(do_update)
-                    update(w1, w2, kappa*x1*x2, eta);
+                    update(w1, w2, kappa*x1*x2, eta, lambda);
                 else
                     t += w1.w*w2.w*x1*x2;
             }

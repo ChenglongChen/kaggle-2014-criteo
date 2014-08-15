@@ -14,9 +14,9 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), iter(5), k(1) {}
+    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(1) {}
     std::string Tr_path, model_path, Va_path;
-    float eta;
+    float eta, lambda;
     size_t iter, k;
 };
 
@@ -26,7 +26,8 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-k <iteration>: you know\n"
+"-l <labmda>: you know\n"
+"-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n");
@@ -61,6 +62,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.eta = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-l") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.lambda = std::stof(args[++i]);
         }
         else if(args[i].compare("-v") == 0)
         {
@@ -139,7 +146,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, true);
+            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
