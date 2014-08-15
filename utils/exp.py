@@ -12,7 +12,7 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 start = time.time()
-for size in ["x", "100", "10", "1", "0"]:
+for size in ["x", "100", "10", "1"]:
     tr_csv = 'tr.r{size}.csv'.format(size=size)
     tr_svm = 'tr.r{size}.svm'.format(size=size)
     va_csv = 'va.r{size}.csv'.format(size=size)
