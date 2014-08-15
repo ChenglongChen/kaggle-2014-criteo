@@ -36,11 +36,14 @@ fi
 #ln -sf solvers/superliblinear-poly2/train supertrain-poly2
 #ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
 make -C solvers/fm
-ln -sf solvers/fm/fm-train anony0-train
-ln -sf solvers/fm/fm-predict anony0-predict
+ln -sf solvers/fm/fm-train .
+ln -sf solvers/fm/fm-predict .
 make -C solvers/fm-sse
-ln -sf solvers/fm-sse/fm-sse-train anony1-train
-ln -sf solvers/fm-sse/fm-sse-predict anony1-predict
+ln -sf solvers/fm-sse/fm-sse-train .
+ln -sf solvers/fm-sse/fm-sse-predict .
+make -C solvers/fm-linear
+ln -sf solvers/fm-linear/fm-linear-train .
+ln -sf solvers/fm-linear/fm-linear-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
