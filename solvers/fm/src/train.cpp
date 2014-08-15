@@ -14,10 +14,11 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(1) {}
+    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
     size_t iter, k;
+    bool save_model;
 };
 
 std::string train_help()
@@ -30,7 +31,8 @@ std::string train_help()
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
-"-v <path>: you know\n");
+"-v <path>: you know\n"
+"-q: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -74,6 +76,10 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.Va_path = args[++i];
+        }
+        else if(args[i].compare("-q") == 0)
+        {
+            opt.save_model = false;
         }
         else
         {
@@ -187,7 +193,8 @@ int main(int const argc, char const * const * const argv)
 
     Model model = train(Tr, Va, opt);
 
-    save_model(model, opt.model_path);
+    if(opt.save_model)
+        save_model(model, opt.model_path);
 
     return EXIT_SUCCESS;
 }

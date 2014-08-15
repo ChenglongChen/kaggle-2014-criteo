@@ -38,6 +38,9 @@ fi
 make -C solvers/fm
 ln -sf solvers/fm/fm-train anony0-train
 ln -sf solvers/fm/fm-predict anony0-predict
+make -C solvers/fm-sse
+ln -sf solvers/fm-sse/fm-sse-train anony1-train
+ln -sf solvers/fm-sse/fm-sse-predict anony1-predict
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
