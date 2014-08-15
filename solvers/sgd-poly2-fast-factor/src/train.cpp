@@ -105,7 +105,7 @@ void init_mode(Model &model)
     for(size_t j = 0; j < kW_SIZE; ++j)
         for(size_t f = 0; f < kF_SIZE; ++f)
             for(size_t d = 0; d < model.k; ++d)
-                model.W[j%kW_SIZE].wv[f*model.k+d].w = 0.1f*static_cast<float>(drand48());
+                model.W[j%kW_SIZE].wv[f*model.k+d].w = 0.5f*static_cast<float>(drand48());
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
