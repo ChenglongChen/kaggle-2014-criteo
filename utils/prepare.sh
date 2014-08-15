@@ -28,7 +28,7 @@ ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
 make -C solvers/sgd-poly2-fast-sp3/
 ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-train-fast-sp3 .
 ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-predict-fast-sp3 .
-make -C solvers/superliblinear/
+make -C solvers/superliblinear-poly2/
 ln -sf solvers/superliblinear-poly2/train supertrain-poly2
 ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
 
