@@ -43,6 +43,7 @@ struct W_Vector
 {
     W_Vector(size_t const k) : wv(kF_SIZE*k) {}
     std::vector<W_Node> wv;
+    W_Node & operator [] (size_t idx) {return wv[idx];}
 };
 
 struct Model
@@ -103,8 +104,8 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
 
             for(size_t d = 0; d < model.k; ++d)
             {
-                W_Node &w1 = model.W[j1%kW_SIZE].wv[f2*model.k+d];
-                W_Node &w2 = model.W[j2%kW_SIZE].wv[f1*model.k+d];
+                W_Node &w1 = model.W[j1%kW_SIZE][f2*model.k+d];
+                W_Node &w2 = model.W[j2%kW_SIZE][f1*model.k+d];
                 if(do_update)
                     update(w1, w2, kappa*x1*x2, eta, lambda);
                 else

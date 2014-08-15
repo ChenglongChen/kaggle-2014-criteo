@@ -49,15 +49,21 @@ SpMat read_data(std::string const tr_path)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
-    //fwrite(model.W.data(), sizeof(WNode),kW_SIZE, f);
+    fwrite(&model.k, sizeof(size_t), 1, f);
+    for(size_t j = 0; j < kW_SIZE; ++j)
+        fwrite(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
     fclose(f);
 }
 
 Model load_model(std::string const &path)
 {
-    Model model(0);
     FILE *f = fopen(path.c_str(), "rb");
-    //fread(model.W.data(), sizeof(WNode), kW_SIZE, f);
+    size_t k;
+    fread(&k, sizeof(size_t), 1, f);
+
+    Model model(k);
+    for(size_t j = 0; j < kW_SIZE; ++j)
+        fread(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
     fclose(f);
     return model;
 }
