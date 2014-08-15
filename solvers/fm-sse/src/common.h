@@ -59,47 +59,81 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     bool const do_update=false)
 {
     size_t const k = model.k;
-    float t = 0;
+    __m128 const XMMkappa = _mm_load1_ps(&kappa);
+    __m128 const XMMeta = _mm_load1_ps(&eta);
+    __m128 const XMMlambda = _mm_load1_ps(&lambda);
+
+    __m128 XMMt = _mm_setzero_ps();
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         size_t const j1 = problem.JX[idx1].j;
         size_t const f1 = problem.JX[idx1].f;
-        float const x1 = problem.JX[idx1].x;
-        float const kappa_x1 = do_update? kappa*x1 : 0;
+        __m128 const XMMx1 = _mm_load1_ps(&problem.JX[idx1].x);
+        __m128 const XMMkappa_x1 = _mm_mul_ps(XMMkappa, XMMx1);
+
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
             size_t const f2 = problem.JX[idx2].f;
-            float const x2 = problem.JX[idx2].x;
-            float const kappa_x1_x2 = do_update? kappa_x1*x2 : 0;
+            __m128 const XMMx2 = _mm_load1_ps(&problem.JX[idx2].x);
+            __m128 const XMMkappa_x1_x2 = _mm_mul_ps(XMMkappa_x1, XMMx2);
 
-            float * w1 = model.W.data()+j1*kF_SIZE*k*2+f2*k*2;
-            float * w2 = model.W.data()+j2*kF_SIZE*k*2+f1*k*2;
+            float * const w1 = model.W.data()+j1*kF_SIZE*k*2+f2*k*2;
+            float * const w2 = model.W.data()+j2*kF_SIZE*k*2+f1*k*2;
 
             if(do_update)
             {
-                for(size_t d = 0; d < k; ++d, ++w1, ++w2)
+                for(size_t d = 0; d < k; d += 4)
                 {
-                    float * const wg1 = w1+k;
-                    float * const wg2 = w2+k;
+                    __m128 XMMw1 = _mm_load_ps(w1+d);
+                    __m128 XMMw2 = _mm_load_ps(w2+d);
 
-                    float const g1 = lambda*(*w1) + kappa_x1_x2*(*w2);
-                    float const g2 = lambda*(*w2) + kappa_x1_x2*(*w1);
+                    __m128 XMMwg1 = _mm_load_ps(w1+k+d);
+                    __m128 XMMwg2 = _mm_load_ps(w2+k+d);
 
-                    (*wg1) += g1*g1;
-                    (*wg2) += g2*g2;
+                    __m128 XMMg1 = _mm_add_ps(
+                        _mm_mul_ps(XMMlambda, XMMw1),
+                        _mm_mul_ps(XMMkappa_x1_x2, XMMw2));
+                    __m128 XMMg2 = _mm_add_ps(
+                        _mm_mul_ps(XMMlambda, XMMw2),
+                        _mm_mul_ps(XMMkappa_x1_x2, XMMw1));
 
-                    (*w1) -= eta*qrsqrt(*wg1)*g1;
-                    (*w2) -= eta*qrsqrt(*wg2)*g2;
+                    XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
+                    XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
+
+                    XMMw1 = _mm_sub_ps(XMMw1,
+                        _mm_mul_ps(XMMeta, 
+                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
+                    XMMw2 = _mm_sub_ps(XMMw2,
+                        _mm_mul_ps(XMMeta, 
+                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
+
+                    _mm_store_ps(w1+d, XMMw1);
+                    _mm_store_ps(w2+d, XMMw2);
+
+                    _mm_store_ps(w1+k+d, XMMwg1);
+                    _mm_store_ps(w2+k+d, XMMwg2);
                 }
             }
             else
             {
-                for(size_t d = 0; d < k; ++d, ++w1, ++w2)
-                    t += (*w1)*(*w2)*x1*x2;
+                for(size_t d = 0; d < k; d += 4)
+                {
+                    __m128 const XMMw1 = _mm_load_ps(w1+d);
+                    __m128 const XMMw2 = _mm_load_ps(w2+d);
+
+                    XMMt = _mm_add_ps(XMMt, 
+                        _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMx1), XMMx2));
+                }
             }
         }
     }
+
+    XMMt = _mm_hadd_ps(XMMt, XMMt);
+    XMMt = _mm_hadd_ps(XMMt, XMMt);
+    float t;
+    _mm_store_ss(&t, XMMt);
+
     return t;
 }
 
