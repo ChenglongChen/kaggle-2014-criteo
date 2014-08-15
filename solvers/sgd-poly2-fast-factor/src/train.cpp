@@ -93,9 +93,18 @@ Option parse_option(std::vector<std::string> const &args)
     return option;
 }
 
+void init_mode(Model &model)
+{
+    for(size_t j = 0; j < kW_SIZE; ++j)
+        for(size_t f = 0; f < kF_SIZE; ++f)
+            model.W[j%kW_SIZE].wv[f].w = 0.1f*static_cast<float>(drand48());
+}
+
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     Model model;
+
+    init_mode(model);
 
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)

@@ -31,7 +31,7 @@ struct SpMat
 SpMat read_data(std::string const tr_path);
 
 size_t const kW_SIZE = 1e+7;
-size_t const kNR_FIELDS = 39;
+size_t const kF_SIZE = 39;
 
 struct W_Node
 {
@@ -41,7 +41,7 @@ struct W_Node
 
 struct W_Vector
 {
-    W_Vector() : wv(kNR_FIELDS) {}
+    W_Vector() : wv(kF_SIZE) {}
     std::vector<W_Node> wv;
 };
 
@@ -77,8 +77,8 @@ inline void update(W_Node &w1, W_Node &w2,
     float const g1 = kappa_x1_x2*w2.w;
     float const g2 = kappa_x1_x2*w1.w;
 
-    w1.wg += g1;
-    w2.wg += g2;
+    w1.wg += g1*g1;
+    w2.wg += g2*g2;
 
     w1.w -= eta*qrsqrt(w1.wg)*g1;
     w2.w -= eta*qrsqrt(w2.wg)*g2;
