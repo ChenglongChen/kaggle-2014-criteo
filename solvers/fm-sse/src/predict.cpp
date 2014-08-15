@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <omp.h>
 
 #include "common.h"
 
@@ -57,6 +58,8 @@ int main(int const argc, char const * const * const argv)
         std::cout << "\n" << e.what() << "\n";
         return EXIT_FAILURE;
     }
+
+	omp_set_num_threads(1);
 
     SpMat const Te = read_data(opt.Te_path);
 

@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <cstring>
+#include <omp.h>
 
 #include "common.h"
 
@@ -93,6 +94,7 @@ float predict(SpMat const &problem, Model &model,
         f = open_c_file(output_path, "w");
 
     double loss = 0;
+#pragma omp parallel for schedule(static) reduction(+:loss)
     for(size_t i = 0; i < problem.Y.size(); ++i)
     {
         float const y = problem.Y[i];
