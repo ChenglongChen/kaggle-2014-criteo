@@ -39,7 +39,7 @@ Option parse_option(std::vector<std::string> const &args)
     if(argc == 0)
         throw std::invalid_argument(train_help());
 
-    Option option; 
+    Option opt; 
 
     size_t i = 0;
     for(; i < argc; ++i)
@@ -48,25 +48,25 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.iter = std::stoi(args[++i]);
+            opt.iter = std::stoi(args[++i]);
         }
         else if(args[i].compare("-k") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.k = std::stoi(args[++i]);
+            opt.k = std::stoi(args[++i]);
         }
         else if(args[i].compare("-r") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.eta = std::stof(args[++i]);
+            opt.eta = std::stof(args[++i]);
         }
         else if(args[i].compare("-v") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            option.Va_path = args[++i];
+            opt.Va_path = args[++i];
         }
         else
         {
@@ -77,27 +77,27 @@ Option parse_option(std::vector<std::string> const &args)
     if(i >= argc)
         throw std::invalid_argument("training data not specified");
 
-    option.Tr_path = args[i++];
+    opt.Tr_path = args[i++];
 
     if(i < argc)
     {
-        option.model_path = std::string(args[i]);
+        opt.model_path = std::string(args[i]);
     }
     else if(i == argc)
     {
-        const char *ptr = strrchr(&*option.Tr_path.begin(),'/');
+        const char *ptr = strrchr(&*opt.Tr_path.begin(),'/');
         if(!ptr)
-            ptr = option.Tr_path.c_str();
+            ptr = opt.Tr_path.c_str();
         else
             ++ptr;
-        option.model_path = std::string(ptr) + ".model";
+        opt.model_path = std::string(ptr) + ".model";
     }
     else
     {
         throw std::invalid_argument("invalid argument");
     }
 
-    return option;
+    return opt;
 }
 
 void init_mode(Model &model)
