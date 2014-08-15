@@ -32,8 +32,8 @@ make -C solvers/superliblinear-poly2/
 ln -sf solvers/superliblinear-poly2/train supertrain-poly2
 ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
 make -C solvers/sgd-poly2-fast-factor/
-ln -sf solvers/sgd-poly2-fast/sgd-poly2-train-fast-factor .
-ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast-factor .
+ln -sf solvers/sgd-poly2-fast-factor/sgd-poly2-train-fast-factor .
+ln -sf solvers/sgd-poly2-fast-factor/sgd-poly2-predict-fast-factor .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv

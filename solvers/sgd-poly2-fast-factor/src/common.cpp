@@ -26,14 +26,16 @@ SpMat read_data(std::string const tr_path)
         float const y = (atoi(p)>0)? 1.0f : -1.0f;
         while(1)
         {
+            char *field_char = strtok(nullptr,":");
             char *idx_char = strtok(nullptr,":");
             char *val_char = strtok(nullptr," \t");
             if(val_char == nullptr || *val_char == '\n')
                 break;
+            size_t field = static_cast<size_t>(atoi(field_char));
             size_t idx = static_cast<size_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
             spmat.n = std::max(spmat.n, idx);
-            spmat.JX.emplace_back(idx-1, val);
+            spmat.JX.emplace_back(field, idx-1, val);
         }
         spmat.P.push_back(spmat.JX.size());
         spmat.Y.push_back(y);
@@ -47,7 +49,7 @@ SpMat read_data(std::string const tr_path)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
-    fwrite(model.W.data(), sizeof(WNode),kW_SIZE, f);
+    //fwrite(model.W.data(), sizeof(WNode),kW_SIZE, f);
     fclose(f);
 }
 
@@ -55,7 +57,7 @@ Model load_model(std::string const &path)
 {
     Model model;
     FILE *f = fopen(path.c_str(), "rb");
-    fread(model.W.data(), sizeof(WNode), kW_SIZE, f);
+    //fread(model.W.data(), sizeof(WNode), kW_SIZE, f);
     fclose(f);
     return model;
 }

@@ -14,8 +14,8 @@
 
 struct Node
 {
-    Node(size_t const j, float const x) : j(j), x(x) {}
-    size_t j;
+    Node(size_t const f, size_t const j, float const x) : f(f), j(j), x(x) {}
+    size_t f, j;
     float x;
 };
 
@@ -30,18 +30,25 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+8;
+size_t const kW_SIZE = 1e+7;
+size_t const kNR_FIELDS = 39;
 
-struct WNode
+struct W_Node
 {
-    WNode() : w(0), wg(0) {}
+    W_Node() : w(0), wg(0) {}
     float w, wg;
+};
+
+struct W_Vector
+{
+    W_Vector() : wv(kNR_FIELDS) {}
+    std::vector<W_Node> wv;
 };
 
 struct Model
 {
     Model() : W(kW_SIZE) {}
-    std::vector<WNode> W;
+    std::vector<W_Vector> W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -64,11 +71,17 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline void update(Model &model, size_t const w_idx, float const g, float const eta)
+inline void update(W_Node &w1, W_Node &w2, 
+    float const kappa_x1_x2, float const eta)
 {
-    WNode &w1 = model.W[w_idx];
-    w1.wg += g*g;
-    w1.w -= eta*qrsqrt(w1.wg)*g;
+    float const g1 = kappa_x1_x2*w2.w;
+    float const g2 = kappa_x1_x2*w1.w;
+
+    w1.wg += g1;
+    w2.wg += g2;
+
+    w1.w -= eta*qrsqrt(w1.wg)*g1;
+    w2.w -= eta*qrsqrt(w2.wg)*g2;
 }
 
 inline float wTx(SpMat const &problem, Model &model, size_t const i, 
@@ -78,18 +91,21 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         size_t const j1 = problem.JX[idx1].j;
+        size_t const f1 = problem.JX[idx1].f;
         float const x1 = problem.JX[idx1].x;
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
+            size_t const f2 = problem.JX[idx2].f;
             float const x2 = problem.JX[idx2].x;
 
-            size_t const w_idx = calc_w_idx(j1,j2);
+            W_Node &w1 = model.W[j1%kW_SIZE].wv[f2];
+            W_Node &w2 = model.W[j2%kW_SIZE].wv[f1];
 
             if(do_update)
-                update(model, w_idx, kappa*x1*x2, eta);
+                update(w1, w2, kappa*x1*x2, eta);
             else
-                t += model.W[w_idx].w*x1*x2;
+                t += w1.w*w2.w*x1*x2;
         }
     }
     return t;
