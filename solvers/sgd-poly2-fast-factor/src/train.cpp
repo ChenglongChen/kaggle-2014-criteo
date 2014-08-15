@@ -109,10 +109,13 @@ Option parse_option(std::vector<std::string> const &args)
 
 void init_mode(Model &model)
 {
+    float const coef = 
+        static_cast<float>(0.5/sqrt(static_cast<double>(model.k)));
     for(size_t j = 0; j < kW_SIZE; ++j)
         for(size_t f = 0; f < kF_SIZE; ++f)
             for(size_t d = 0; d < model.k; ++d)
-                model.W[j%kW_SIZE].wv[f*model.k+d].w = 0.5f*static_cast<float>(drand48());
+                model.W[j%kW_SIZE].wv[f*model.k+d].w = 
+                    coef*static_cast<float>(drand48());
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
