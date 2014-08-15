@@ -35,7 +35,7 @@ SpMat read_data(std::string const tr_path)
             size_t idx = static_cast<size_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
             spmat.n = std::max(spmat.n, idx);
-            spmat.JX.emplace_back(field, idx-1, val);
+            spmat.JX.emplace_back(field-1, idx-1, val);
         }
         spmat.P.push_back(spmat.JX.size());
         spmat.Y.push_back(y);
@@ -49,8 +49,9 @@ SpMat read_data(std::string const tr_path)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
+    fwrite(&model.n, sizeof(size_t), 1, f);
     fwrite(&model.k, sizeof(size_t), 1, f);
-    for(size_t j = 0; j < kW_SIZE; ++j)
+    for(size_t j = 0; j < model.n; ++j)
         fwrite(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
     fclose(f);
 }
@@ -58,11 +59,12 @@ void save_model(Model const &model, std::string const &path)
 Model load_model(std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "rb");
-    size_t k;
+    size_t k, n;
+    fread(&n, sizeof(size_t), 1, f);
     fread(&k, sizeof(size_t), 1, f);
 
-    Model model(k);
-    for(size_t j = 0; j < kW_SIZE; ++j)
+    Model model(n, k);
+    for(size_t j = 0; j < model.n; ++j)
         fread(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
     fclose(f);
     return model;

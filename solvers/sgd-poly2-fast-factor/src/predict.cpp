@@ -64,7 +64,7 @@ int main(int const argc, char const * const * const argv)
     
     float const Te_loss = predict(Te, model, opt.output_path);
 
-    printf("losloss = %f\n", Te_loss);
+    printf("logloss = %f\n", Te_loss);
 
     return EXIT_SUCCESS;
 }

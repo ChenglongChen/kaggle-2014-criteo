@@ -30,7 +30,6 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+7;
 size_t const kF_SIZE = 39;
 
 struct W_Node
@@ -43,14 +42,14 @@ struct W_Vector
 {
     W_Vector(size_t const k) : wv(kF_SIZE*k) {}
     std::vector<W_Node> wv;
-    W_Node & operator [] (size_t idx) {return wv[idx];}
+    W_Node & operator [] (size_t idx) { return wv[idx]; }
 };
 
 struct Model
 {
-    Model(size_t const k) : W(kW_SIZE, k), k(k) {}
+    Model(size_t const n, size_t const k) : W(n, k), n(n), k(k) {}
     std::vector<W_Vector> W;
-    size_t k;
+    const size_t n, k;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -61,11 +60,6 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
-
-inline size_t calc_w_idx(size_t const a, size_t const b)
-{
-    return ((a+b)*(a+b+1)/2+b)%kW_SIZE;
-}
 
 inline float qrsqrt(float x)
 {
@@ -104,8 +98,8 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
 
             for(size_t d = 0; d < model.k; ++d)
             {
-                W_Node &w1 = model.W[j1%kW_SIZE][f2*model.k+d];
-                W_Node &w2 = model.W[j2%kW_SIZE][f1*model.k+d];
+                W_Node &w1 = model.W[j1][f2*model.k+d];
+                W_Node &w2 = model.W[j2][f1*model.k+d];
                 if(do_update)
                     update(w1, w2, kappa*x1*x2, eta, lambda);
                 else

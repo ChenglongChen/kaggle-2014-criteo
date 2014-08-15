@@ -107,22 +107,21 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void init_mode(Model &model)
+void init_model(Model &model)
 {
     float const coef = 
         static_cast<float>(0.5/sqrt(static_cast<double>(model.k)));
-    for(size_t j = 0; j < kW_SIZE; ++j)
+    for(size_t j = 0; j < model.n; ++j)
         for(size_t f = 0; f < kF_SIZE; ++f)
             for(size_t d = 0; d < model.k; ++d)
-                model.W[j%kW_SIZE][f*model.k+d].w = 
-                    coef*static_cast<float>(drand48());
+                model.W[j][f*model.k+d].w = coef*static_cast<float>(drand48());
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    Model model(opt.k);
+    Model model(Tr.n, opt.k);
 
-    init_mode(model);
+    init_model(model);
 
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)

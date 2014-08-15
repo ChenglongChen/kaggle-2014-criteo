@@ -34,7 +34,6 @@ with open(args['svm_path'], 'w') as f:
             type, field = field[0], int(field[1:])
             if type == 'C' and feat not in frequent_feats:
                 feat = feat.split('-')[0]+'less'
-            field -= 1
             if type == 'C':
                 field += 13
             feats.append((field, feat))
