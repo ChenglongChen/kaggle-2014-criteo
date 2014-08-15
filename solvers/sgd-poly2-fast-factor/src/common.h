@@ -35,7 +35,7 @@ size_t const kF_SIZE = 39;
 
 struct W_Node
 {
-    W_Node() : w(0), wg(0) {}
+    W_Node() : w(0), wg(1) {}
     float w, wg;
 };
 
