@@ -30,7 +30,7 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+6;
+size_t const kW_SIZE = 1e+7;
 size_t const kF_SIZE = 39;
 
 struct W_Node
