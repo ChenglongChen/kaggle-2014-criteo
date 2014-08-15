@@ -55,7 +55,7 @@ void save_model(Model const &model, std::string const &path)
 
 Model load_model(std::string const &path)
 {
-    Model model;
+    Model model(0);
     FILE *f = fopen(path.c_str(), "rb");
     //fread(model.W.data(), sizeof(WNode), kW_SIZE, f);
     fclose(f);

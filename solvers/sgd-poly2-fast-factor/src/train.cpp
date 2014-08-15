@@ -14,10 +14,10 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), iter(5) {}
+    Option() : eta(0.1f), iter(5), k(1) {}
     std::string Tr_path, model_path, Va_path;
     float eta;
-    size_t iter;
+    size_t iter, k;
 };
 
 std::string train_help()
@@ -26,6 +26,7 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
+"-k <iteration>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-v <path>: you know\n");
@@ -48,6 +49,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             option.iter = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-k") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            option.k = std::stoi(args[++i]);
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -97,12 +104,13 @@ void init_mode(Model &model)
 {
     for(size_t j = 0; j < kW_SIZE; ++j)
         for(size_t f = 0; f < kF_SIZE; ++f)
-            model.W[j%kW_SIZE].wv[f].w = 0.1f*static_cast<float>(drand48());
+            for(size_t d = 0; d < model.k; ++d)
+                model.W[j%kW_SIZE].wv[f*model.k+d].w = 0.1f*static_cast<float>(drand48());
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
-    Model model;
+    Model model(opt.k);
 
     init_mode(model);
 

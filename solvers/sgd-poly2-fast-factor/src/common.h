@@ -30,7 +30,7 @@ struct SpMat
 
 SpMat read_data(std::string const tr_path);
 
-size_t const kW_SIZE = 1e+7;
+size_t const kW_SIZE = 1e+6;
 size_t const kF_SIZE = 39;
 
 struct W_Node
@@ -41,14 +41,15 @@ struct W_Node
 
 struct W_Vector
 {
-    W_Vector() : wv(kF_SIZE) {}
+    W_Vector(size_t const k) : wv(kF_SIZE*k) {}
     std::vector<W_Node> wv;
 };
 
 struct Model
 {
-    Model() : W(kW_SIZE) {}
+    Model(size_t const k) : W(kW_SIZE, k), k(k) {}
     std::vector<W_Vector> W;
+    size_t k;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -72,7 +73,7 @@ inline float qrsqrt(float x)
 }
 
 inline void update(W_Node &w1, W_Node &w2, 
-    float const kappa_x1_x2, float const eta)
+    float const kappa_x1_x2, float const eta, size_t const k)
 {
     float const g1 = kappa_x1_x2*w2.w;
     float const g2 = kappa_x1_x2*w1.w;
@@ -99,13 +100,15 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             size_t const f2 = problem.JX[idx2].f;
             float const x2 = problem.JX[idx2].x;
 
-            W_Node &w1 = model.W[j1%kW_SIZE].wv[f2];
-            W_Node &w2 = model.W[j2%kW_SIZE].wv[f1];
-
-            if(do_update)
-                update(w1, w2, kappa*x1*x2, eta);
-            else
-                t += w1.w*w2.w*x1*x2;
+            for(size_t d = 0; d < model.k; ++d)
+            {
+                W_Node &w1 = model.W[j1%kW_SIZE].wv[f2*model.k+d];
+                W_Node &w2 = model.W[j2%kW_SIZE].wv[f1*model.k+d];
+                if(do_update)
+                    update(w1, w2, kappa*x1*x2, eta, model.k);
+                else
+                    t += w1.w*w2.w*x1*x2;
+            }
         }
     }
     return t;
