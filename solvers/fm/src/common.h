@@ -90,21 +90,32 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
         size_t const j1 = problem.JX[idx1].j;
         size_t const f1 = problem.JX[idx1].f;
         float const x1 = problem.JX[idx1].x;
+        float const kappa_x1 = do_update? kappa*x1 : 0;
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
             size_t const f2 = problem.JX[idx2].f;
             float const x2 = problem.JX[idx2].x;
+            float const kappa_x1_x2 = do_update? kappa_x1*x2 : 0;
 
-            for(size_t d = 0; d < model.k; ++d)
-            {
-                W_Node &w1 = model.W[j1][f2*model.k+d];
-                W_Node &w2 = model.W[j2][f1*model.k+d];
-                if(do_update)
-                    update(w1, w2, kappa*x1*x2, eta, lambda);
-                else
-                    t += w1.w*w2.w*x1*x2;
-            }
+            W_Node * w1 = &model.W[j1][f2*model.k];
+            W_Node * w2 = &model.W[j2][f1*model.k];
+
+            if(do_update)
+                for(size_t d = 0; d < model.k; ++d, ++w1, ++w2)
+                {
+                    float const g1 = lambda*w1->w + kappa_x1_x2*w2->w;
+                    float const g2 = lambda*w2->w + kappa_x1_x2*w1->w;
+
+                    w1->wg += g1*g1;
+                    w2->wg += g2*g2;
+
+                    w1->w -= eta*qrsqrt(w1->wg)*g1;
+                    w2->w -= eta*qrsqrt(w2->wg)*g2;
+                }
+            else
+                for(size_t d = 0; d < model.k; ++d, ++w1, ++w2)
+                    t += w1->w*w2->w*x1*x2;
         }
     }
     return t;
