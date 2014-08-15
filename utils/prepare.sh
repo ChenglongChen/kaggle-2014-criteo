@@ -1,15 +1,19 @@
 #!/bin/bash
 
+if [[ "$(hostname)" == linux* ]]; then
 cd ~/work2/kaggle.2014.criteo/
+elif [[ "$(hostname)" == optima ]] || [[ "$(hostname)" == schroeder ]]; then
+cd ~/work/kaggle.2014.criteo/
+fi
 #make -C solvers/superliblinear/
 #ln -sf solvers/superliblinear/train supertrain
 #ln -sf solvers/superliblinear/predict superpredict
 #make -C solvers/sgd-poly2/
 #ln -sf solvers/sgd-poly2/sgd-poly2-train .
 #ln -sf solvers/sgd-poly2/sgd-poly2-predict .
-make -C solvers/sgd-poly2-fast/
-ln -sf solvers/sgd-poly2-fast/sgd-poly2-train-fast .
-ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
+#make -C solvers/sgd-poly2-fast/
+#ln -sf solvers/sgd-poly2-fast/sgd-poly2-train-fast .
+#ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
 #make -C solvers/sgd-poly3-fast/
 #ln -sf solvers/sgd-poly3-fast/sgd-poly3-train-fast .
 #ln -sf solvers/sgd-poly3-fast/sgd-poly3-predict-fast .
@@ -25,15 +29,15 @@ ln -sf solvers/sgd-poly2-fast/sgd-poly2-predict-fast .
 #make -C solvers/sgd-poly2-fast-sp2/
 #ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-train-fast-sp2 .
 #ln -sf solvers/sgd-poly2-fast-sp2/sgd-poly2-predict-fast-sp2 .
-make -C solvers/sgd-poly2-fast-sp3/
-ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-train-fast-sp3 .
-ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-predict-fast-sp3 .
-make -C solvers/superliblinear-poly2/
-ln -sf solvers/superliblinear-poly2/train supertrain-poly2
-ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
-make -C solvers/sgd-poly2-fast-factor/
-ln -sf solvers/sgd-poly2-fast-factor/sgd-poly2-train-fast-factor .
-ln -sf solvers/sgd-poly2-fast-factor/sgd-poly2-predict-fast-factor .
+#make -C solvers/sgd-poly2-fast-sp3/
+#ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-train-fast-sp3 .
+#ln -sf solvers/sgd-poly2-fast-sp3/sgd-poly2-predict-fast-sp3 .
+#make -C solvers/superliblinear-poly2/
+#ln -sf solvers/superliblinear-poly2/train supertrain-poly2
+#ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
+make -C solvers/fm
+ln -sf solvers/fm/fm-train anony0-train
+ln -sf solvers/fm/fm-predict anony0-predict
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
