@@ -141,6 +141,11 @@ void init_model(Model &model, size_t const k_real)
                 *w = 1;
         }
     }
+
+    for(size_t j = 0; j < model.n; ++j)
+    {
+        model.WL[2*j+1] = 1.0f;
+    }
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)

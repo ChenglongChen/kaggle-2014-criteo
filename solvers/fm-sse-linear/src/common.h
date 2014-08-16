@@ -34,8 +34,8 @@ size_t const kF_SIZE = 39;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*2, 0), n(n), k(k) {}
-    std::vector<float> W;
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*2, 0), WL(n*2, 0), n(n), k(k) {}
+    std::vector<float> W, WL;
     const size_t n, k;
 };
 
@@ -64,6 +64,29 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
+
+    float tl = 0.0f;
+    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
+    {
+        size_t const j1 = problem.JX[idx1].j;
+        float const x1 = problem.JX[idx1].x;
+        float &w = model.WL[j1*2];
+        float &wG = model.WL[j1*2+1];
+
+        if(do_update)
+        {
+            float const g = lambda*w + kappa*x1;
+
+            wG += g*g;
+
+            w -= eta*qrsqrt(wG)*g;
+        }
+        else
+        {
+            tl += w*x1;
+        }
+    }
+
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         size_t const j1 = problem.JX[idx1].j;
@@ -133,6 +156,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     XMMt = _mm_hadd_ps(XMMt, XMMt);
     float t;
     _mm_store_ss(&t, XMMt);
+    t += tl;
 
     return t;
 }
