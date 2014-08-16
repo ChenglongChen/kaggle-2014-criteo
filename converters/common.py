@@ -50,3 +50,13 @@ def read_freqent_feats(threshold=10):
             continue
         frequent_feats.add(row['Field']+'-'+row['Value'])
     return frequent_feats
+
+def gen_hashed_fm_feats(feats, nr_bins, coef=None):
+    feats = [(field, hashstr(feat, nr_bins)) for (field, feat) in feats]
+    feats.sort()
+    if coef is not None:
+        val = coef
+    else:
+        val = 1/math.sqrt(float(len(feats)))
+    feats = ['{0}:{1}:{2}'.format(field, idx, val) for (field, idx) in feats]
+    return feats
