@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <omp.h>
 
 #include "common.h"
 #include "timer.h"
@@ -14,10 +15,10 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(1), save_model(true) {}
+    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(4), k_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    size_t iter, k;
+    size_t iter, k, k_real, nr_threads;
     bool save_model;
 };
 
@@ -31,6 +32,7 @@ std::string train_help()
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
+"-s <nr_threads>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
 }
@@ -57,7 +59,8 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.k = std::stoi(args[++i]);
+            opt.k_real = std::stoi(args[++i]);
+            opt.k = static_cast<size_t>(ceil(static_cast<float>(opt.k_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -76,6 +79,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.Va_path = args[++i];
+        }
+        else if(args[i].compare("-s") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.nr_threads = std::stoi(args[++i]);
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -113,21 +122,32 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void init_model(Model &model)
+void init_model(Model &model, size_t const k_real)
 {
+    size_t const k = model.k;
     float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(model.k)));
+        static_cast<float>(0.5/sqrt(static_cast<double>(k_real)));
+
+    float * w = model.W.data();
     for(size_t j = 0; j < model.n; ++j)
+    {
         for(size_t f = 0; f < kF_SIZE; ++f)
-            for(size_t d = 0; d < model.k; ++d)
-                model.W[j][f*model.k+d].w = coef*static_cast<float>(drand48());
+        {
+            for(size_t d = 0; d < k_real; ++d, ++w)
+                *w = coef*static_cast<float>(drand48());
+            for(size_t d = k_real; d < k; ++d, ++w)
+                *w = 0;
+            for(size_t d = k; d < 2*k; ++d, ++w)
+                *w = 1;
+        }
+    }
 }
 
 Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 {
     Model model(Tr.n, opt.k);
 
-    init_model(model);
+    init_model(model, opt.k_real);
 
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
@@ -140,6 +160,7 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
 
         double Tr_loss = 0;
         std::random_shuffle(order.begin(), order.end());
+#pragma omp parallel for schedule(static)
         for(size_t i_ = 0; i_ < order.size(); ++i_)
         {
             size_t const i = order[i_];
@@ -184,6 +205,8 @@ int main(int const argc, char const * const * const argv)
         std::cout << "\n" << e.what() << "\n";
         return EXIT_FAILURE;
     }
+
+	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
     SpMat const Tr = read_data(opt.Tr_path);
 

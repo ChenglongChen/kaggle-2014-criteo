@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <cstring>
+#include <omp.h>
 
 #include "common.h"
 
@@ -51,8 +52,7 @@ void save_model(Model const &model, std::string const &path)
     FILE *f = fopen(path.c_str(), "wb");
     fwrite(&model.n, sizeof(size_t), 1, f);
     fwrite(&model.k, sizeof(size_t), 1, f);
-    for(size_t j = 0; j < model.n; ++j)
-        fwrite(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
+    fwrite(model.W.data(), sizeof(float), model.n*kF_SIZE*model.k*2, f);
     fclose(f);
 }
 
@@ -64,8 +64,7 @@ Model load_model(std::string const &path)
     fread(&k, sizeof(size_t), 1, f);
 
     Model model(n, k);
-    for(size_t j = 0; j < model.n; ++j)
-        fread(model.W[j].wv.data(), sizeof(W_Node), kF_SIZE*model.k, f);
+    fread(model.W.data(), sizeof(float), model.n*kF_SIZE*model.k*2, f);
     fclose(f);
     return model;
 }
@@ -95,6 +94,7 @@ float predict(SpMat const &problem, Model &model,
         f = open_c_file(output_path, "w");
 
     double loss = 0;
+#pragma omp parallel for schedule(static) reduction(+:loss)
     for(size_t i = 0; i < problem.Y.size(); ++i)
     {
         float const y = problem.Y[i];
