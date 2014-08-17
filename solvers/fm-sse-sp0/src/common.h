@@ -35,8 +35,9 @@ size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), masks(n*kF_SIZE, 0), n(n), k(k) {}
     std::vector<float> W;
+    std::vector<int> masks;
     const size_t n, k;
 };
 
@@ -86,6 +87,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
 
             if(do_update)
             {
+                model.masks[j1*kF_SIZE+f1] = model.masks[j2*kF_SIZE+f2] = 1;
                 for(size_t d = 0; d < k; d += 4)
                 {
                     __m128 XMMw1 = _mm_load_ps(w1+d);
@@ -120,6 +122,8 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             }
             else
             {
+                if(model.masks[j1*kF_SIZE+f1] == 0 || model.masks[j2*kF_SIZE+f2] == 0)
+                    continue;
                 for(size_t d = 0; d < k; d += 4)
                 {
                     __m128 const XMMw1 = _mm_load_ps(w1+d);
