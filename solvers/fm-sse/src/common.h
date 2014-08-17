@@ -31,10 +31,11 @@ struct SpMat
 SpMat read_data(std::string const tr_path);
 
 size_t const kF_SIZE = 39;
+size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*2, 0), n(n), k(k) {}
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
     std::vector<float> W;
     const size_t n, k;
 };
@@ -78,8 +79,10 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             __m128 const XMMx2 = _mm_load1_ps(&problem.JX[idx2].x);
             __m128 const XMMkappa_x1_x2 = _mm_mul_ps(XMMkappa_x1, XMMx2);
 
-            float * const w1 = model.W.data()+j1*kF_SIZE*k*2+f2*k*2;
-            float * const w2 = model.W.data()+j2*kF_SIZE*k*2+f1*k*2;
+            float * const w1 = 
+                model.W.data()+j1*kF_SIZE*k*kW_NODE_SIZE+f2*k*kW_NODE_SIZE;
+            float * const w2 = 
+                model.W.data()+j2*kF_SIZE*k*kW_NODE_SIZE+f1*k*kW_NODE_SIZE;
 
             if(do_update)
             {
