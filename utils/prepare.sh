@@ -44,9 +44,6 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-sse-linear
 #ln -sf solvers/fm-sse-linear/fm-sse-linear-train .
 #ln -sf solvers/fm-sse-linear/fm-sse-linear-predict .
-make -C solvers/fm-sse-sp2
-ln -sf solvers/fm-sse-sp2/fm-sse-sp2-train .
-ln -sf solvers/fm-sse-sp2/fm-sse-sp2-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
