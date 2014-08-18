@@ -200,8 +200,6 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-	omp_set_num_threads(static_cast<int>(opt.nr_threads));
-
     SpMat const Tr = read_data(opt.Tr_path);
 
     SpMat Va;
@@ -211,6 +209,8 @@ int main(int const argc, char const * const * const argv)
     Model model(Tr.n, opt.k);
 
     init_model(model, opt.k_real);
+
+	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
     train(Tr, Va, model, opt);
 
