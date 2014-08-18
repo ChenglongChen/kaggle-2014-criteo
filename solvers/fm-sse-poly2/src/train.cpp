@@ -15,9 +15,9 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(4), k_real(4), nr_threads(1), save_model(true) {}
+    Option() : eta(0.1f), lambda(0.00001f), lambda_p2(0.1f), iter(5), k(4), k_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    float eta, lambda;
+    float eta, lambda, lambda_p2;
     size_t iter, k, k_real, nr_threads;
     bool save_model;
 };
@@ -28,7 +28,8 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-l <labmda>: you know\n"
+"-l <lambda>: you know\n"
+"-l2 <lambda>: you know\n"
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
@@ -73,6 +74,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.lambda = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-l2") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.lambda_p2 = std::stof(args[++i]);
         }
         else if(args[i].compare("-v") == 0)
         {
@@ -219,7 +226,7 @@ void train_poly2(SpMat const &Tr, SpMat const &Va, Model &model, Option const &o
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx_poly2(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx_poly2(Tr, model, i, kappa, opt.eta, opt.lambda_p2, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 

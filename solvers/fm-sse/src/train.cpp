@@ -143,12 +143,8 @@ void init_model(Model &model, size_t const k_real)
     }
 }
 
-Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
+void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
-    Model model(Tr.n, opt.k);
-
-    init_model(model, opt.k_real);
-
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
@@ -187,8 +183,6 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         printf("\n");
         fflush(stdout);
     }
-
-    return model;
 }
 
 } //unnamed namespace
@@ -214,7 +208,11 @@ int main(int const argc, char const * const * const argv)
     if(!opt.Va_path.empty())
         Va = read_data(opt.Va_path);
 
-    Model model = train(Tr, Va, opt);
+    Model model(Tr.n, opt.k);
+
+    init_model(model, opt.k_real);
+
+    train(Tr, Va, model, opt);
 
     if(opt.save_model)
         save_model(model, opt.model_path);
