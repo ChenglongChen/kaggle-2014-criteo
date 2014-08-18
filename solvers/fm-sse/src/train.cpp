@@ -200,15 +200,23 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
+    printf("reading data...");
+    fflush(stdout);
     SpMat const Tr = read_data(opt.Tr_path);
 
     SpMat Va;
     if(!opt.Va_path.empty())
         Va = read_data(opt.Va_path);
+    printf("done\n");
+    fflush(stdout);
 
+    printf("initializing model...");
+    fflush(stdout);
     Model model(Tr.n, opt.k);
 
     init_model(model, opt.k_real);
+    printf("done\n");
+    fflush(stdout);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
