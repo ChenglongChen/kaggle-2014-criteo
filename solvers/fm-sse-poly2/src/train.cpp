@@ -150,12 +150,8 @@ void init_model(Model &model, size_t const k_real)
     }
 }
 
-Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
+void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
-    Model model(Tr.n, opt.k);
-
-    init_model(model, opt.k_real);
-
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
@@ -194,8 +190,6 @@ Model train(SpMat const &Tr, SpMat const &Va, Option const &opt)
         printf("\n");
         fflush(stdout);
     }
-
-    return model;
 }
 
 void train_poly2(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
@@ -255,15 +249,19 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-	omp_set_num_threads(static_cast<int>(opt.nr_threads));
-
     SpMat const Tr = read_data(opt.Tr_path);
 
     SpMat Va;
     if(!opt.Va_path.empty())
         Va = read_data(opt.Va_path);
 
-    Model model = train(Tr, Va, opt);
+    Model model(Tr.n, opt.k);
+
+    init_model(model, opt.k_real);
+
+	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+
+    train(Tr, Va, model, opt);
 
     train_poly2(Tr, Va, model, opt);
 
