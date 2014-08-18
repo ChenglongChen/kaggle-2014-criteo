@@ -35,8 +35,8 @@ size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
-    std::vector<float> W;
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), WP2(n*kW_NODE_SIZE, 0), n(n), k(k) {}
+    std::vector<float> W, WP2;
     const size_t n, k;
 };
 
@@ -137,6 +137,44 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     float t;
     _mm_store_ss(&t, XMMt);
 
+    return t;
+}
+
+inline size_t calc_w_idx(size_t const a, size_t const b, size_t const n)
+{
+    return ((a+b)*(a+b+1)/2+b)%n;
+}
+
+inline float wTx_poly2(SpMat const &problem, Model &model, 
+    size_t const i, float const kappa=0, float const eta=0, 
+    float const lambda=0, bool const do_update=false)
+{
+    float t = wTx(problem, model, i);
+    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
+    {
+        size_t const j1 = problem.JX[idx1].j;
+        float const x1 = problem.JX[idx1].x;
+        for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
+        {
+            size_t const j2 = problem.JX[idx2].j;
+            float const x2 = problem.JX[idx2].x;
+
+            size_t const w_idx = calc_w_idx(j1,j2,model.n);
+            float &w = model.WP2[w_idx*kW_NODE_SIZE];
+
+            if(do_update)
+            {
+                float &wg = model.WP2[w_idx*kW_NODE_SIZE+1];
+                float const g = lambda*w + kappa*x1*x2;
+                wg += g*g;
+                w -= eta*qrsqrt(wg)*g;
+            }
+            else
+            {
+                t += w*x1*x2;
+            }
+        }
+    }
     return t;
 }
 

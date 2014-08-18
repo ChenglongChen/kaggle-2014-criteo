@@ -101,7 +101,7 @@ float predict(SpMat const &problem, Model &model,
     {
         float const y = problem.Y[i];
 
-        float const t = wTx(problem, model, i);
+        float const t = wTx_poly2(problem, model, i);
         
         float const prob = logistic_func(t);
 
