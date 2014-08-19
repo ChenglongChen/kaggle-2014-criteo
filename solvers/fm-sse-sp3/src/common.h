@@ -10,6 +10,8 @@
 #include <vector>
 #include <cmath>
 
+#include "upairs.h"
+
 #include <pmmintrin.h>
 
 struct Node
@@ -76,6 +78,8 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
         {
             size_t const j2 = problem.JX[idx2].j;
             size_t const f2 = problem.JX[idx2].f;
+            if(useful_pairs[f1*39+f2] == 0)
+                continue;
             __m128 const XMMx2 = _mm_load1_ps(&problem.JX[idx2].x);
             __m128 const XMMkappa_x1_x2 = _mm_mul_ps(XMMkappa_x1, XMMx2);
 
