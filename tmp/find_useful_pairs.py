@@ -20,13 +20,13 @@ for line in open(args['log_path']):
         if logloss < args['threshold']:
             useful_pairs.add((f1, f2))
 
-sys.stdout.write("#include <vector>\n")
-sys.stdout.write("std::vector<int> useful_pairs = {")
+sys.stdout.write("int const useful_pairs [1521] = {")
 
 useful_pairs_ = []
-for f1, f2 in itertools.combinations(range(1, 40), 2):
-    useful = 1 if (f1, f2) in useful_pairs else 0
-    useful_pairs_.append(str(useful))
+for f1 in range(39):
+    for f2 in range(39):
+        useful = 1 if (f1, f2) in useful_pairs else 0
+        useful_pairs_.append(str(useful))
 sys.stdout.write(','.join(useful_pairs_))
 
 sys.stdout.write('};\n')
