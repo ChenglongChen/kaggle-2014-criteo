@@ -12,7 +12,7 @@ LOG_DIR = 'logs/{0}'.format(UUID)
 #    os.makedirs(LOG_DIR)
 
 start = time.time()
-for size in ["100"]:
+for size in ["10"]:
     tr_csv = 'tr.r{size}.csv'.format(size=size)
     tr_svm = 'tr.r{size}.svm'.format(size=size)
     va_csv = 'va.r{size}.csv'.format(size=size)
