@@ -6,7 +6,7 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--threshold', type=float, default=0.55)
+parser.add_argument('-t', '--threshold', type=float, default=0.57)
 parser.add_argument('log_path', type=str)
 args = vars(parser.parse_args())
 
