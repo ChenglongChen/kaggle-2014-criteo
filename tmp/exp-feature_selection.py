@@ -23,13 +23,13 @@ for size in ["100"]:
     worker = subprocess.Popen('echo "" > {0}'.format(log_path), shell=True) 
     worker.communicate()
 
-    for feat1, feat2 in itertools.combinations(range(1, 39), 2):
+    for feat1, feat2 in itertools.combinations(range(1, 40), 2):
         for data_csv, data_svm in [(tr_csv, tr_svm), (va_csv, va_svm)]:
-            cmd = 'converters/parallelizer.py -n 24 "converters/challenger-1.py -f {feat1},{feat2}" {data_csv} {data_svm}'\
+            cmd = 'converters/parallelizer.py -n 16 "converters/challenger-1.py -f {feat1},{feat2}" {data_csv} {data_svm}'\
                 .format(data_csv=data_csv, data_svm=data_svm, feat1=feat1, feat2=feat2)
             subprocess.call(cmd, shell=True)
 
-        cmd = './fm-sse-train -l 0.01 -q -s 24 -t 10 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
+        cmd = './fm-sse-train -l 0.01 -q -s 16 -t 10 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
         #cmd += ' && ./fm-sse-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
         #cmd += ' && ./utils/calc_log_loss.py {va_svm} {out}'.format(va_svm=va_svm, out=out)
         print('f1 = {feat1}, f2 = {feat2}'.format(feat1=feat1, feat2=feat2)) 
