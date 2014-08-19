@@ -12,7 +12,7 @@ LOG_DIR = 'logs/{0}'.format(UUID)
 #    os.makedirs(LOG_DIR)
 
 start = time.time()
-for size in ["100"]:
+for size in ["10"]:
     tr_csv = 'tr.r{size}.csv'.format(size=size)
     tr_svm = 'tr.r{size}.svm'.format(size=size)
     va_csv = 'va.r{size}.csv'.format(size=size)
@@ -23,7 +23,7 @@ for size in ["100"]:
     worker = subprocess.Popen('echo "" > {0}'.format(log_path), shell=True) 
     worker.communicate()
 
-    for feat1, feat2 in itertools.combinations(range(1, 39), 2):
+    for feat1, feat2 in itertools.combinations(range(1, 40), 2):
         for data_csv, data_svm in [(tr_csv, tr_svm), (va_csv, va_svm)]:
             cmd = 'converters/parallelizer.py -n 24 "converters/challenger-1.py -f {feat1},{feat2}" {data_csv} {data_svm}'\
                 .format(data_csv=data_csv, data_svm=data_svm, feat1=feat1, feat2=feat2)
