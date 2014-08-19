@@ -25,7 +25,7 @@ for field in FIELDS:
     if field <= 13:
         I_FIELDS.append(field)
     else:
-        C_FIELDS.append(field)
+        C_FIELDS.append(field-13)
 
 def gen_feats(row):
     feats = []
