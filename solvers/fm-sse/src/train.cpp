@@ -126,7 +126,7 @@ void init_model(Model &model, size_t const k_real)
 {
     size_t const k = model.k;
     float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(k_real)));
+        static_cast<float>(-0.5/sqrt(static_cast<double>(k_real)));
 
     float * w = model.W.data();
     for(size_t j = 0; j < model.n; ++j)
