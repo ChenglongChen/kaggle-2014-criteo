@@ -185,6 +185,34 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     }
 }
 
+std::vector<size_t> count_feature(SpMat const &problem)
+{
+    std::vector<size_t> counts(problem.n, 1);
+    for(auto &jx : problem.JX)
+    {
+        ++counts[jx.j];
+    }
+    return counts;
+}
+
+void scale_problem(SpMat &problem, std::vector<size_t> const &feature_counts)
+{
+    for(size_t i = 0; i < problem.Y.size(); ++i)
+    {
+        float coef = 0.0f;
+        for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+        {
+            size_t const j = problem.JX[idx].j;
+            float &x = problem.JX[idx].x;
+            x = static_cast<float>(log(static_cast<double>(feature_counts[j])));
+            coef += x*x;
+        }
+        coef = static_cast<float>(1.0/sqrt(coef));
+        for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+            problem.JX[idx].x *= coef;
+    }
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -202,8 +230,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path);
-    SpMat const Va = read_data(opt.Va_path);
+    SpMat Tr = read_data(opt.Tr_path);
+    SpMat Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 
@@ -214,6 +242,10 @@ int main(int const argc, char const * const * const argv)
     init_model(model, opt.k_real);
     printf("done\n");
     fflush(stdout);
+
+    std::vector<size_t> feature_counts = count_feature(Tr);
+    scale_problem(Tr, feature_counts);
+    scale_problem(Va, feature_counts);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
