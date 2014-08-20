@@ -47,9 +47,12 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-sse-sp3
 #ln -sf solvers/fm-sse-sp3/fm-sse-sp3-train .
 #ln -sf solvers/fm-sse-sp3/fm-sse-sp3-predict .
-make -C solvers/fm-sse-poly2-v2
-ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-train .
-ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-predict .
+#make -C solvers/fm-sse-poly2-v2
+#ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-train .
+#ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-predict .
+make -C solvers/fm-sse-sp4
+ln -sf solvers/fm-sse-sp4/fm-sse-sp4-train .
+ln -sf solvers/fm-sse-sp4/fm-sse-sp4-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
