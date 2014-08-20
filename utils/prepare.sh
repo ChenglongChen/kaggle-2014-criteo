@@ -50,9 +50,12 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-sse-poly2-v2
 #ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-train .
 #ln -sf solvers/fm-sse-poly2-v2/fm-sse-poly2-v2-predict .
-make -C solvers/fm-sse-sp5
-ln -sf solvers/fm-sse-sp5/fm-sse-sp5-train .
-ln -sf solvers/fm-sse-sp5/fm-sse-sp5-predict .
+#make -C solvers/fm-sse-sp5
+#ln -sf solvers/fm-sse-sp5/fm-sse-sp5-train .
+#ln -sf solvers/fm-sse-sp5/fm-sse-sp5-predict .
+make -C solvers/fm-sse-analysis
+ln -sf solvers/fm-sse-analysis/fm-sse-analysis-train .
+ln -sf solvers/fm-sse-analysis/fm-sse-analysis-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv

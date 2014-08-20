@@ -140,7 +140,7 @@ float predict(SpMat const &problem, Model &model,
                             t1 += (*(w1+d))*(*(w2+d))*x1*x2;
                         t_ += t1;
                         if(t1 > 0.1)
-                            printf("f1 = %3ld, f2 = %3ld, j1 = %10ld, j2 = %10ld, w1 = %10.3f, w2 = %10.ef, t1 = %10.3f, t = %10.3f\n", f1, f2, j1, j2, *w1, *w2, t1, t_);
+                            printf("f1 = %3ld, f2 = %3ld, j1 = %10ld, j2 = %10ld, w1 = %10.3f, w2 = %10.3f, t1 = %10.3f, t = %10.3f\n", f1, f2, j1, j2, *w1, *w2, t1, t_);
                     }
                 }
             }
