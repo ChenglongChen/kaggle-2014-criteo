@@ -28,7 +28,7 @@ struct SpMat
     size_t n;
 };
 
-SpMat read_data(std::string const tr_path);
+SpMat read_data(std::string const path);
 
 size_t const kF_SIZE = 39;
 size_t const kW_NODE_SIZE = 2;

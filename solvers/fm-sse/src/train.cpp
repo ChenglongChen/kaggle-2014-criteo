@@ -203,10 +203,7 @@ int main(int const argc, char const * const * const argv)
     printf("reading data...");
     fflush(stdout);
     SpMat const Tr = read_data(opt.Tr_path);
-
-    SpMat Va;
-    if(!opt.Va_path.empty())
-        Va = read_data(opt.Va_path);
+    SpMat const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 
