@@ -5,10 +5,6 @@ FILES = common.cpp timer.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)
 
-cleanall: 
-	make clean
-	make all
-
 all: $(MAIN)
 
 fm-sse-sp5-train: src/train.cpp $(SRCS) $(HEADERS)
