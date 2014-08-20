@@ -140,7 +140,7 @@ void init_model(Model &model, size_t const k_real)
                 for(size_t d = k_real; d < k; ++d, ++w)
                     *w = 0;
                 for(size_t d = k; d < 2*k; ++d, ++w)
-                    *w = 1;
+                    *w = 0.1f;
             }
         }
     }
