@@ -148,6 +148,15 @@ void init_model(Model &model, size_t const k_real)
                 *w = 1;
         }
     }
+
+    float * wp = model.WP2.data();
+    for(size_t j = 0; j < model.n; ++j)
+    {
+        *wp = 0;
+        ++wp;
+        *wp = 1;
+        ++wp;
+    }
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
