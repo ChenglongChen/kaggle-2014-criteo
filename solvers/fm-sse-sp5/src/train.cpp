@@ -133,12 +133,15 @@ void init_model(Model &model, size_t const k_real)
     {
         for(size_t f = 0; f < kF_SIZE; ++f)
         {
-            for(size_t d = 0; d < k_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = k_real; d < k; ++d, ++w)
-                *w = 0;
-            for(size_t d = k; d < 2*k; ++d, ++w)
-                *w = 1;
+            for(size_t g = 0; g < kGROUP_SIZE; ++g)
+            {
+                for(size_t d = 0; d < k_real; ++d, ++w)
+                    *w = coef*static_cast<float>(drand48());
+                for(size_t d = k_real; d < k; ++d, ++w)
+                    *w = 0;
+                for(size_t d = k; d < 2*k; ++d, ++w)
+                    *w = 1;
+            }
         }
     }
 }
@@ -185,6 +188,43 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     }
 }
 
+std::vector<float> calc_feature_ratio(SpMat const &problem)
+{
+    std::vector<size_t> pos(problem.n, 1), neg(problem.n, 1);
+    for(size_t i = 0; i < problem.Y.size(); ++i)
+    {
+        float const y = problem.Y[i];
+        for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+        {
+            size_t const j = problem.JX[idx].j;
+            if(y == 1)
+                ++pos[j];
+            else
+                ++neg[j];
+        }
+    }
+
+    std::vector<float> feature_ratio(problem.n);
+
+    for(size_t j = 0; j < problem.n; ++j)
+        feature_ratio[j] = float(pos[j])/static_cast<float>(pos[j]+neg[j]);
+
+    return feature_ratio;
+}
+
+void group(SpMat &problem, std::vector<float> const &feature_ratio)
+{
+    for(auto &node : problem.JX)
+    {
+        if(feature_ratio[node.j] < 0.1)
+            node.c = 0;
+        else if(feature_ratio[node.j] > 0.7)
+            node.c = 2;
+        else
+            node.c = 1;
+    }
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -202,8 +242,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path);
-    SpMat const Va = read_data(opt.Va_path);
+    SpMat Tr = read_data(opt.Tr_path);
+    SpMat Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 
@@ -214,6 +254,10 @@ int main(int const argc, char const * const * const argv)
     init_model(model, opt.k_real);
     printf("done\n");
     fflush(stdout);
+
+    std::vector<float> const feature_ratio = calc_feature_ratio(Tr);
+    group(Tr, feature_ratio);
+    group(Va, feature_ratio);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 

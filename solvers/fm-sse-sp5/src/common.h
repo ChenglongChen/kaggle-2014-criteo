@@ -15,7 +15,7 @@
 struct Node
 {
     Node(size_t const f, size_t const j, float const x) : f(f), j(j), x(x) {}
-    size_t f, j;
+    size_t f, j, c;
     float x;
 };
 
@@ -31,11 +31,12 @@ struct SpMat
 SpMat read_data(std::string const path);
 
 size_t const kF_SIZE = 39;
+size_t const kGROUP_SIZE = 3;
 size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
+    Model(size_t const n, size_t const k) : W(n*kGROUP_SIZE*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
     std::vector<float> W;
     const size_t n, k;
 };
@@ -66,18 +67,20 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     {
         size_t const j1 = problem.JX[idx1].j;
         size_t const f1 = problem.JX[idx1].f;
+        size_t const c1 = problem.JX[idx1].c;
         float const x1 = problem.JX[idx1].x;
 
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
             size_t const f2 = problem.JX[idx2].f;
+            size_t const c2 = problem.JX[idx2].c;
             float const x2 = problem.JX[idx2].x;
 
             float * w1 = 
-                model.W.data()+j1*kF_SIZE*k*kW_NODE_SIZE+f2*k*kW_NODE_SIZE;
+                model.W.data()+j1*kF_SIZE*kGROUP_SIZE*k*kW_NODE_SIZE+f2*kGROUP_SIZE*k*kW_NODE_SIZE+c2*k*kW_NODE_SIZE;
             float * w2 = 
-                model.W.data()+j2*kF_SIZE*k*kW_NODE_SIZE+f1*k*kW_NODE_SIZE;
+                model.W.data()+j2*kF_SIZE*kGROUP_SIZE*k*kW_NODE_SIZE+f1*kGROUP_SIZE*k*kW_NODE_SIZE+c1*k*kW_NODE_SIZE;
 
             if(do_update)
             {
