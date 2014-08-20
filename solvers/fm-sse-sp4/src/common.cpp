@@ -13,13 +13,16 @@ inline float logistic_func(float const t)
 
 } //unamed namespace
 
-SpMat read_data(std::string const tr_path)
+SpMat read_data(std::string const path)
 {
+    SpMat spmat;
+    if(path.empty())
+        return spmat;
+
     int const kMaxLineSize = 1000000;
-    FILE *f = open_c_file(tr_path.c_str(), "r");
+    FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
-    SpMat spmat;
     spmat.P.push_back(0);
     while(fgets(line, kMaxLineSize, f) != nullptr)
     {
