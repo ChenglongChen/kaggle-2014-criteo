@@ -126,19 +126,22 @@ void init_model(Model &model, size_t const k_real)
 {
     size_t const k = model.k;
     float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(k_real)));
+        static_cast<float>(0.5/pow(static_cast<double>(k_real), 1/3.0));
 
     float * w = model.W.data();
     for(size_t j = 0; j < model.n; ++j)
     {
-        for(size_t f = 0; f < kF_SIZE; ++f)
+        for(size_t f1 = 0; f1 < kF_SIZE; ++f1)
         {
-            for(size_t d = 0; d < k_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = k_real; d < k; ++d, ++w)
-                *w = 0;
-            for(size_t d = k; d < 2*k; ++d, ++w)
-                *w = 1;
+            for(size_t f2 = 0; f2 < kF_SIZE; ++f2)
+            {
+                for(size_t d = 0; d < k_real; ++d, ++w)
+                    *w = coef*static_cast<float>(drand48());
+                for(size_t d = k_real; d < k; ++d, ++w)
+                    *w = 0;
+                for(size_t d = k; d < 2*k; ++d, ++w)
+                    *w = 1;
+            }
         }
     }
 }

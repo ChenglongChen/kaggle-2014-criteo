@@ -35,7 +35,7 @@ size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
+    Model(size_t const n, size_t const k) : W(n*kF_SIZE*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
     std::vector<float> W;
     const size_t n, k;
 };
@@ -79,54 +79,78 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             __m128 const XMMx2 = _mm_load1_ps(&problem.JX[idx2].x);
             __m128 const XMMkappa_x1_x2 = _mm_mul_ps(XMMkappa_x1, XMMx2);
 
-            float * const w1 = 
-                model.W.data()+j1*kF_SIZE*k*kW_NODE_SIZE+f2*k*kW_NODE_SIZE;
-            float * const w2 = 
-                model.W.data()+j2*kF_SIZE*k*kW_NODE_SIZE+f1*k*kW_NODE_SIZE;
-
-            if(do_update)
+            for(size_t idx3 = idx2+1; idx3 < problem.P[i+1]; ++idx3)
             {
-                for(size_t d = 0; d < k; d += 4)
+                size_t const j3 = problem.JX[idx3].j;
+                size_t const f3 = problem.JX[idx3].f;
+                __m128 const XMMx3 = _mm_load1_ps(&problem.JX[idx3].x);
+                __m128 const XMMkappa_x1_x2_x3 = _mm_mul_ps(XMMkappa_x1_x2, XMMx3);
+
+                float * const w1 = 
+                    model.W.data()+j1*kF_SIZE*kF_SIZE*k*kW_NODE_SIZE+(f2*kF_SIZE+f3)*k*kW_NODE_SIZE;
+                float * const w2 = 
+                    model.W.data()+j2*kF_SIZE*kF_SIZE*k*kW_NODE_SIZE+(f1*kF_SIZE+f3)*k*kW_NODE_SIZE;
+                float * const w3 = 
+                    model.W.data()+j3*kF_SIZE*kF_SIZE*k*kW_NODE_SIZE+(f1*kF_SIZE+f2)*k*kW_NODE_SIZE;
+
+                if(do_update)
                 {
-                    __m128 XMMw1 = _mm_load_ps(w1+d);
-                    __m128 XMMw2 = _mm_load_ps(w2+d);
+                    for(size_t d = 0; d < k; d += 4)
+                    {
+                        __m128 XMMw1 = _mm_load_ps(w1+d);
+                        __m128 XMMw2 = _mm_load_ps(w2+d);
+                        __m128 XMMw3 = _mm_load_ps(w3+d);
 
-                    __m128 XMMwg1 = _mm_load_ps(w1+k+d);
-                    __m128 XMMwg2 = _mm_load_ps(w2+k+d);
+                        __m128 XMMwg1 = _mm_load_ps(w1+k+d);
+                        __m128 XMMwg2 = _mm_load_ps(w2+k+d);
+                        __m128 XMMwg3 = _mm_load_ps(w3+k+d);
 
-                    __m128 XMMg1 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw1),
-                        _mm_mul_ps(XMMkappa_x1_x2, XMMw2));
-                    __m128 XMMg2 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw2),
-                        _mm_mul_ps(XMMkappa_x1_x2, XMMw1));
+                        __m128 XMMg1 = _mm_add_ps(
+                            _mm_mul_ps(XMMlambda, XMMw1),
+                            _mm_mul_ps(XMMkappa_x1_x2_x3, _mm_mul_ps(XMMw2, XMMw3)));
+                        __m128 XMMg2 = _mm_add_ps(
+                            _mm_mul_ps(XMMlambda, XMMw2),
+                            _mm_mul_ps(XMMkappa_x1_x2_x3, _mm_mul_ps(XMMw1, XMMw3)));
+                        __m128 XMMg3 = _mm_add_ps(
+                            _mm_mul_ps(XMMlambda, XMMw3),
+                            _mm_mul_ps(XMMkappa_x1_x2_x3, _mm_mul_ps(XMMw1, XMMw2)));
 
-                    XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
-                    XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
+                        XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
+                        XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
+                        XMMwg3 = _mm_add_ps(XMMwg3, _mm_mul_ps(XMMg3, XMMg3));
 
-                    XMMw1 = _mm_sub_ps(XMMw1,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
-                    XMMw2 = _mm_sub_ps(XMMw2,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
+                        XMMw1 = _mm_sub_ps(XMMw1,
+                            _mm_mul_ps(XMMeta, 
+                            _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
+                        XMMw2 = _mm_sub_ps(XMMw2,
+                            _mm_mul_ps(XMMeta, 
+                            _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
+                        XMMw3 = _mm_sub_ps(XMMw3,
+                            _mm_mul_ps(XMMeta, 
+                            _mm_mul_ps(_mm_rsqrt_ps(XMMwg3), XMMg3)));
 
-                    _mm_store_ps(w1+d, XMMw1);
-                    _mm_store_ps(w2+d, XMMw2);
+                        _mm_store_ps(w1+d, XMMw1);
+                        _mm_store_ps(w2+d, XMMw2);
+                        _mm_store_ps(w3+d, XMMw3);
 
-                    _mm_store_ps(w1+k+d, XMMwg1);
-                    _mm_store_ps(w2+k+d, XMMwg2);
+                        _mm_store_ps(w1+k+d, XMMwg1);
+                        _mm_store_ps(w2+k+d, XMMwg2);
+                        _mm_store_ps(w3+k+d, XMMwg3);
+                    }
                 }
-            }
-            else
-            {
-                for(size_t d = 0; d < k; d += 4)
+                else
                 {
-                    __m128 const XMMw1 = _mm_load_ps(w1+d);
-                    __m128 const XMMw2 = _mm_load_ps(w2+d);
+                    for(size_t d = 0; d < k; d += 4)
+                    {
+                        __m128 const XMMw1 = _mm_load_ps(w1+d);
+                        __m128 const XMMw2 = _mm_load_ps(w2+d);
+                        __m128 const XMMw3 = _mm_load_ps(w3+d);
 
-                    XMMt = _mm_add_ps(XMMt, 
-                        _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMx1), XMMx2));
+                        __m128 XMMw = _mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMw3);
+                        __m128 XMMx = _mm_mul_ps(_mm_mul_ps(XMMx1, XMMx2), XMMx3);
+                        
+                        XMMt = _mm_add_ps(XMMt, _mm_mul_ps(XMMw, XMMx));
+                    }
                 }
             }
         }
