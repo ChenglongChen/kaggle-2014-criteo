@@ -53,9 +53,9 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-sse-sp5
 #ln -sf solvers/fm-sse-sp5/fm-sse-sp5-train .
 #ln -sf solvers/fm-sse-sp5/fm-sse-sp5-predict .
-make -C solvers/fm-sse-type2
-ln -sf solvers/fm-sse-type2/fm-sse-type2-train fm-sse-t3-train
-ln -sf solvers/fm-sse-type2/fm-sse-type2-predict fm-sse-t3-predict
+make -C solvers/fm-type2
+ln -sf solvers/fm-type2/fm-type2-train .
+ln -sf solvers/fm-type2/fm-type2-predict .
 #make -C solvers/fm-sse-analysis
 #ln -sf solvers/fm-sse-analysis/fm-sse-analysis-train .
 #ln -sf solvers/fm-sse-analysis/fm-sse-analysis-predict .
