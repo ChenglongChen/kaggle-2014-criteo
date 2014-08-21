@@ -92,7 +92,7 @@ argv_to_args(int const argc, char const * const * const argv)
 }
 
 float predict(SpMat const &problem, Model &model, 
-    std::string const &output_path, bool const analyze)
+    std::string const &output_path)
 {
     FILE *f = nullptr;
     if(!output_path.empty())
@@ -102,49 +102,11 @@ float predict(SpMat const &problem, Model &model,
 #pragma omp parallel for schedule(static) reduction(+:loss)
     for(size_t i = 0; i < problem.Y.size(); ++i)
     {
-        float y = problem.Y[i];
+        float const y = problem.Y[i];
 
-        float t = wTx(problem, model, i);
+        float const t = wTx(problem, model, i);
         
-        float prob = logistic_func(t);
-
-        //if((prob > 0.8 && y == 0) || (prob < 0.2 && y == 1))
-        //    printf("%d %f\n", static_cast<int>(y), prob);
-
-        if(analyze && prob > 0.9)
-        {
-            if(true)
-            {
-                printf("%2d %f\n", static_cast<int>(y), prob);
-                size_t const k = model.k;
-                float t_ = 0;
-                for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
-                {
-                    size_t const j1 = problem.JX[idx1].j;
-                    size_t const f1 = problem.JX[idx1].f;
-                    float const x1 = problem.JX[idx1].x;
-
-                    for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
-                    {
-                        size_t const j2 = problem.JX[idx2].j;
-                        size_t const f2 = problem.JX[idx2].f;
-                        float const x2 = problem.JX[idx2].x;
-
-                        float * const w1 = 
-                            model.W.data()+j1*kF_SIZE*k*kW_NODE_SIZE+f2*k*kW_NODE_SIZE;
-                        float * const w2 = 
-                            model.W.data()+j2*kF_SIZE*k*kW_NODE_SIZE+f1*k*kW_NODE_SIZE;
-                        
-                        float t1 = 0;
-                        for(size_t d = 0; d < k; d += 1)
-                            t1 += (*(w1+d))*(*(w2+d))*x1*x2;
-                        t_ += t1;
-                        if(t1 > 0.1 || t1 < -0.1)
-                            printf("f1 = %3ld, f2 = %3ld, j1 = %10ld, j2 = %10ld, w1 = %10.3f, w2 = %10.3f, t1 = %10.3f, t = %10.3f\n", f1, f2, j1, j2, *w1, *w2, t1, t_);
-                    }
-                }
-            }
-        }
+        float const prob = logistic_func(t);
 
         float const expnyt = static_cast<float>(exp(-y*t));
 
