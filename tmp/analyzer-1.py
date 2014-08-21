@@ -27,5 +27,9 @@ for line_svm, line_out in zip(open(args['svm_path']), open(args['out_path'])):
 
 x, diffs = [], []
 for bin, (pos, neg, loss) in records.items():
+    prob = bin*args['accuracy']
+    if prob == 0 or prob == 1:
+        continue
     total = pos+neg
-    print('{0:4.2f} {1:9.3f}'.format(bin*args['accuracy'], loss/total)) 
+    ideal = -(prob*math.log(prob)+(1-prob)*math.log(1-prob))
+    print('{0:4.2f} {1:7.3f} {2:7.3f} {3:6d}'.format(prob, loss/total, ideal, total)) 
