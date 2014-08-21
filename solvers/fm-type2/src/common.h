@@ -30,12 +30,11 @@ struct SpMat
 
 SpMat read_data(std::string const path);
 
-size_t const kF_SIZE = 39;
 size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*kF_SIZE*k*kW_NODE_SIZE, 0), n(n), k(k) {}
+    Model(size_t const n, size_t const k) : W(n*k*kW_NODE_SIZE, 0), n(n), k(k) {}
     std::vector<float> W;
     const size_t n, k;
 };
@@ -55,79 +54,31 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &problem, Model &model, size_t const i, 
-    float const kappa=0, float const eta=0, float const lambda=0, 
-    bool const do_update=false)
+inline float wTx(SpMat const &problem, Model &model, size_t const i)
 {
     size_t const k = model.k;
-    __m128 const XMMkappa = _mm_load1_ps(&kappa);
-    __m128 const XMMeta = _mm_load1_ps(&eta);
-    __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
     for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
     {
         size_t const j1 = problem.JX[idx1].j;
-        size_t const f1 = problem.JX[idx1].f;
         __m128 const XMMx1 = _mm_load1_ps(&problem.JX[idx1].x);
-        __m128 const XMMkappa_x1 = _mm_mul_ps(XMMkappa, XMMx1);
 
         for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
         {
             size_t const j2 = problem.JX[idx2].j;
-            size_t const f2 = problem.JX[idx2].f;
             __m128 const XMMx2 = _mm_load1_ps(&problem.JX[idx2].x);
-            __m128 const XMMkappa_x1_x2 = _mm_mul_ps(XMMkappa_x1, XMMx2);
 
-            float * const w1 = 
-                model.W.data()+j1*kF_SIZE*k*kW_NODE_SIZE+f2*k*kW_NODE_SIZE;
-            float * const w2 = 
-                model.W.data()+j2*kF_SIZE*k*kW_NODE_SIZE+f1*k*kW_NODE_SIZE;
+            float * const w1 = model.W.data()+j1*k*kW_NODE_SIZE;
+            float * const w2 = model.W.data()+j2*k*kW_NODE_SIZE;
 
-            if(do_update)
+            for(size_t d = 0; d < k; d += 4)
             {
-                for(size_t d = 0; d < k; d += 4)
-                {
-                    __m128 XMMw1 = _mm_load_ps(w1+d);
-                    __m128 XMMw2 = _mm_load_ps(w2+d);
+                __m128 const XMMw1 = _mm_load_ps(w1+d);
+                __m128 const XMMw2 = _mm_load_ps(w2+d);
 
-                    __m128 XMMwg1 = _mm_load_ps(w1+k+d);
-                    __m128 XMMwg2 = _mm_load_ps(w2+k+d);
-
-                    __m128 XMMg1 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw1),
-                        _mm_mul_ps(XMMkappa_x1_x2, XMMw2));
-                    __m128 XMMg2 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw2),
-                        _mm_mul_ps(XMMkappa_x1_x2, XMMw1));
-
-                    XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
-                    XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
-
-                    XMMw1 = _mm_sub_ps(XMMw1,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
-                    XMMw2 = _mm_sub_ps(XMMw2,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
-
-                    _mm_store_ps(w1+d, XMMw1);
-                    _mm_store_ps(w2+d, XMMw2);
-
-                    _mm_store_ps(w1+k+d, XMMwg1);
-                    _mm_store_ps(w2+k+d, XMMwg2);
-                }
-            }
-            else
-            {
-                for(size_t d = 0; d < k; d += 4)
-                {
-                    __m128 const XMMw1 = _mm_load_ps(w1+d);
-                    __m128 const XMMw2 = _mm_load_ps(w2+d);
-
-                    XMMt = _mm_add_ps(XMMt, 
-                        _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMx1), XMMx2));
-                }
+                XMMt = _mm_add_ps(XMMt, 
+                    _mm_mul_ps(_mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMx1), XMMx2));
             }
         }
     }
@@ -138,6 +89,61 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     _mm_store_ss(&t, XMMt);
 
     return t;
+}
+
+inline void update(SpMat const &problem, Model &model, size_t const i, 
+    float const kappa, float const eta, float const lambda)
+{
+    size_t const k = model.k;
+    __m128 const XMMkappa = _mm_load1_ps(&kappa);
+    __m128 const XMMeta = _mm_load1_ps(&eta);
+    __m128 const XMMlambda = _mm_load1_ps(&lambda);
+
+    std::vector<float> sv(k, 0);
+    float * const s = sv.data();
+
+    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+    {
+        size_t const j = problem.JX[idx].j;
+        __m128 const XMMx = _mm_load1_ps(&problem.JX[idx].x);
+        float * const w = model.W.data()+j*k*kW_NODE_SIZE;
+
+        for(size_t d = 0; d < k; d += 4)
+        {
+            __m128 XMMs = _mm_load_ps(s+d);
+            __m128 const XMMw = _mm_load_ps(w+d);
+
+            XMMs = _mm_add_ps(XMMs, _mm_mul_ps(XMMw, XMMx));
+
+            _mm_store_ps(s+d, XMMs);
+        }
+    }
+
+    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+    {
+        size_t const j = problem.JX[idx].j;
+        __m128 const XMMx = _mm_load1_ps(&problem.JX[idx].x);
+        float * const w = model.W.data()+j*k*kW_NODE_SIZE;
+
+        for(size_t d = 0; d < k; d += 4)
+        {
+            __m128 XMMs = _mm_load_ps(s+d);
+            __m128 XMMw = _mm_load_ps(w+d);
+            __m128 XMMwg = _mm_load_ps(w+k+d);
+
+            __m128 XMMg = _mm_add_ps(_mm_mul_ps(XMMlambda, XMMw), 
+                _mm_mul_ps(XMMkappa, _mm_sub_ps(XMMs, _mm_mul_ps(XMMw, XMMx))));
+
+            XMMwg = _mm_add_ps(XMMwg, _mm_mul_ps(XMMg, XMMg));
+
+            XMMw = _mm_sub_ps(XMMw,
+                _mm_mul_ps(XMMeta, 
+                _mm_mul_ps(_mm_rsqrt_ps(XMMwg), XMMg)));
+
+            _mm_store_ps(w+d, XMMw);
+            _mm_store_ps(w+k+d, XMMwg);
+        }
+    }
 }
 
 float predict(SpMat const &problem, Model &model, 

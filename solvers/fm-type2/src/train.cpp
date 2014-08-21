@@ -131,15 +131,12 @@ void init_model(Model &model, size_t const k_real)
     float * w = model.W.data();
     for(size_t j = 0; j < model.n; ++j)
     {
-        for(size_t f = 0; f < kF_SIZE; ++f)
-        {
-            for(size_t d = 0; d < k_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = k_real; d < k; ++d, ++w)
-                *w = 0;
-            for(size_t d = k; d < 2*k; ++d, ++w)
-                *w = 1;
-        }
+        for(size_t d = 0; d < k_real; ++d, ++w)
+            *w = coef*static_cast<float>(drand48());
+        for(size_t d = k_real; d < k; ++d, ++w)
+            *w = 0;
+        for(size_t d = k; d < 2*k; ++d, ++w)
+            *w = 1;
     }
 }
 
@@ -171,7 +168,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            update(Tr, model, i, kappa, opt.eta, opt.lambda);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 

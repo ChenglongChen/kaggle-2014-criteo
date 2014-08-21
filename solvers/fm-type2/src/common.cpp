@@ -56,7 +56,7 @@ void save_model(Model const &model, std::string const &path)
     fwrite(&model.n, sizeof(size_t), 1, f);
     fwrite(&model.k, sizeof(size_t), 1, f);
     fwrite(model.W.data(), sizeof(float), 
-        model.n*kF_SIZE*model.k*kW_NODE_SIZE, f);
+        model.n*model.k*kW_NODE_SIZE, f);
     fclose(f);
 }
 
@@ -69,7 +69,7 @@ Model load_model(std::string const &path)
 
     Model model(n, k);
     fread(model.W.data(), sizeof(float), 
-        model.n*kF_SIZE*model.k*kW_NODE_SIZE, f);
+        model.n*model.k*kW_NODE_SIZE, f);
     fclose(f);
     return model;
 }
