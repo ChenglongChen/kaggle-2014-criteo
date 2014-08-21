@@ -34,8 +34,8 @@ size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const n, size_t const k) : W(n*k*kW_NODE_SIZE, 0), n(n), k(k) {}
-    std::vector<float> W;
+    Model(size_t const n, size_t const k) : W(n*k*kW_NODE_SIZE, 0), WL(n*kW_NODE_SIZE, 0), n(n), k(k) {}
+    std::vector<float> W, WL;
     const size_t n, k;
 };
 
@@ -67,6 +67,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     float * const s = sv.data();
 
     __m128 XMMt = _mm_setzero_ps();
+    float tl = 0;
     for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
     {
         size_t const j = problem.JX[idx].j;
@@ -89,9 +90,13 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
         size_t const j = problem.JX[idx].j;
         __m128 const XMMx = _mm_load1_ps(&problem.JX[idx].x);
         float * const w = model.W.data()+j*k*kW_NODE_SIZE;
+        float * const wl = model.WL.data()+j*kW_NODE_SIZE;
         
         if(do_update)
         {
+            float const g = lambda*(*wl) + kappa*problem.JX[idx].x;
+            *(wl+1) += g*g;
+            *wl -= eta*qrsqrt(*(wl+1))*g;
             for(size_t d = 0; d < k; d += 4)
             {
                 __m128 XMMs = _mm_load_ps(s+d);
@@ -113,6 +118,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
         }
         else
         {
+            tl += (*wl)*problem.JX[idx].x;
             for(size_t d = 0; d < k; d += 4)
             {
                 __m128 XMMs = _mm_load_ps(s+d);
@@ -129,7 +135,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     float t;
     _mm_store_ss(&t, XMMt);
 
-    return t/2.0f;
+    return tl+t/2.0f;
 }
 
 float predict(SpMat const &problem, Model &model, 
