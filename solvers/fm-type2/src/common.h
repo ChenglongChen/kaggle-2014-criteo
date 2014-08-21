@@ -99,7 +99,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
                 __m128 XMMwg = _mm_load_ps(w+k+d);
 
                 __m128 XMMg = _mm_add_ps(_mm_mul_ps(XMMlambda, XMMw), 
-                    _mm_mul_ps(XMMkappa, _mm_sub_ps(XMMs, _mm_mul_ps(XMMw, XMMx))));
+                    _mm_mul_ps(XMMkappa, _mm_mul_ps(_mm_sub_ps(XMMs, _mm_mul_ps(XMMw, XMMx)), XMMx)));
 
                 XMMwg = _mm_add_ps(XMMwg, _mm_mul_ps(XMMg, XMMg));
 
