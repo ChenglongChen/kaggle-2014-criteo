@@ -206,7 +206,7 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    printf("ignore: %ld\n", opt.ignore);
+    printf("ignore: %ld\n", opt.ignore+1);
 
     printf("reading data...");
     fflush(stdout);
