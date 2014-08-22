@@ -13,18 +13,16 @@ def hashstr(str, nr_bins):
 def gen_feats(row):
     feats = []
     for j in range(1, 14):
-        if j in [1]:
-            continue
         field = 'I{0}'.format(j)
         value = row[field]
         if j == 5 and value != '':
-            value = int(math.log(float(value)+1))
+            value = int(math.log(float(value)+1)**2)
         elif j in [2, 3, 6, 7, 9] and value != '':
             value = int(float(value)/10)
         key = field + '-' + str(value)
         feats.append(key)
     for j in range(1, 27):
-        if j in [11, 21]:
+        if j in [21]:
             continue
         field = 'C{0}'.format(j)
         value = row[field]
