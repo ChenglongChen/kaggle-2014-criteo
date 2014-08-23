@@ -32,12 +32,6 @@ SpMat read_data(std::string const path);
 
 size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
-float const kLAMBDAS[39] = {
-//       0       1       2       3       4       5       6       7       8       9
-    0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f,
-    0.003f, 0.003f, 0.003f, 0.003f, 0.003f, 0.009f, 0.003f, 0.003f, 0.003f, 0.003f,
-    0.003f, 0.003f, 0.003f, 0.003f, 0.009f, 0.003f, 0.003f, 0.003f, 0.009f, 0.003f,
-    0.003f, 0.003f, 0.003f, 0.009f, 0.003f, 0.003f, 0.003f, 0.003f, 0.003f};
 
 struct Model
 {
@@ -63,8 +57,14 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &problem, Model &model, size_t const i, 
-    float const kappa=0, float const eta=0, bool const do_update=false)
+inline float wTx(
+    SpMat const &problem, 
+    Model &model, 
+    size_t const i, 
+    float const kappa=0, 
+    float const eta=0, 
+    std::vector<float> const &field_lambda=std::vector<float>(), 
+    bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
     __m128 const XMMkappa = _mm_load1_ps(&kappa);
@@ -83,7 +83,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             size_t const j2 = problem.X[idx2].j;
             size_t const f2 = problem.X[idx2].f;
 
-           float const lambda = kLAMBDAS[f1]*kLAMBDAS[f2]; 
+           float const lambda = field_lambda[f1]*field_lambda[f2]; 
             __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
             __m128 const XMMv2 = _mm_load1_ps(&problem.X[idx2].v);
