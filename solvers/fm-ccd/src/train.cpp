@@ -15,10 +15,10 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
+    Option() : eta(0.1f), lambda(0.00001f), iter(5), nr_factor(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    size_t iter, nr_factor, nr_factor_real, nr_threads;
+    size_t iter, nr_factor, nr_threads;
     bool save_model;
 };
 
@@ -59,8 +59,7 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = std::stoi(args[++i]);
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -122,11 +121,11 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void init_model(Model &model, size_t const nr_factor_real)
+void init_model(Model &model)
 {
     size_t const nr_factor = model.nr_factor;
     float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
+        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor)));
 
     for(size_t f = 0; f < model.nr_field; ++f)
     {
@@ -135,10 +134,8 @@ void init_model(Model &model, size_t const nr_factor_real)
         {
             for(size_t f = 0; f < model.nr_field; ++f)
             {
-                for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+                for(size_t d = 0; d < nr_factor; ++d, ++w)
                     *w = coef*static_cast<float>(drand48());
-                for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
-                    *w = 0;
                 for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
                     *w = 1;
             }
@@ -214,7 +211,7 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
     Model model(Tr.nr_field, opt.nr_factor, Tr.nr_field_feature);
 
-    init_model(model, opt.nr_factor_real);
+    init_model(model);
     printf("done\n");
     fflush(stdout);
 
