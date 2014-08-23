@@ -38,10 +38,10 @@ SpMat read_data(std::string const path)
             size_t field = static_cast<size_t>(atoi(field_char));
             size_t idx = static_cast<size_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
-            spmat.n = std::max(spmat.n, idx);
-            spmat.JX.emplace_back(field-1, idx-1, val);
+            spmat.nr_feature = std::max(spmat.nr_feature, idx);
+            spmat.X.emplace_back(field-1, idx-1, val);
         }
-        spmat.P.push_back(spmat.JX.size());
+        spmat.P.push_back(spmat.X.size());
         spmat.Y.push_back(y);
     }
 
@@ -53,23 +53,23 @@ SpMat read_data(std::string const path)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
-    fwrite(&model.n, sizeof(size_t), 1, f);
-    fwrite(&model.k, sizeof(size_t), 1, f);
+    fwrite(&model.nr_feature, sizeof(size_t), 1, f);
+    fwrite(&model.nr_factor, sizeof(size_t), 1, f);
     fwrite(model.W.data(), sizeof(float), 
-        model.n*kF_SIZE*model.k*kW_NODE_SIZE, f);
+        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
     fclose(f);
 }
 
 Model load_model(std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "rb");
-    size_t k, n;
-    fread(&n, sizeof(size_t), 1, f);
-    fread(&k, sizeof(size_t), 1, f);
+    size_t nr_factor, nr_feature;
+    fread(&nr_feature, sizeof(size_t), 1, f);
+    fread(&nr_factor, sizeof(size_t), 1, f);
 
-    Model model(n, k);
+    Model model(nr_feature, nr_factor);
     fread(model.W.data(), sizeof(float), 
-        model.n*kF_SIZE*model.k*kW_NODE_SIZE, f);
+        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
     fclose(f);
     return model;
 }

@@ -15,10 +15,10 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), k(4), k_real(4), nr_threads(1), save_model(true) {}
+    Option() : eta(0.1f), lambda(0.00001f), iter(5), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    size_t iter, k, k_real, nr_threads;
+    size_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
 
@@ -59,8 +59,8 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.k_real = std::stoi(args[++i]);
-            opt.k = static_cast<size_t>(ceil(static_cast<float>(opt.k_real)/4.0f))*4;
+            opt.nr_factor_real = std::stoi(args[++i]);
+            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -122,22 +122,22 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void init_model(Model &model, size_t const k_real)
+void init_model(Model &model, size_t const nr_factor_real)
 {
-    size_t const k = model.k;
+    size_t const nr_factor = model.nr_factor;
     float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(k_real)));
+        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
 
     float * w = model.W.data();
-    for(size_t j = 0; j < model.n; ++j)
+    for(size_t j = 0; j < model.nr_feature; ++j)
     {
-        for(size_t f = 0; f < kF_SIZE; ++f)
+        for(size_t f = 0; f < kNR_FIELD; ++f)
         {
-            for(size_t d = 0; d < k_real; ++d, ++w)
+            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
                 *w = coef*static_cast<float>(drand48());
-            for(size_t d = k_real; d < k; ++d, ++w)
+            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
                 *w = 0;
-            for(size_t d = k; d < 2*k; ++d, ++w)
+            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
                 *w = 1;
         }
     }
@@ -209,9 +209,9 @@ int main(int const argc, char const * const * const argv)
 
     printf("initializing model...");
     fflush(stdout);
-    Model model(Tr.n, opt.k);
+    Model model(Tr.nr_feature, opt.nr_factor);
 
-    init_model(model, opt.k_real);
+    init_model(model, opt.nr_factor_real);
     printf("done\n");
     fflush(stdout);
 
