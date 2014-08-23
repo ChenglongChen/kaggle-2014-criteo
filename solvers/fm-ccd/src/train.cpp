@@ -101,7 +101,7 @@ std::vector<AuxiliaryMat> get_aux_matrices(SpMat const &spmat)
 
 struct Option
 {
-    Option() : lambda(0.00001f), iter(5), inner_iter(2), nr_factor(1), nr_thread(1), save_model(true) {}
+    Option() : lambda(2.0f), iter(100), inner_iter(2), nr_factor(1), nr_thread(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float lambda;
     size_t iter, inner_iter, nr_factor, nr_thread;
