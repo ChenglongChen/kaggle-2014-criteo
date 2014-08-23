@@ -15,10 +15,10 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(5), nr_factor(4), nr_threads(1), save_model(true) {}
+    Option() : lambda(0.00001f), iter(5), inner_iter(2), nr_factor(1), nr_thread(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    float eta, lambda;
-    size_t iter, nr_factor, nr_threads;
+    float lambda;
+    size_t iter, inner_iter, nr_factor, nr_thread;
     bool save_model;
 };
 
@@ -30,9 +30,9 @@ std::string train_help()
 "options:\n"
 "-l <labmda>: you know\n"
 "-k <dimension>: you know\n"
+"-T <iteration>: you know\n"
 "-t <iteration>: you know\n"
-"-r <eta>: you know\n"
-"-s <nr_threads>: you know\n"
+"-s <nr_thread>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
 }
@@ -49,23 +49,23 @@ Option parse_option(std::vector<std::string> const &args)
     size_t i = 0;
     for(; i < argc; ++i)
     {
-        if(args[i].compare("-t") == 0)
+        if(args[i].compare("-T") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.iter = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-t") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.inner_iter = std::stoi(args[++i]);
         }
         else if(args[i].compare("-k") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor = std::stoi(args[++i]);
-        }
-        else if(args[i].compare("-r") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            opt.eta = std::stof(args[++i]);
         }
         else if(args[i].compare("-l") == 0)
         {
@@ -83,7 +83,7 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.nr_threads = std::stoi(args[++i]);
+            opt.nr_thread = std::stoi(args[++i]);
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -131,57 +131,101 @@ void init_model(Model &model)
     {
         float * w = model.W[f].data();
         for(size_t j = 0; j < model.nr_field_feature[f]; ++j)
-        {
             for(size_t f = 0; f < model.nr_field; ++f)
-            {
                 for(size_t d = 0; d < nr_factor; ++d, ++w)
                     *w = coef*static_cast<float>(drand48());
-                for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
-                    *w = 1;
-            }
-        }
     }
+}
+
+void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
+    size_t const d, size_t const f1, size_t const f2, bool const do_addition)
+{
+    size_t const nr_field = model.nr_field;
+    size_t const nr_factor = model.nr_factor;
+
+    for(size_t i = 0; i < spmat.nr_instance; ++i)
+    {
+        Node const * const x = &spmat.X[spmat.P[i]];
+        Node const * const x1 = x+f1;
+        Node const * const x2 = x+f2;
+
+        size_t const j1 = x1->j;
+        if(j1 >= model.nr_field_feature[f1])
+            continue;
+        size_t const j2 = x2->j;
+        if(j2 >= model.nr_field_feature[f2])
+            continue;
+
+        float const v1 = x1->v;
+        float const v2 = x2->v;
+
+        float const &w1 = 
+            model.W[f1][j1*nr_field*nr_factor+f2*nr_factor+d];
+        float const &w2 = 
+            model.W[f2][j2*nr_field*nr_factor+f1*nr_factor+d];
+
+        float const delta = w1*w2*v1*v2;
+
+        if(do_addition)
+            S[i] += delta;
+        else
+            S[i] -= delta;
+    }
+}
+
+inline float solve_z(
+    float const * const Y,
+    float const * const S,
+    float const * const A,
+    float const z_init,
+    float const lambda,
+    size_t const nr_instance)
+{
+    return z_init;
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
-    std::vector<size_t> order(Tr.Y.size());
-    for(size_t i = 0; i < Tr.Y.size(); ++i)
-        order[i] = i;
+    std::vector<float> Tr_S = calc_s(Tr, model);
+    std::vector<float> Va_S = calc_s(Va, model);
 
     Timer timer;
-    for(size_t iter = 0; iter < opt.iter; ++iter)
+    for(size_t t = 0; t < opt.iter; ++t)
     {
-        timer.tic();
-
-        double Tr_loss = 0;
-        std::random_shuffle(order.begin(), order.end());
-#pragma omp parallel for schedule(static)
-        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        for(size_t d = 0; d < model.nr_factor; ++d)
         {
-            size_t const i = order[i_];
+            for(size_t f1 = 0; f1 < model.nr_field; ++f1)
+            {
+                for(size_t f2 = f1+1; f2 < model.nr_field; ++f2)
+                {
+                    update_s(Tr, model, Tr_S, d, f1, f2, false);
+                    update_s(Va, model, Va_S, d, f1, f2, false);
 
-            float const y = Tr.Y[i];
-            
-            float const t = wTx(Tr, model, i);
+                    for(size_t tt = 0; tt < opt.inner_iter; ++tt)
+                    {
+                        for(size_t j = 0; j < model.nr_field_feature[f1]; ++j)
+                        {
+                            ;                     
+                        }
 
-            float const expnyt = static_cast<float>(exp(-y*t));
+                        for(size_t j = 0; j < model.nr_field_feature[f2]; ++j)
+                        {
+                            ; 
+                        }
+                    }
 
-            Tr_loss += log(1+expnyt);
-               
-            float const kappa = -y*expnyt/(1+expnyt);
+                    update_s(Tr, model, Tr_S, d, f1, f2, true);
+                    update_s(Va, model, Va_S, d, f1, f2, true);
+                }
+            }
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            printf("%3ld %3ld %8.2f %10.5f", 
+                t, d, timer.toc(), calc_loss(Tr.Y, Tr_S));
+            if(Va.Y.size() != 0)
+                printf(" %10.5f", calc_loss(Va.Y, Va_S));
+            printf("\n");
+            fflush(stdout);
         }
-
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
-            Tr_loss/static_cast<double>(Tr.Y.size()));
-
-        if(Va.Y.size() != 0)
-            printf(" %10.5f", predict(Va, model));
-
-        printf("\n");
-        fflush(stdout);
     }
 }
 
@@ -215,7 +259,7 @@ int main(int const argc, char const * const * const argv)
     printf("done\n");
     fflush(stdout);
 
-	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+	//omp_set_num_threads(static_cast<int>(opt.nr_thread));
 
     train(Tr, Va, model, opt);
 

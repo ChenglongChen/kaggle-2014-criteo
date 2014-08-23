@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native -fopenmp
-MAIN = fm-ccd-train fm-ccd-predict
+MAIN = fm-ccd-train #fm-ccd-predict
 FILES = common.cpp timer.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)

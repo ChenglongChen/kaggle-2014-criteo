@@ -6,9 +6,9 @@
 
 namespace {
 
-inline float logistic_func(float const t)
+inline float logistic_func(float const s)
 {
-    return 1/(1+static_cast<float>(exp(-t)));
+    return 1/(1+static_cast<float>(exp(-s)));
 }
 
 } //unamed namespace
@@ -70,7 +70,7 @@ void save_model(Model const &model, std::string const &path)
     fwrite(model.nr_field_feature.data(), sizeof(size_t), model.nr_field, fout);
     for(size_t f = 0; f < model.nr_field; ++f)
         fwrite(model.W[f].data(), sizeof(float), model.nr_field_feature[f] * 
-            model.nr_field * model.nr_factor * kW_NODE_SIZE, fout);
+            model.nr_field * model.nr_factor, fout);
     fclose(fout);
 }
 
@@ -87,7 +87,7 @@ Model load_model(std::string const &path)
     Model model(nr_field, nr_factor, nr_field_feature);
     for(size_t f = 0; f < model.nr_field; ++f)
         fread(model.W[f].data(), sizeof(float), model.nr_field_feature[f] * 
-            model.nr_field * model.nr_factor * kW_NODE_SIZE, fin);
+            model.nr_field * model.nr_factor, fin);
     fclose(fin);
     return model;
 }
@@ -109,7 +109,15 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model &model, 
+std::vector<float> calc_s(SpMat const &spmat, Model const &model)
+{
+    std::vector<float> S(spmat.nr_instance);
+    for(size_t i = 0; i < spmat.nr_instance; ++i)
+        S[i] = phi(spmat, model, i);
+    return S;
+}
+
+float calc_loss(std::vector<float> const &Y, std::vector<float> const &S,
     std::string const &output_path)
 {
     FILE *f = nullptr;
@@ -117,25 +125,25 @@ float predict(SpMat const &problem, Model &model,
         f = open_c_file(output_path, "w");
 
     double loss = 0;
-#pragma omp parallel for schedule(static) reduction(+:loss)
-    for(size_t i = 0; i < problem.Y.size(); ++i)
+    for(size_t i = 0; i < Y.size(); ++i)
     {
-        float const y = problem.Y[i];
-
-        float const t = wTx(problem, model, i);
+        float const y = Y[i];
         
-        float const prob = logistic_func(t);
+        float const s = S[i];
 
-        float const expnyt = static_cast<float>(exp(-y*t));
+        float const expnyt = static_cast<float>(exp(-y*s));
 
         loss += log(1+expnyt);
 
         if(f)
+        {
+            float const prob = logistic_func(s);
             fprintf(f, "%lf\n", prob);
+        }
     }
 
     if(f)
         fclose(f);
 
-    return static_cast<float>(loss/static_cast<double>(problem.Y.size()));
+    return static_cast<float>(loss/static_cast<double>(Y.size()));
 }
