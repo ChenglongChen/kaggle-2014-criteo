@@ -38,11 +38,23 @@ SpMat read_data(std::string const path)
             size_t field = static_cast<size_t>(atoi(field_char));
             size_t idx = static_cast<size_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
-            spmat.nr_feature = std::max(spmat.nr_feature, idx);
+
+            spmat.nr_field = std::max(spmat.nr_field, field);
+            if(spmat.nr_field_feature.size() != spmat.nr_field)
+            {
+                if(spmat.nr_instance != 0)
+                    throw std::runtime_error(
+                        "number of fields in each line shoud be the same");
+                spmat.nr_field_feature.resize(spmat.nr_field, 0);
+            }
+
+            spmat.nr_field_feature[field-1] 
+                = std::max(spmat.nr_field_feature[field-1], idx);
             spmat.X.emplace_back(field-1, idx-1, val);
         }
         spmat.P.push_back(spmat.X.size());
         spmat.Y.push_back(y);
+        ++spmat.nr_instance;
     }
 
     fclose(f);
@@ -52,25 +64,31 @@ SpMat read_data(std::string const path)
 
 void save_model(Model const &model, std::string const &path)
 {
-    FILE *f = fopen(path.c_str(), "wb");
-    fwrite(&model.nr_feature, sizeof(size_t), 1, f);
-    fwrite(&model.nr_factor, sizeof(size_t), 1, f);
-    fwrite(model.W.data(), sizeof(float), 
-        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
-    fclose(f);
+    FILE *fout = fopen(path.c_str(), "wb");
+    fwrite(&model.nr_field, sizeof(size_t), 1, fout);
+    fwrite(&model.nr_factor, sizeof(size_t), 1, fout);
+    fwrite(model.nr_field_feature.data(), sizeof(size_t), model.nr_field, fout);
+    for(size_t f = 0; f < model.nr_field; ++f)
+        fwrite(model.W[f].data(), sizeof(float), model.nr_field_feature[f] * 
+            model.nr_field * model.nr_factor * kW_NODE_SIZE, fout);
+    fclose(fout);
 }
 
 Model load_model(std::string const &path)
 {
-    FILE *f = fopen(path.c_str(), "rb");
-    size_t nr_factor, nr_feature;
-    fread(&nr_feature, sizeof(size_t), 1, f);
-    fread(&nr_factor, sizeof(size_t), 1, f);
+    FILE *fin = fopen(path.c_str(), "rb");
+    size_t nr_field, nr_factor;
+    fread(&nr_field, sizeof(size_t), 1, fin);
+    fread(&nr_factor, sizeof(size_t), 1, fin);
 
-    Model model(nr_feature, nr_factor);
-    fread(model.W.data(), sizeof(float), 
-        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
-    fclose(f);
+    std::vector<size_t> nr_field_feature(nr_field);
+    fread(nr_field_feature.data(), sizeof(size_t), nr_field, fin);
+
+    Model model(nr_field, nr_factor, nr_field_feature);
+    for(size_t f = 0; f < model.nr_field; ++f)
+        fread(model.W[f].data(), sizeof(float), model.nr_field_feature[f] * 
+            model.nr_field * model.nr_factor * kW_NODE_SIZE, fin);
+    fclose(fin);
     return model;
 }
 

@@ -21,25 +21,31 @@ struct Node
 
 struct SpMat
 {
-    SpMat() : nr_feature(0) {}
+    SpMat() : nr_instance(0), nr_field(0) {}
     std::vector<size_t> P;
     std::vector<Node> X;
     std::vector<float> Y;
-    size_t nr_feature;
+    std::vector<size_t> nr_field_feature;
+    size_t nr_instance, nr_field;
 };
 
 SpMat read_data(std::string const path);
 
-size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const nr_feature, size_t const nr_factor) 
-        : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
-          nr_feature(nr_feature), nr_factor(nr_factor) {}
-    std::vector<float> W;
-    const size_t nr_feature, nr_factor;
+    Model(size_t const nr_field, size_t const nr_factor, 
+          std::vector<size_t> nr_field_feature)
+        : nr_field(nr_field), nr_factor(nr_factor), 
+          nr_field_feature(nr_field_feature), W(nr_field)
+    {
+        for(size_t f = 0; f < nr_field; ++f) 
+            W[f].resize(nr_field_feature[f]*nr_field*nr_factor*kW_NODE_SIZE);
+    }
+    size_t const nr_field, nr_factor;
+    std::vector<size_t> const nr_field_feature; 
+    std::vector<std::vector<float>> W;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -61,6 +67,7 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
+    size_t const nr_field = model.nr_field;
     size_t const nr_factor = model.nr_factor;
     __m128 const XMMkappa = _mm_load1_ps(&kappa);
     __m128 const XMMeta = _mm_load1_ps(&eta);
@@ -82,9 +89,9 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
             __m128 const XMMkappa_v1_v2 = _mm_mul_ps(XMMkappa_v1, XMMv2);
 
             float * const w1 = 
-                model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                model.W[f1].data()+j1*nr_field*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
             float * const w2 = 
-                model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                model.W[f2].data()+j2*nr_field*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
 
             if(do_update)
             {

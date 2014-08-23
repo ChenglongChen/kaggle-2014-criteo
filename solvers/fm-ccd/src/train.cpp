@@ -128,17 +128,20 @@ void init_model(Model &model, size_t const nr_factor_real)
     float const coef = 
         static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
 
-    float * w = model.W.data();
-    for(size_t j = 0; j < model.nr_feature; ++j)
+    for(size_t f = 0; f < model.nr_field; ++f)
     {
-        for(size_t f = 0; f < kNR_FIELD; ++f)
+        float * w = model.W[f].data();
+        for(size_t j = 0; j < model.nr_field_feature[f]; ++j)
         {
-            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
-                *w = 0;
-            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
-                *w = 1;
+            for(size_t f = 0; f < model.nr_field; ++f)
+            {
+                for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+                    *w = coef*static_cast<float>(drand48());
+                for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
+                    *w = 0;
+                for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
+                    *w = 1;
+            }
         }
     }
 }
@@ -209,7 +212,7 @@ int main(int const argc, char const * const * const argv)
 
     printf("initializing model...");
     fflush(stdout);
-    Model model(Tr.nr_feature, opt.nr_factor);
+    Model model(Tr.nr_field, opt.nr_factor, Tr.nr_field_feature);
 
     init_model(model, opt.nr_factor_real);
     printf("done\n");
