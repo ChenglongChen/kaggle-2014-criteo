@@ -95,8 +95,6 @@ std::vector<AuxiliaryMat> get_aux_matrices(SpMat const &spmat)
             }
             aux_mat.P.push_back(aux_mat.I.size());
         }
-        assert(aux_mat.P.size() == nr_feature+1);
-        assert(aux_mat.I.size() == spmat.nr_instance);
     }
     return aux_mats;
 }
