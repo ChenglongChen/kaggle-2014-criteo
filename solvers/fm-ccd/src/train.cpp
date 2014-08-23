@@ -22,6 +22,8 @@ inline float solve_z(
     float const lambda,
     size_t const nr_instance)
 {
+    if(nr_instance == 0)
+        return z_init;
 	double z = z_init;
 	double z_new = 0;
 	double f = 0;
@@ -60,8 +62,8 @@ inline float solve_z(
 struct AuxiliaryMat
 {
     AuxiliaryMat(size_t const nr_instance) : nr_instance(nr_instance) {}
-    std::vector<size_t> P;
-    std::vector<size_t> I;
+    std::vector<size_t> P, I;
+    std::vector<float> Y, S, A;
     size_t const nr_instance;
 };
 
@@ -71,21 +73,26 @@ std::vector<AuxiliaryMat> get_aux_matrices(SpMat const &spmat)
     for(size_t f = 0; f < spmat.nr_field; ++f)
     {
         size_t const nr_feature = spmat.nr_field_feature[f];
-        std::vector<std::vector<size_t>> buff(nr_feature);
+        std::vector<std::vector<std::pair<size_t, float>>> buff(nr_feature);
         for(size_t i = 0; i < spmat.nr_instance; ++i)
         {
             Node const &x = spmat.X[spmat.P[i]+f];
             if(x.j >= nr_feature)
                 continue;
-            buff[x.j].push_back(i); 
+            buff[x.j].emplace_back(i, spmat.Y[i]); 
         }
 
         AuxiliaryMat &aux_mat = aux_mats[f];
         aux_mat.P.push_back(0);
         for(size_t j = 0; j < nr_feature; ++j)
         {
-            for(auto i : buff[j])
-                aux_mat.I.push_back(i);
+            for(auto &tuple : buff[j])
+            {
+                aux_mat.I.push_back(tuple.first);
+                aux_mat.Y.push_back(tuple.second);
+                aux_mat.S.push_back(0);
+                aux_mat.A.push_back(0);
+            }
             aux_mat.P.push_back(aux_mat.I.size());
         }
         assert(aux_mat.P.size() == nr_feature+1);
@@ -109,7 +116,7 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-l <labmda>: you know\n"
+"-l <lambda>: you know\n"
 "-k <dimension>: you know\n"
 "-T <iteration>: you know\n"
 "-t <iteration>: you know\n"
@@ -254,8 +261,43 @@ void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
     }
 }
 
+void update_w(
+    SpMat const &spmat, 
+    Model &model, 
+    std::vector<float> const &S,
+    size_t const d,
+    size_t const f1,
+    size_t const f2,
+    std::vector<AuxiliaryMat> &aux_mats,
+    float const lambda)
+{
+    size_t const nr_field = model.nr_field;
+    size_t const nr_factor = model.nr_factor;
+
+    for(size_t j = 0; j < model.nr_field_feature[f1]; ++j)
+    {
+        AuxiliaryMat &aux_mat = aux_mats[f1];
+        for(size_t idx = aux_mat.P[j]; idx < aux_mat.P[j+1]; ++idx)
+        {
+            size_t const i = aux_mat.I[idx];
+            Node const &x1 = spmat.X[spmat.P[i]+f1];
+            Node const &x2 = spmat.X[spmat.P[i]+f2];
+
+            aux_mat.S[idx] = S[i];
+            aux_mat.A[idx] = model.W[f2][x2.j*nr_field*nr_factor+x1.f*nr_factor+d]*x1.v*x2.v;
+        }
+
+        float &z = model.W[f1][j*nr_field*nr_factor+f2*nr_factor+d];
+        size_t const idx = aux_mat.P[j];
+        z = solve_z(&aux_mat.Y[idx], &aux_mat.S[idx], &aux_mat.A[idx], z, lambda, aux_mat.P[j+1]-aux_mat.P[j]);
+    }
+}
+
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
+    size_t const nr_field = model.nr_field;
+    size_t const nr_factor = model.nr_factor;
+
     std::vector<AuxiliaryMat> Tr_aux = get_aux_matrices(Tr);
     std::vector<float> Tr_S = calc_s(Tr, model);
     std::vector<float> Va_S = calc_s(Va, model);
@@ -263,40 +305,33 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     Timer timer;
     for(size_t t = 0; t < opt.iter; ++t)
     {
-        for(size_t d = 0; d < model.nr_factor; ++d)
+        for(size_t d = 0; d < nr_factor; ++d)
         {
             timer.tic();
-            for(size_t f1 = 0; f1 < model.nr_field; ++f1)
+            for(size_t f1 = 0; f1 < nr_field; ++f1)
             {
-                for(size_t f2 = f1+1; f2 < model.nr_field; ++f2)
+                for(size_t f2 = f1+1; f2 < nr_field; ++f2)
                 {
                     update_s(Tr, model, Tr_S, d, f1, f2, false);
                     update_s(Va, model, Va_S, d, f1, f2, false);
 
                     for(size_t tt = 0; tt < opt.inner_iter; ++tt)
                     {
-                        for(size_t j = 0; j < model.nr_field_feature[f1]; ++j)
-                        {
-                            ;                     
-                        }
-
-                        for(size_t j = 0; j < model.nr_field_feature[f2]; ++j)
-                        {
-                            ; 
-                        }
+                        update_w(Tr, model, Tr_S, d, f1, f2, Tr_aux, opt.lambda);
+                        update_w(Tr, model, Tr_S, d, f2, f1, Tr_aux, opt.lambda);
                     }
 
                     update_s(Tr, model, Tr_S, d, f1, f2, true);
                     update_s(Va, model, Va_S, d, f1, f2, true);
+
+                    printf("%3ld %3ld %8.2f %10.5f", 
+                        t, d, timer.toc(), calc_loss(Tr.Y, Tr_S));
+                    if(Va.Y.size() != 0)
+                        printf(" %10.5f", calc_loss(Va.Y, Va_S));
+                    printf("\n");
+                    fflush(stdout);
                 }
             }
-
-            printf("%3ld %3ld %8.2f %10.5f", 
-                t, d, timer.toc(), calc_loss(Tr.Y, Tr_S));
-            if(Va.Y.size() != 0)
-                printf(" %10.5f", calc_loss(Va.Y, Va_S));
-            printf("\n");
-            fflush(stdout);
         }
     }
 }
