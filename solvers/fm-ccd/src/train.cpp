@@ -31,13 +31,13 @@ inline float solve_z(
 	double exp_dec = 0;
 	const double beta = 0.5;
 	const double gamma = 0.5;
-	const int max_iter = 2;
+	const size_t max_iter = 2;
 
-	for(int t = 1; t <= max_iter; t++){
+	for(size_t t = 1; t <= max_iter; t++){
 		f = lambda / 2 * z * z;
 		g = lambda*z;
 		h = lambda;
-		for(int i = 0; i <= nr_instance - 1; i++){
+		for(size_t i = 0; i <= nr_instance - 1; i++){
 			exp_dec = std::exp(-Y[i] * (S[i] + z * A[i]));
 			f += std::log(1 + exp_dec);
 			g += -Y[i] * A[i] * exp_dec / (1 + exp_dec);
@@ -48,12 +48,12 @@ inline float solve_z(
 		do{
 			z_new = z + d;
 			f_new = lambda / 2 * z_new * z_new;
-			for(int i = 0; i <= nr_instance - 1; i++)
+			for(size_t i = 0; i <= nr_instance - 1; i++)
 				f_new += std::log( 1 + std::exp(-Y[i] * (S[i] + z_new * A[i])));
 			d *= beta;
 		}while(f_new - f > gamma * d  * g);
 	}
-	return z_new;
+	return static_cast<float>(z_new);
 }
 
 struct Option
