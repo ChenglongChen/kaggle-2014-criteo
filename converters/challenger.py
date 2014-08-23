@@ -24,7 +24,7 @@ print('nr_bins = {0}'.format(sum(FieldSize)))
 
 frequent_feats = read_freqent_feats(args['threshold'])
 
-def gen_hashed_fm_feats(feats, coef=None):
+def gen_hashed_fm_feats_(feats, coef=None):
     fm_feats = []
     for field, feat in feats:
         nr_bins = FieldSize[field-1]
@@ -49,5 +49,5 @@ with open(args['svm_path'], 'w') as f:
             if type == 'C':
                 field += 13
             feats.append((field, feat))
-        feats = gen_hashed_fm_feats(feats)
+        feats = gen_hashed_fm_feats_(feats)
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
