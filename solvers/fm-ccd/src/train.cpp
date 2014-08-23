@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <cassert>
 #include <omp.h>
 
 #include "common.h"
@@ -54,6 +55,43 @@ inline float solve_z(
 		}while(f_new - f > gamma * d  * g);
 	}
 	return static_cast<float>(z_new);
+}
+
+struct AuxiliaryMat
+{
+    AuxiliaryMat(size_t const nr_instance) : nr_instance(nr_instance) {}
+    std::vector<size_t> P;
+    std::vector<size_t> I;
+    size_t const nr_instance;
+};
+
+std::vector<AuxiliaryMat> get_aux_matrices(SpMat const &spmat)
+{
+    std::vector<AuxiliaryMat> aux_mats(spmat.nr_field, spmat.nr_instance);
+    for(size_t f = 0; f < spmat.nr_field; ++f)
+    {
+        size_t const nr_feature = spmat.nr_field_feature[f];
+        std::vector<std::vector<size_t>> buff(nr_feature);
+        for(size_t i = 0; i < spmat.nr_instance; ++i)
+        {
+            Node const &x = spmat.X[spmat.P[i]+f];
+            if(x.j >= nr_feature)
+                continue;
+            buff[x.j].push_back(i); 
+        }
+
+        AuxiliaryMat &aux_mat = aux_mats[f];
+        aux_mat.P.push_back(0);
+        for(size_t j = 0; j < nr_feature; ++j)
+        {
+            for(auto i : buff[j])
+                aux_mat.I.push_back(i);
+            aux_mat.P.push_back(aux_mat.I.size());
+        }
+        assert(aux_mat.P.size() == nr_feature+1);
+        assert(aux_mat.I.size() == spmat.nr_instance);
+    }
+    return aux_mats;
 }
 
 struct Option
@@ -218,6 +256,7 @@ void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
+    std::vector<AuxiliaryMat> Tr_aux = get_aux_matrices(Tr);
     std::vector<float> Tr_S = calc_s(Tr, model);
     std::vector<float> Va_S = calc_s(Va, model);
 
@@ -226,6 +265,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     {
         for(size_t d = 0; d < model.nr_factor; ++d)
         {
+            timer.tic();
             for(size_t f1 = 0; f1 < model.nr_field; ++f1)
             {
                 for(size_t f2 = f1+1; f2 < model.nr_field; ++f2)

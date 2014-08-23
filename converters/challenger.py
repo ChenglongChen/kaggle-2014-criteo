@@ -38,10 +38,28 @@ def gen_hashed_fm_feats_(feats, coef=None):
     fm_feats = ['{0}:{1}:{2}'.format(field, idx, val) for (field, idx) in fm_feats]
     return fm_feats
 
+def gen_feats_(row):
+    feats = []
+    for j in range(1, 14):
+        field = 'I{0}'.format(j)
+        value = row[field]
+        if j == 5 and value != '':
+            value = int(math.log(float(value)+1)**2)
+        elif j in [2, 3, 6, 7, 9] and value != '':
+            value = int(float(value)/10)
+        key = field + '-' + str(value)
+        feats.append(key)
+    for j in range(1, 27):
+        field = 'C{0}'.format(j)
+        value = row[field]
+        key = field + '-' + value
+        feats.append(key)
+    return feats
+
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = []
-        for feat in gen_feats(row):
+        for feat in gen_feats_(row):
             field = feat.split('-')[0]
             type, field = field[0], int(field[1:])
             if type == 'C' and feat not in frequent_feats:
