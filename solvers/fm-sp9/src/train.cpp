@@ -171,7 +171,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, kappa, opt.eta, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
