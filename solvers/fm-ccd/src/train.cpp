@@ -13,6 +13,49 @@
 
 namespace {
 
+inline float solve_z(
+    float const * const Y,
+    float const * const S,
+    float const * const A,
+    float const z_init,
+    float const lambda,
+    size_t const nr_instance)
+{
+	double z = z_init;
+	double z_new = 0;
+	double f = 0;
+	double f_new = 0;
+	double g = 0;
+	double h = 0;
+	double d = 0;
+	double exp_dec = 0;
+	const double beta = 0.5;
+	const double gamma = 0.5;
+	const int max_iter = 2;
+
+	for(int t = 1; t <= max_iter; t++){
+		f = lambda / 2 * z * z;
+		g = lambda*z;
+		h = lambda;
+		for(int i = 0; i <= nr_instance - 1; i++){
+			exp_dec = std::exp(-Y[i] * (S[i] + z * A[i]));
+			f += std::log(1 + exp_dec);
+			g += -Y[i] * A[i] * exp_dec / (1 + exp_dec);
+			h += exp_dec * pow(A[i] / (1 + exp_dec), 2);
+		}
+		d = -g / h;
+		
+		do{
+			z_new = z + d;
+			f_new = lambda / 2 * z_new * z_new;
+			for(int i = 0; i <= nr_instance - 1; i++)
+				f_new += std::log( 1 + std::exp(-Y[i] * (S[i] + z_new * A[i])));
+			d *= beta;
+		}while(f_new - f > gamma * d  * g);
+	}
+	return z_new;
+}
+
 struct Option
 {
     Option() : lambda(0.00001f), iter(5), inner_iter(2), nr_factor(1), nr_thread(1), save_model(true) {}
@@ -171,17 +214,6 @@ void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
         else
             S[i] -= delta;
     }
-}
-
-inline float solve_z(
-    float const * const Y,
-    float const * const S,
-    float const * const A,
-    float const z_init,
-    float const lambda,
-    size_t const nr_instance)
-{
-    return z_init;
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
