@@ -307,11 +307,11 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     {
         for(size_t d = 0; d < nr_factor; ++d)
         {
-            timer.tic();
             for(size_t f1 = 0; f1 < nr_field; ++f1)
             {
                 for(size_t f2 = f1+1; f2 < nr_field; ++f2)
                 {
+                    timer.tic();
                     update_s(Tr, model, Tr_S, d, f1, f2, false);
                     update_s(Va, model, Va_S, d, f1, f2, false);
 
@@ -324,8 +324,8 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                     update_s(Tr, model, Tr_S, d, f1, f2, true);
                     update_s(Va, model, Va_S, d, f1, f2, true);
 
-                    printf("%3ld %3ld %8.2f %10.5f", 
-                        t, d, timer.toc(), calc_loss(Tr.Y, Tr_S));
+                    printf("%3ld %3ld %3ld %3ld %8.2f %10.5f", 
+                        t, d, f1+1, f2+1, timer.toc(), calc_loss(Tr.Y, Tr_S));
                     if(Va.Y.size() != 0)
                         printf(" %10.5f", calc_loss(Va.Y, Va_S));
                     printf("\n");
