@@ -177,9 +177,9 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 
             float y = Tr.Y[i];
             if(y == -1)
-                y = 0.01;
+                y = 0.01f;
             else
-                y = 0.97;
+                y = 0.97f;
             
             float const t = wTx(Tr, model, i);
 
