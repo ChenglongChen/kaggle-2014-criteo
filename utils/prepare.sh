@@ -62,6 +62,9 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-ccd
 #ln -sf solvers/fm-ccd/fm-ccd-train .
 #ln -sf solvers/fm-ccd/fm-ccd-predict .
+make -C solvers/fm-ccd-sgd
+ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-train .
+ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-predict .
 make -C solvers/fm-sp10
 ln -sf solvers/fm-sp10/fm-sp10-train .
 ln -sf solvers/fm-sp10/fm-sp10-predict .
