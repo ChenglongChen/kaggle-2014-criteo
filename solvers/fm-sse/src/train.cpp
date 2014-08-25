@@ -28,7 +28,7 @@ std::string train_help()
 "usage: sgd-poly2-train [<options>] <train_path>\n"
 "\n"
 "options:\n"
-"-l <labmda>: you know\n"
+"-l <lambda>: you know\n"
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
