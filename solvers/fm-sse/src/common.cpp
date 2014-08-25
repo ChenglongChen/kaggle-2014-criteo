@@ -92,7 +92,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model &model, 
+float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;
@@ -101,11 +101,11 @@ float predict(SpMat const &problem, Model &model,
 
     double loss = 0;
 #pragma omp parallel for schedule(static) reduction(+:loss)
-    for(size_t i = 0; i < problem.Y.size(); ++i)
+    for(size_t i = 0; i < spmat.Y.size(); ++i)
     {
-        float const y = problem.Y[i];
+        float const y = spmat.Y[i];
 
-        float const t = wTx(problem, model, i);
+        float const t = wTx(spmat, model, i);
         
         float const prob = logistic_func(t);
 
@@ -120,5 +120,5 @@ float predict(SpMat const &problem, Model &model,
     if(f)
         fclose(f);
 
-    return static_cast<float>(loss/static_cast<double>(problem.Y.size()));
+    return static_cast<float>(loss/static_cast<double>(spmat.Y.size()));
 }

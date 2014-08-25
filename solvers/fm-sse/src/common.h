@@ -57,7 +57,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &problem, Model &model, size_t const i, 
+inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -67,18 +67,18 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
-    for(size_t idx1 = problem.P[i]; idx1 < problem.P[i+1]; ++idx1)
+    for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
     {
-        size_t const j1 = problem.X[idx1].j;
-        size_t const f1 = problem.X[idx1].f;
-        __m128 const XMMv1 = _mm_load1_ps(&problem.X[idx1].v);
+        size_t const j1 = spmat.X[idx1].j;
+        size_t const f1 = spmat.X[idx1].f;
+        __m128 const XMMv1 = _mm_load1_ps(&spmat.X[idx1].v);
         __m128 const XMMkappa_v1 = _mm_mul_ps(XMMkappa, XMMv1);
 
-        for(size_t idx2 = idx1+1; idx2 < problem.P[i+1]; ++idx2)
+        for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
         {
-            size_t const j2 = problem.X[idx2].j;
-            size_t const f2 = problem.X[idx2].f;
-            __m128 const XMMv2 = _mm_load1_ps(&problem.X[idx2].v);
+            size_t const j2 = spmat.X[idx2].j;
+            size_t const f2 = spmat.X[idx2].f;
+            __m128 const XMMv2 = _mm_load1_ps(&spmat.X[idx2].v);
             __m128 const XMMkappa_v1_v2 = _mm_mul_ps(XMMkappa_v1, XMMv2);
 
             float * const w1 = 
@@ -142,6 +142,6 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
     return t;
 }
 
-float predict(SpMat const &problem, Model &model, 
+float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_
