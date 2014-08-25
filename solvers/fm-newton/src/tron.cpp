@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "tron.h"
+#include "common.h"
 
 #ifndef min
 template <class T> static inline T min(T x,T y) { return (x<y)?x:y; }
@@ -120,7 +121,7 @@ void TRON::tron(double *w)
 		else
 			delta = max(delta, min(alpha*snorm, sigma3*delta));
 
-		info("iter %2d act %5.3e pre %5.3e delta %5.3e f %5.3e |g| %5.3e CG %3d\n", iter, actred, prered, delta, f, gnorm, cg_iter);
+		printf("iter %2d act %5.3e pre %5.3e delta %5.3e f %5.3e |g| %5.3e CG %3d\n", iter, actred, prered, delta, f, gnorm, cg_iter);
 
 		if (actred > eta0*prered)
 		{
@@ -135,18 +136,18 @@ void TRON::tron(double *w)
 		}
 		if (f < -1.0e+32)
 		{
-			info("WARNING: f < -1.0e+32\n");
+			printf("WARNING: f < -1.0e+32\n");
 			break;
 		}
 		if (fabs(actred) <= 0 && prered <= 0)
 		{
-			info("WARNING: actred and prered <= 0\n");
+			printf("WARNING: actred and prered <= 0\n");
 			break;
 		}
 		if (fabs(actred) <= 1.0e-12*fabs(f) &&
 		    fabs(prered) <= 1.0e-12*fabs(f))
 		{
-			info("WARNING: actred and prered too small\n");
+			printf("WARNING: actred and prered too small\n");
 			break;
 		}
 	}
@@ -187,7 +188,7 @@ int TRON::trcg(double delta, double *g, double *s, double *r)
 		daxpy_(&n, &alpha, d, &inc, s, &inc);
 		if (dnrm2_(&n, s, &inc) > delta)
 		{
-			info("cg reaches trust region boundary\n");
+			printf("cg reaches trust region boundary\n");
 			alpha = -alpha;
 			daxpy_(&n, &alpha, d, &inc, s, &inc);
 

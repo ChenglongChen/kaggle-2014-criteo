@@ -138,8 +138,6 @@ void init_model(Model &model, size_t const nr_factor_real)
                 *w = coef*static_cast<double>(drand48());
             for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
                 *w = 0;
-            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
-                *w = 1;
         }
     }
 }
