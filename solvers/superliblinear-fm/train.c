@@ -396,7 +396,7 @@ void read_problem(const char *filename)
 
 			errno = 0;
 			x_space[j].index = (int) strtol(idx,&endptr,10);
-			if(endptr == idx || errno != 0 || *endptr != '\0' || x_space[j].index <= inst_max_index)
+			if(endptr == idx || errno != 0 || *endptr != '\0')
 				exit_input_error(i+1);
 			else
 				inst_max_index = x_space[j].index;
