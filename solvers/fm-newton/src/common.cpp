@@ -92,7 +92,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-double predict(SpMat const &problem, Model const &model, 
+double predict(SpMat const &problem, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;

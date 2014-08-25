@@ -20,7 +20,7 @@ public:
 	TRON(const function *fun_obj, double eps = 0.1, int max_iter = 1000);
 	~TRON();
 
-	void tron(double *w, SpMat const &Va, Model const &model);
+	void tron(double *w, SpMat const &Va, Model &model);
 	void set_print_string(void (*i_print) (const char *buf));
 
 private:

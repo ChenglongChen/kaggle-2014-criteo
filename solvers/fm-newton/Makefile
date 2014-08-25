@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native -fopenmp
-MAIN = fm-newton-train fm-newton-predict
+MAIN = fm-newton-train #fm-newton-predict
 FILES = common.cpp timer.cpp tron.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)

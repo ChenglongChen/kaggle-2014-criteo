@@ -54,7 +54,7 @@ TRON::~TRON()
 {
 }
 
-void TRON::tron(double *w, SpMat const &Va, Model const &model)
+void TRON::tron(double *w, SpMat const &Va, Model &model)
 {
 	// Parameters for updating the iterates.
 	double eta0 = 1e-4; //, eta1 = 0.25, eta2 = 0.75;

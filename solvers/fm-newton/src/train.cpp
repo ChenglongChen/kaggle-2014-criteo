@@ -16,9 +16,9 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(1.0f), eps(0.001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
+    Option() : eta(0.1), lambda(1.0f), eps(0.001f), iter(10), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    double lambda, eps;
+    double eta, lambda, eps;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
@@ -33,6 +33,7 @@ std::string train_help()
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-s <nr_threads>: you know\n"
+"-r <eta>: you know\n"
 "-e <eps>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
@@ -69,6 +70,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.eps = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-r") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.eta = std::stof(args[++i]);
         }
         else if(args[i].compare("-l") == 0)
         {
@@ -286,6 +293,48 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     tron_obj.tron(model.W.data(), Va, model);
 }
 
+void train_sgd(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
+{
+    std::vector<size_t> order(Tr.Y.size());
+    for(size_t i = 0; i < Tr.Y.size(); ++i)
+        order[i] = i;
+
+    Timer timer;
+    for(size_t iter = 0; iter < opt.iter; ++iter)
+    {
+        timer.tic();
+
+        double Tr_loss = 0;
+        std::random_shuffle(order.begin(), order.end());
+#pragma omp parallel for schedule(static)
+        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        {
+            size_t const i = order[i_];
+
+            double const y = Tr.Y[i];
+            
+            double const t = wTx(Tr, model, i);
+
+            double const expnyt = static_cast<double>(exp(-y*t));
+
+            Tr_loss += log(1+expnyt);
+               
+            double const kappa = -y*expnyt/(1+expnyt);
+
+            wTx(Tr, model, i, kappa, opt.eta, 0.00001, true);
+        }
+
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr.Y.size()));
+
+        if(Va.Y.size() != 0)
+            printf(" %10.5f", predict(Va, model));
+
+        printf("\n");
+        fflush(stdout);
+    }
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -317,6 +366,8 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+
+    train_sgd(Tr, Va, model, opt);
 
     train(Tr, Va, model, opt);
 
