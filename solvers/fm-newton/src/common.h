@@ -29,12 +29,11 @@ struct SpMat
 SpMat read_data(std::string const path);
 
 size_t const kNR_FIELD = 39;
-size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor) 
-        : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
+        : W(nr_feature*kNR_FIELD*nr_factor, 0), 
           nr_feature(nr_feature), nr_factor(nr_factor) {}
     std::vector<double> W;
     const size_t nr_feature, nr_factor;
@@ -70,9 +69,9 @@ inline double wTx(SpMat const &spmat, Model const &model, size_t const i,
             double const v2 = spmat.X[idx2].v;
 
             double const * w1 = 
-                W+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                W+j1*kNR_FIELD*nr_factor+f2*nr_factor;
             double const * w2 = 
-                W+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                W+j2*kNR_FIELD*nr_factor+f1*nr_factor;
 
             for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
                 t += (*w1)*(*w2)*v1*v2;

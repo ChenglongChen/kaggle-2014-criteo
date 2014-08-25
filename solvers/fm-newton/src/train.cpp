@@ -16,9 +16,9 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
+    Option() : lambda(0.00001f), eps(0.01f), iter(15), nr_factor(1), nr_factor_real(1), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    double eta, lambda;
+    double lambda, eps;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
@@ -32,8 +32,8 @@ std::string train_help()
 "-l <labmda>: you know\n"
 "-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
-"-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
+"-e <eps>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
 }
@@ -63,11 +63,11 @@ Option parse_option(std::vector<std::string> const &args)
             opt.nr_factor_real = std::stoi(args[++i]);
             opt.nr_factor = static_cast<size_t>(ceil(static_cast<double>(opt.nr_factor_real)/4.0f))*4;
         }
-        else if(args[i].compare("-r") == 0)
+        else if(args[i].compare("-e") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.eta = std::stof(args[++i]);
+            opt.eps = std::stof(args[++i]);
         }
         else if(args[i].compare("-l") == 0)
         {
@@ -157,8 +157,8 @@ public:
 	int get_nr_variable();
 
 private:
-	void Xv(double *v, double *Xv);
-	void XTv(double *v, double *XTv);
+	void Xr(double *R, double *Xr);
+	void XTr(double *R, double *XTr);
 
     SpMat const &spmat;
     Model const &model;
@@ -168,7 +168,7 @@ private:
 
 double FactorFunc::fun(double *w)
 {
-	Xv(w, Z.data());
+	Xr(w, Z.data());
 
 	double f=0;
     for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
@@ -189,7 +189,7 @@ void FactorFunc::grad(double *w, double *g)
 		D[i] = Z[i]*(1-Z[i]);
 		Z[i] = (Z[i]-1)*spmat.Y[i];
 	}
-	XTv(Z.data(), g);
+	XTr(Z.data(), g);
 
     for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
 		g[j] = w[j] + g[j];
@@ -204,55 +204,87 @@ void FactorFunc::Hv(double *s, double *Hs)
 {
     std::vector<double> wa(spmat.nr_instance);
 
-	Xv(s, wa.data());
+	Xr(s, wa.data());
 	for(size_t i = 0; i < spmat.nr_instance; ++i)
 		wa[i] = D[i]*wa[i];
 
-	XTv(wa.data(), Hs);
+	XTr(wa.data(), Hs);
     for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
 		Hs[j] = s[j]+Hs[j];
 }
 
-void FactorFunc::Xv(double *V, double *Xv)
+void FactorFunc::Xr(double *R, double *Xr)
 {
+    size_t const nr_factor = model.nr_factor;
+    double const * const W = model.W.data();
+
     for(size_t i = 0; i < spmat.nr_instance; ++i)
-        Xv[i] = wTx(spmat, model, i, V);
+    {
+        Xr[i] = 0;
+        for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+        {
+            size_t const j1 = spmat.X[idx1].j;
+            size_t const f1 = spmat.X[idx1].f;
+            double const v1 = spmat.X[idx1].v;
+
+            for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+            {
+                size_t const j2 = spmat.X[idx2].j;
+                size_t const f2 = spmat.X[idx2].f;
+                double const v2 = spmat.X[idx2].v;
+
+                double const * r1 = 
+                    R+j1*kNR_FIELD*nr_factor+f2*nr_factor;
+                double const * w2 = 
+                    W+j2*kNR_FIELD*nr_factor+f1*nr_factor;
+
+                for(size_t d = 0; d < nr_factor; ++d, ++r1, ++w2)
+                    Xr[i] += (*r1)*(*w2)*v1*v2;
+            }
+        }
+    }
 }
 
-void FactorFunc::XTv(double *V, double *XTv)
+void FactorFunc::XTr(double *R, double *XTr)
 {
-    //size_t const nr_factor = model.nr_factor;
-    //double * const W = V;
+    size_t const nr_factor = model.nr_factor;
+    double const * const W = model.W.data();
 
-    //for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
-	//	XTv[j] = 0;
+    for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
+		XTr[j] = 0;
 
-    //for(size_t i = 0; i < spmat.nr_instance; ++i)
-    //{
-    //    for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
-    //    {
-    //        size_t const j1 = spmat.X[idx1].j;
-    //        size_t const f1 = spmat.X[idx1].f;
-    //        double const v1 = spmat.X[idx1].v;
+    for(size_t i = 0; i < spmat.nr_instance; ++i)
+    {
+        double const r1 = R[i];
+        for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+        {
+            size_t const j1 = spmat.X[idx1].j;
+            size_t const f1 = spmat.X[idx1].f;
+            double const v1 = spmat.X[idx1].v;
 
-    //        for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
-    //        {
-    //            size_t const j2 = spmat.X[idx2].j;
-    //            size_t const f2 = spmat.X[idx2].f;
-    //            double const v2 = spmat.X[idx2].v;
+            for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+            {
+                size_t const j2 = spmat.X[idx2].j;
+                size_t const f2 = spmat.X[idx2].f;
+                double const v2 = spmat.X[idx2].v;
 
-    //            double const * w1 = 
-    //                W+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
-    //            double const * w2 = 
-    //                W+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
-    //        }
-    //    }
-    //}
+                double * XTr1 = 
+                    XTr+j1*kNR_FIELD*nr_factor+f2*nr_factor;
+                double const * w2 = 
+                    W+j2*kNR_FIELD*nr_factor+f1*nr_factor;
+
+                for(size_t d = 0; d < nr_factor; ++d, ++XTr1, ++w2)
+                    *XTr1 += r1*(*w2)*v1*v2;
+            }
+        }
+    }
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
-
+    FactorFunc Tr_fun(Tr, model, opt.lambda);
+    TRON tron_obj(&Tr_fun);
+    tron_obj.tron(model.W.data());
 }
 
 } //unnamed namespace
