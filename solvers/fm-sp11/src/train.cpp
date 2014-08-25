@@ -179,7 +179,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                     wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true, f1, f2);
                 }
 
-                printf("%3ld %ld %ld %8.2f %10.5f", iter, f1, f2, timer.toc(), 
+                printf("%3ld %3ld %3ld %8.2f %10.5f", iter, f1, f2, timer.toc(), 
                     Tr_loss/static_cast<double>(Tr.Y.size()));
 
                 if(Va.Y.size() != 0)
