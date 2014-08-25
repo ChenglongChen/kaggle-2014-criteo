@@ -17,7 +17,7 @@ struct Option
 {
     Option() : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    float eta, lambda;
+    double eta, lambda;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
@@ -60,7 +60,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = static_cast<size_t>(ceil(static_cast<double>(opt.nr_factor_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -125,20 +125,126 @@ Option parse_option(std::vector<std::string> const &args)
 void init_model(Model &model, size_t const nr_factor_real)
 {
     size_t const nr_factor = model.nr_factor;
-    float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
+    double const coef = 
+        static_cast<double>(0.5/sqrt(static_cast<double>(nr_factor_real)));
 
-    float * w = model.W.data();
+    double * w = model.W.data();
     for(size_t j = 0; j < model.nr_feature; ++j)
     {
         for(size_t f = 0; f < kNR_FIELD; ++f)
         {
             for(size_t d = 0; d < nr_factor_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
+                *w = coef*static_cast<double>(drand48());
             for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
                 *w = 0;
             for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
                 *w = 1;
+        }
+    }
+}
+
+class FactorFunc : public function
+{
+public:
+    FactorFunc(SpMat const &spmat, Model const &model, double const lambda) 
+        : spmat(spmat), model(model), lambda(lambda), 
+          Z(spmat.nr_instance), D(spmat.nr_instance) {}
+	double fun(double *w);
+	void grad(double *w, double *g);
+	void Hv(double *s, double *Hs);
+
+	int get_nr_variable();
+	~function() {}
+private:
+	void Xv(double *v, double *Xv);
+	void XTv(double *v, double *XTv);
+
+    SpMat const &spmat;
+    Model const &model;
+    double const lambda;
+    std::vector<double> Z, D;
+};
+
+double FactorFunc::fun(double *w)
+{
+	Xv(w, Z.data());
+
+	double f=0;
+	for(size_t j = 0; j < get_nr_variable(); ++j)
+		f += w[j]*w[j];
+	f = lambda*f/2.0;
+
+	for(size_t i = 0; i < l; ++i)
+        f += log(1+exp(-spmat.y[i]*Z[i]));
+
+	return f;
+}
+
+void FactorFunc::grad(double *w, double *g)
+{
+	for(size_t i = 0; i < spmat.nr_instance; ++i)
+	{
+		Z[i] = 1/(1+exp(-spmat.y[i]*Z[i]));
+		D[i] = Z[i]*(1-Z[i]);
+		Z[i] = C[i]*(Z[i]-1)*spmat.y[i];
+	}
+	XTv(Z.data(), g);
+
+	for(size_t j = 0; j < get_nr_variable(); ++j)
+		g[j] = w[j] + g[j];
+}
+
+int l2r_lr_fun::get_nr_variable()
+{
+	return static_cast<int>(spmat.nr_feature*kNR_FIELD*model.nr_factor);
+}
+
+void l2r_lr_fun::Hv(double *s, double *Hs)
+{
+    std::vector<double> wa(spmat.nr_instance);
+
+	Xv(s, wa.data());
+	for(size_t i = 0; i < spat.nr_instance; ++i)
+		wa[i] = C[i]*D[i]*wa[i];
+
+	XTv(wa.data(), Hs);
+	for(size_t i = 0; i < get_nr_variable(); ++i)
+		Hs[i] = s[i]+Hs[i];
+}
+
+void l2r_lr_fun::Xv(double *V, double *Xv)
+{
+    for(size_t i = 0; i < spmat.nr_instance; ++i)
+        Xv[i] = wTx(spmat, model, i, V);
+}
+
+void l2r_lr_fun::XTv(double *V, double *XTv)
+{
+	for(size_t j = 0; j < get_nr_variable(); ++j)
+		XTv[j] = 0;
+
+    for(size_t i = 0; i < spmat.nr_instance; ++i)
+    {
+        for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+        {
+            size_t const j1 = spmat.X[idx1].j;
+            size_t const f1 = spmat.X[idx1].f;
+            double const v1 = spmat.X[idx1].v;
+
+            for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+            {
+                size_t const j2 = spmat.X[idx2].j;
+                size_t const f2 = spmat.X[idx2].f;
+                double const v2 = spmat.X[idx2].v;
+
+                double * const w1 = 
+                    W+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                double * const w2 = 
+                    W+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+
+                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
+                    t += (*w1)*(*w2)*v1*v2;
+            }
         }
     }
 }
@@ -161,15 +267,15 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
         {
             size_t const i = order[i_];
 
-            float const y = Tr.Y[i];
+            double const y = Tr.Y[i];
             
-            float const t = wTx(Tr, model, i);
+            double const t = wTx(Tr, model, i);
 
-            float const expnyt = static_cast<float>(exp(-y*t));
+            double const expnyt = static_cast<double>(exp(-y*t));
 
             Tr_loss += log(1+expnyt);
                
-            float const kappa = -y*expnyt/(1+expnyt);
+            double const kappa = -y*expnyt/(1+expnyt);
 
             wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
         }

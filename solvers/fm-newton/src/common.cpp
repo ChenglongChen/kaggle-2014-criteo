@@ -6,9 +6,9 @@
 
 namespace {
 
-inline float logistic_func(float const t)
+inline double logistic_func(double const t)
 {
-    return 1/(1+static_cast<float>(exp(-t)));
+    return 1/(1+static_cast<double>(exp(-t)));
 }
 
 } //unamed namespace
@@ -27,7 +27,7 @@ SpMat read_data(std::string const path)
     while(fgets(line, kMaxLineSize, f) != nullptr)
     {
         char *p = strtok(line, " \t");
-        float const y = (atoi(p)>0)? 1.0f : -1.0f;
+        double const y = (atoi(p)>0)? 1.0f : -1.0f;
         while(1)
         {
             char *field_char = strtok(nullptr,":");
@@ -37,12 +37,13 @@ SpMat read_data(std::string const path)
                 break;
             size_t field = static_cast<size_t>(atoi(field_char));
             size_t idx = static_cast<size_t>(atoi(idx_char));
-            float const val = static_cast<float>(atof(val_char));
+            double const val = static_cast<double>(atof(val_char));
             spmat.nr_feature = std::max(spmat.nr_feature, idx);
             spmat.X.emplace_back(field-1, idx-1, val);
         }
         spmat.P.push_back(spmat.X.size());
         spmat.Y.push_back(y);
+        ++spmat.nr_instance;
     }
 
     fclose(f);
@@ -55,7 +56,7 @@ void save_model(Model const &model, std::string const &path)
     FILE *f = fopen(path.c_str(), "wb");
     fwrite(&model.nr_feature, sizeof(size_t), 1, f);
     fwrite(&model.nr_factor, sizeof(size_t), 1, f);
-    fwrite(model.W.data(), sizeof(float), 
+    fwrite(model.W.data(), sizeof(double), 
         model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
     fclose(f);
 }
@@ -68,7 +69,7 @@ Model load_model(std::string const &path)
     fread(&nr_factor, sizeof(size_t), 1, f);
 
     Model model(nr_feature, nr_factor);
-    fread(model.W.data(), sizeof(float), 
+    fread(model.W.data(), sizeof(double), 
         model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
     fclose(f);
     return model;
@@ -91,7 +92,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &problem, Model &model, 
+double predict(SpMat const &problem, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;
@@ -102,13 +103,13 @@ float predict(SpMat const &problem, Model &model,
 #pragma omp parallel for schedule(static) reduction(+:loss)
     for(size_t i = 0; i < problem.Y.size(); ++i)
     {
-        float const y = problem.Y[i];
+        double const y = problem.Y[i];
 
-        float const t = wTx(problem, model, i);
+        double const t = wTx(problem, model, i);
         
-        float const prob = logistic_func(t);
+        double const prob = logistic_func(t);
 
-        float const expnyt = static_cast<float>(exp(-y*t));
+        double const expnyt = static_cast<double>(exp(-y*t));
 
         loss += log(1+expnyt);
 
@@ -119,5 +120,5 @@ float predict(SpMat const &problem, Model &model,
     if(f)
         fclose(f);
 
-    return static_cast<float>(loss/static_cast<double>(problem.Y.size()));
+    return static_cast<double>(loss/static_cast<double>(problem.Y.size()));
 }

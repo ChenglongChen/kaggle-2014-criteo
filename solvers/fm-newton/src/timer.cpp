@@ -18,16 +18,16 @@ void Timer::tic()
     begin = std::chrono::high_resolution_clock::now();
 }
 
-float Timer::toc()
+double Timer::toc()
 {
     duration += std::chrono::duration_cast<std::chrono::milliseconds>
                     (std::chrono::high_resolution_clock::now()-begin);
-    return (float)duration.count()/1000;
+    return (double)duration.count()/1000;
 }
 
-float Timer::get()
+double Timer::get()
 {
-    float time = toc();
+    double time = toc();
     tic();
     return time;
 }
