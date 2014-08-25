@@ -26,6 +26,6 @@ with open(args['svm_path'], 'w') as f:
                 feat = feat.split('-')[0]+'less'
             if type == 'C':
                 field += 13
-            feats.append((field, feat))
-        feats = gen_hashed_fm_feats(feats, args['nr_bins'])
+            feats.append(feat)
+        feats = gen_hashed_svm_feats(feats, args['nr_bins'])
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
