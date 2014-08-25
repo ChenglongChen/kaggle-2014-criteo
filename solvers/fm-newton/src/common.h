@@ -10,8 +10,6 @@
 #include <vector>
 #include <cmath>
 
-#include <pmmintrin.h>
-
 struct Node
 {
     Node(size_t const f, size_t const j, double const v) : f(f), j(j), v(v) {}
@@ -51,14 +49,8 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
 
-inline double qrsqrt(double x)
-{
-    _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
-    return x;
-}
-
 inline double wTx(SpMat const &spmat, Model const &model, size_t const i,
-    double * W=nullptr)
+    double const * W=nullptr)
 {
     size_t const nr_factor = model.nr_factor;
     if(W == nullptr)
@@ -77,9 +69,9 @@ inline double wTx(SpMat const &spmat, Model const &model, size_t const i,
             size_t const f2 = spmat.X[idx2].f;
             double const v2 = spmat.X[idx2].v;
 
-            double * const w1 = 
+            double const * w1 = 
                 W+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
-            double * const w2 = 
+            double const * w2 = 
                 W+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
 
             for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
