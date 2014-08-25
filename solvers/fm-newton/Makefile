@@ -7,6 +7,9 @@ HEADERS = $(FILES:%.cpp=src/%.h)
 
 all: $(MAIN)
 
+blas/blas.a: blas/*.c blas/*.h
+	make -C blas OPTFLAGS='$(CFLAGS)' CC='$(CC)';
+
 fm-newton-train: src/train.cpp $(SRCS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(SRCS)
 
