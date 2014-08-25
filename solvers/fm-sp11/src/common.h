@@ -59,7 +59,8 @@ inline float qrsqrt(float x)
 
 inline float wTx(SpMat const &problem, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
-    bool const do_update=false)
+    bool const do_update=false, size_t const target_f1=0, 
+    size_t const target_f2=0)
 {
     size_t const nr_factor = model.nr_factor;
     __m128 const XMMkappa = _mm_load1_ps(&kappa);
@@ -88,6 +89,8 @@ inline float wTx(SpMat const &problem, Model &model, size_t const i,
 
             if(do_update)
             {
+                if(f1 != target_f1 || f2 != target_f2)
+                    continue;
                 for(size_t d = 0; d < nr_factor; d += 4)
                 {
                     __m128 XMMw1 = _mm_load_ps(w1+d);

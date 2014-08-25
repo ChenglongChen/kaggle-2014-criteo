@@ -152,36 +152,44 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     Timer timer;
     for(size_t iter = 0; iter < opt.iter; ++iter)
     {
-        timer.tic();
-
-        double Tr_loss = 0;
-        std::random_shuffle(order.begin(), order.end());
-#pragma omp parallel for schedule(static)
-        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        for(size_t f1 = 0; f1 < kNR_FIELD; ++f1)
         {
-            size_t const i = order[i_];
+            for(size_t f2 = f1+1; f2 < kNR_FIELD; ++f2)
+            {
 
-            float const y = Tr.Y[i];
-            
-            float const t = wTx(Tr, model, i);
+                timer.tic();
 
-            float const expnyt = static_cast<float>(exp(-y*t));
+                double Tr_loss = 0;
+                std::random_shuffle(order.begin(), order.end());
+#pragma omp parallel for schedule(static)
+                for(size_t i_ = 0; i_ < order.size(); ++i_)
+                {
+                    size_t const i = order[i_];
 
-            Tr_loss += log(1+expnyt);
-               
-            float const kappa = -y*expnyt/(1+expnyt);
+                    float const y = Tr.Y[i];
+                    
+                    float const t = wTx(Tr, model, i);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+                    float const expnyt = static_cast<float>(exp(-y*t));
+
+                    Tr_loss += log(1+expnyt);
+                       
+                    float const kappa = -y*expnyt/(1+expnyt);
+
+                    wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true, f1, f2);
+                }
+
+                printf("%3ld %ld %ld %8.2f %10.5f", iter, f1, f2, timer.toc(), 
+                    Tr_loss/static_cast<double>(Tr.Y.size()));
+
+                if(Va.Y.size() != 0)
+                    printf(" %10.5f", predict(Va, model));
+
+                printf("\n");
+                fflush(stdout);
+            }
         }
 
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
-            Tr_loss/static_cast<double>(Tr.Y.size()));
-
-        if(Va.Y.size() != 0)
-            printf(" %10.5f", predict(Va, model));
-
-        printf("\n");
-        fflush(stdout);
     }
 }
 
