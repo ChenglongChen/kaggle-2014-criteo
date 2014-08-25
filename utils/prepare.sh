@@ -68,9 +68,9 @@ ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-predict .
 make -C solvers/fm-sp11
 ln -sf solvers/fm-sp11/fm-sp11-train .
 ln -sf solvers/fm-sp11/fm-sp11-predict .
-make -C solvers/superliblinear-fm/
-ln -sf solvers/superliblinear-fm/supertrain-fm .
-ln -sf solvers/superliblinear-fm/superpredict-fm .
+make -C solvers/fm-newton
+ln -sf solvers/fm-newton/fm-newton-train .
+ln -sf solvers/fm-newton/fm-newton-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
