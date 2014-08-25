@@ -21,11 +21,11 @@ struct Node
 
 struct SpMat
 {
-    SpMat() : nr_feature(0) {}
+    SpMat() : nr_feature(0), nr_instance(0) {}
     std::vector<size_t> P;
     std::vector<Node> X;
     std::vector<float> Y;
-    size_t nr_feature;
+    size_t nr_feature, nr_instance;
 };
 
 SpMat read_data(std::string const path);

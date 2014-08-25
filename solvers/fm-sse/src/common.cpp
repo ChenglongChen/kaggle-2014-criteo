@@ -43,6 +43,7 @@ SpMat read_data(std::string const path)
         }
         spmat.P.push_back(spmat.X.size());
         spmat.Y.push_back(y);
+        ++spmat.nr_instance;
     }
 
     fclose(f);
