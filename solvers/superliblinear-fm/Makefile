@@ -4,13 +4,13 @@ CFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x
 LIBS ?= blas/blas.a
 #LIBS ?= -lblas
 
-all: train predict
+all: supertrain-fm superpredict-fm
 
-train: tron.o linear.o train.c blas/blas.a eval.o
-	$(CXX) $(CFLAGS) -o train train.c tron.o eval.o linear.o $(LIBS)
+supertrain-fm: tron.o linear.o train.c blas/blas.a eval.o
+	$(CXX) $(CFLAGS) -o supertrain-fm train.c tron.o eval.o linear.o $(LIBS)
 
-predict: tron.o linear.o predict.c blas/blas.a eval.o
-	$(CXX) $(CFLAGS) -o predict predict.c tron.o eval.o linear.o $(LIBS)
+superpredict-fm: tron.o linear.o predict.c blas/blas.a eval.o
+	$(CXX) $(CFLAGS) -o superpredict-fm predict.c tron.o eval.o linear.o $(LIBS)
 
 eval.o: eval.h eval.cpp
 	$(CXX) $(CFLAGS) -c -o eval.o eval.cpp
@@ -26,4 +26,4 @@ blas/blas.a:
 
 clean:
 	cd blas;	make clean
-	rm -f *~ tron.o linear.o train predict
+	rm -f *~ tron.o linear.o supertrain-fm superpredict-fm
