@@ -208,7 +208,7 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 	void (*print_func)(const char*) = NULL;	// default printing to stdout
 
 	// default values
-	param.solver_type = L2R_L2LOSS_SVC_DUAL;
+	param.solver_type = L2R_LR;
 	param.C = 1;
 	param.eps = INF; // see setting below
 	param.p = 0.1;
