@@ -16,7 +16,7 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(0.00001f), eps(0.001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
+    Option() : lambda(1.0f), eps(0.001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     double lambda, eps;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
@@ -191,7 +191,7 @@ void FactorFunc::grad(double *w, double *g)
 	XTr(Z.data(), g);
 
     for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
-		g[j] = w[j] + g[j];
+		g[j] = lambda*w[j] + g[j];
 }
 
 int FactorFunc::get_nr_variable()
@@ -209,7 +209,7 @@ void FactorFunc::Hv(double *s, double *Hs)
 
 	XTr(wa.data(), Hs);
     for(size_t j = 0; j < static_cast<size_t>(get_nr_variable()); ++j)
-		Hs[j] = s[j]+Hs[j];
+		Hs[j] = lambda*s[j]+Hs[j];
 }
 
 void FactorFunc::Xr(double *R, double *Xr)
