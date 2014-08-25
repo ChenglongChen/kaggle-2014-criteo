@@ -63,7 +63,7 @@ void TRON::tron(double *w)
 	double sigma1 = 0.25, sigma2 = 0.5, sigma3 = 4;
 
 	int n = fun_obj->get_nr_variable();
-	int i, cg_iter;
+	int cg_iter;
 	double delta, snorm, one=1.0;
 	double alpha, f, fnew, prered, actred, gs;
 	int search = 1, iter = 1, inc = 1;
@@ -71,9 +71,6 @@ void TRON::tron(double *w)
 	double *r = new double[n];
 	double *w_new = new double[n];
 	double *g = new double[n];
-
-	for (i=0; i<n; i++)
-		w[i] = 0;
 
 	f = fun_obj->fun(w);
 	fun_obj->grad(w, g);

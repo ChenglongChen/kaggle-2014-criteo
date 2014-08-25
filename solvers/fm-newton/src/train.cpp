@@ -16,7 +16,7 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(0.00001f), eps(0.01f), iter(15), nr_factor(1), nr_factor_real(1), nr_threads(1), save_model(true) {}
+    Option() : lambda(0.00001f), eps(0.01f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     double lambda, eps;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
