@@ -61,7 +61,8 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<double>(opt.nr_factor_real)/4.0f))*4;
+            //opt.nr_factor = static_cast<size_t>(ceil(static_cast<double>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = opt.nr_factor_real;
         }
         else if(args[i].compare("-e") == 0)
         {
@@ -281,7 +282,7 @@ void FactorFunc::XTr(double *R, double *XTr)
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
     FactorFunc Tr_fun(Tr, model, opt.lambda);
-    TRON tron_obj(&Tr_fun);
+    TRON tron_obj(&Tr_fun, opt.eps);
     tron_obj.tron(model.W.data(), Va, model);
 }
 
