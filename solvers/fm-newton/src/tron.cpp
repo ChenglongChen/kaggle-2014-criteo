@@ -57,20 +57,21 @@ TRON::~TRON()
 void TRON::tron(double *w, SpMat const &Va, Model const &model)
 {
 	// Parameters for updating the iterates.
-	double eta0 = 1e-4, eta1 = 0.25, eta2 = 0.75;
+	double eta0 = 1e-4; //, eta1 = 0.25, eta2 = 0.75;
 
 	// Parameters for updating the trust region size delta.
-	double sigma1 = 0.25, sigma2 = 0.5, sigma3 = 4;
+	//double sigma1 = 0.25, sigma2 = 0.5, sigma3 = 4;
 
 	int n = fun_obj->get_nr_variable();
 	int cg_iter;
-	double delta, snorm, one=1.0;
-	double alpha, f, fnew, prered, actred, gs;
+	double delta, one=1.0;
+	double f, fnew, prered, actred, gs, sHs;
 	int search = 1, iter = 1, inc = 1;
 	double *s = new double[n];
 	double *r = new double[n];
 	double *w_new = new double[n];
 	double *g = new double[n];
+	double *Hs = new double[n];
 
 	f = fun_obj->fun(w);
 	fun_obj->grad(w, g);
@@ -97,30 +98,48 @@ void TRON::tron(double *w, SpMat const &Va, Model const &model)
 		// Compute the actual reduction.
 		actred = f - fnew;
 
+        int line_search_iters = 0;
+        while(actred <= eta0*prered && line_search_iters < 10)
+        {
+            for(int i = 0; i < n; ++i)
+                s[i] /= 2;
+            gs = ddot_(&n, g, &inc, s, &inc);
+            fun_obj->Hv(s, Hs);
+            sHs = ddot_(&n, s, &inc, Hs, &inc);
+            prered = -(gs+0.5*sHs);
+            memcpy(w_new, w, sizeof(double)*n);
+            daxpy_(&n, &one, s, &inc, w_new, &inc);
+            fnew = fun_obj->fun(w_new);
+            actred = f-fnew;
+            line_search_iters++;
+        }
+        if(line_search_iters == 10)
+            printf("reaching max line search iterations\n");
+
 		// On the first iteration, adjust the initial step bound.
-		snorm = dnrm2_(&n, s, &inc);
-		if (iter == 1)
-			delta = min(delta, snorm);
+		//snorm = dnrm2_(&n, s, &inc);
+		//if (iter == 1)
+		//	delta = min(delta, snorm);
 
 		// Compute prediction alpha*snorm of the step.
-		if (fnew - f - gs <= 0)
-			alpha = sigma3;
-		else
-			alpha = max(sigma1, -0.5*(gs/(fnew - f - gs)));
+		//if (fnew - f - gs <= 0)
+		//	alpha = sigma3;
+		//else
+		//	alpha = max(sigma1, -0.5*(gs/(fnew - f - gs)));
 
 		// Update the trust region bound according to the ratio of actual to predicted reduction.
-		if (actred < eta0*prered)
-			delta = min(max(alpha, sigma1)*snorm, sigma2*delta);
-		else if (actred < eta1*prered)
-			delta = max(sigma1*delta, min(alpha*snorm, sigma2*delta));
-		else if (actred < eta2*prered)
-			delta = max(sigma1*delta, min(alpha*snorm, sigma3*delta));
-		else
-			delta = max(delta, min(alpha*snorm, sigma3*delta));
+		//if (actred < eta0*prered)
+		//	delta = min(max(alpha, sigma1)*snorm, sigma2*delta);
+		//else if (actred < eta1*prered)
+		//	delta = max(sigma1*delta, min(alpha*snorm, sigma2*delta));
+		//else if (actred < eta2*prered)
+		//	delta = max(sigma1*delta, min(alpha*snorm, sigma3*delta));
+		//else
+		//	delta = max(delta, min(alpha*snorm, sigma3*delta));
 
 		printf("iter %2d act %5.3e pre %5.3e delta %5.3e f %5.3e |g| %5.3e CG %3d logloss %.5f\n", iter, actred, prered, delta, f, gnorm, cg_iter, predict(Va, model));
 
-		if (actred > eta0*prered)
+		if (true)
 		{
 			iter++;
 			memcpy(w, w_new, sizeof(double)*n);
@@ -147,12 +166,14 @@ void TRON::tron(double *w, SpMat const &Va, Model const &model)
 			printf("WARNING: actred and prered too small\n");
 			break;
 		}
+        fflush(stdout);
 	}
 
 	delete[] g;
 	delete[] r;
 	delete[] w_new;
 	delete[] s;
+	delete[] Hs;
 }
 
 int TRON::trcg(double delta, double *g, double *s, double *r)
@@ -170,7 +191,7 @@ int TRON::trcg(double delta, double *g, double *s, double *r)
 		r[i] = -g[i];
 		d[i] = r[i];
 	}
-	cgtol = 0.1*dnrm2_(&n, g, &inc);
+	cgtol = 0.5*dnrm2_(&n, g, &inc);
 
 	int cg_iter = 0;
 	rTr = ddot_(&n, r, &inc, r, &inc);
@@ -183,26 +204,26 @@ int TRON::trcg(double delta, double *g, double *s, double *r)
 
 		alpha = rTr/ddot_(&n, d, &inc, Hd, &inc);
 		daxpy_(&n, &alpha, d, &inc, s, &inc);
-		if (dnrm2_(&n, s, &inc) > delta)
-		{
-			printf("cg reaches trust region boundary\n");
-			alpha = -alpha;
-			daxpy_(&n, &alpha, d, &inc, s, &inc);
+		//if (dnrm2_(&n, s, &inc) > delta)
+		//{
+		//	info("cg reaches trust region boundary\n");
+		//	alpha = -alpha;
+		//	daxpy_(&n, &alpha, d, &inc, s, &inc);
 
-			double std = ddot_(&n, s, &inc, d, &inc);
-			double sts = ddot_(&n, s, &inc, s, &inc);
-			double dtd = ddot_(&n, d, &inc, d, &inc);
-			double dsq = delta*delta;
-			double rad = sqrt(std*std + dtd*(dsq-sts));
-			if (std >= 0)
-				alpha = (dsq - sts)/(std + rad);
-			else
-				alpha = (rad - std)/dtd;
-			daxpy_(&n, &alpha, d, &inc, s, &inc);
-			alpha = -alpha;
-			daxpy_(&n, &alpha, Hd, &inc, r, &inc);
-			break;
-		}
+		//	double std = ddot_(&n, s, &inc, d, &inc);
+		//	double sts = ddot_(&n, s, &inc, s, &inc);
+		//	double dtd = ddot_(&n, d, &inc, d, &inc);
+		//	double dsq = delta*delta;
+		//	double rad = sqrt(std*std + dtd*(dsq-sts));
+		//	if (std >= 0)
+		//		alpha = (dsq - sts)/(std + rad);
+		//	else
+		//		alpha = (rad - std)/dtd;
+		//	daxpy_(&n, &alpha, d, &inc, s, &inc);
+		//	alpha = -alpha;
+		//	daxpy_(&n, &alpha, Hd, &inc, r, &inc);
+		//	break;
+		//}
 		alpha = -alpha;
 		daxpy_(&n, &alpha, Hd, &inc, r, &inc);
 		rnewTrnew = ddot_(&n, r, &inc, r, &inc);
