@@ -54,7 +54,7 @@ TRON::~TRON()
 {
 }
 
-void TRON::tron(double *w)
+void TRON::tron(double *w, SpMat const &Va, Model const &model)
 {
 	// Parameters for updating the iterates.
 	double eta0 = 1e-4, eta1 = 0.25, eta2 = 0.75;
@@ -118,7 +118,7 @@ void TRON::tron(double *w)
 		else
 			delta = max(delta, min(alpha*snorm, sigma3*delta));
 
-		printf("iter %2d act %5.3e pre %5.3e delta %5.3e f %5.3e |g| %5.3e CG %3d\n", iter, actred, prered, delta, f, gnorm, cg_iter);
+		printf("iter %2d act %5.3e pre %5.3e delta %5.3e f %5.3e |g| %5.3e CG %3d logloss %.5f\n", iter, actred, prered, delta, f, gnorm, cg_iter, predict(Va, model));
 
 		if (actred > eta0*prered)
 		{

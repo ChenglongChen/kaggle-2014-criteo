@@ -81,6 +81,6 @@ inline double wTx(SpMat const &spmat, Model const &model, size_t const i,
     return t;
 }
 
-double predict(SpMat const &spmat, Model &model, 
+double predict(SpMat const &spmat, Model const &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_
