@@ -228,7 +228,7 @@ void init_model(Model &model)
 }
 
 void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
-    size_t const d, size_t const f1, size_t const f2, bool const do_addition)
+    size_t const d, size_t const f1, bool const do_addition)
 {
     size_t const nr_field = model.nr_field;
     size_t const nr_factor = model.nr_factor;
@@ -237,29 +237,35 @@ void update_s(SpMat const &spmat, Model const &model, std::vector<float> &S,
     {
         Node const * const x = &spmat.X[spmat.P[i]];
         Node const * const x1 = x+f1;
-        Node const * const x2 = x+f2;
+        for(size_t f2 = 0; f2 < nr_field; ++f2)
+        {
+            if(f1 == f2)
+                continue;
 
-        size_t const j1 = x1->j;
-        if(j1 >= model.nr_field_feature[f1])
-            continue;
-        size_t const j2 = x2->j;
-        if(j2 >= model.nr_field_feature[f2])
-            continue;
+            Node const * const x2 = x+f2;
 
-        float const v1 = x1->v;
-        float const v2 = x2->v;
+            size_t const j1 = x1->j;
+            if(j1 >= model.nr_field_feature[f1])
+                continue;
+            size_t const j2 = x2->j;
+            if(j2 >= model.nr_field_feature[f2])
+                continue;
 
-        float const &w1 = 
-            model.W[f1][j1*nr_field*nr_factor+f2*nr_factor+d];
-        float const &w2 = 
-            model.W[f2][j2*nr_field*nr_factor+f1*nr_factor+d];
+            float const v1 = x1->v;
+            float const v2 = x2->v;
 
-        float const delta = w1*w2*v1*v2;
+            float const &w1 = 
+                model.W[f1][j1*nr_field*nr_factor+f2*nr_factor+d];
+            float const &w2 = 
+                model.W[f2][j2*nr_field*nr_factor+f1*nr_factor+d];
 
-        if(do_addition)
-            S[i] += delta;
-        else
-            S[i] -= delta;
+            float const delta = w1*w2*v1*v2;
+
+            if(do_addition)
+                S[i] += delta;
+            else
+                S[i] -= delta;
+        }
     }
 }
 
@@ -269,29 +275,55 @@ void update_w(
     std::vector<float> const &S,
     size_t const d,
     size_t const f1,
-    size_t const f2,
     std::vector<AuxiliaryMat> &aux_mats,
-    float const lambda)
+    float const lambda,
+    size_t const nr_inner_iter)
 {
     size_t const nr_field = model.nr_field;
     size_t const nr_factor = model.nr_factor;
 
-    for(size_t j = 0; j < model.nr_field_feature[f1]; ++j)
+    for(size_t j1 = 0; j1 < model.nr_field_feature[f1]; ++j1)
     {
         AuxiliaryMat &aux_mat = aux_mats[f1];
-        for(size_t idx = aux_mat.P[j]; idx < aux_mat.P[j+1]; ++idx)
+        size_t const idx_begin = aux_mat.P[j1];
+        size_t const nnz = aux_mat.P[j1+1]-aux_mat.P[j1];
+        std::vector<float> S1(nnz);
+        std::vector<std::vector<float>> A1(nr_field, std::vector<float>(nnz));
+
+        for(size_t idx = aux_mat.P[j1], i1 = 0; idx < aux_mat.P[j1+1]; ++idx, ++i1)
         {
             size_t const i = aux_mat.I[idx];
-            Node const &x1 = spmat.X[spmat.P[i]+f1];
-            Node const &x2 = spmat.X[spmat.P[i]+f2];
+            Node const * const x = &spmat.X[spmat.P[i]];
+            Node const * const x1 = x + f1;
 
-            aux_mat.S[idx] = S[i];
-            aux_mat.A[idx] = model.W[f2][x2.j*nr_field*nr_factor+x1.f*nr_factor+d]*x1.v*x2.v;
+            S1[i1] = S[i];
+            for(size_t f2 = 0; f2 < nr_field; ++f2)
+            {
+                if(f2 == f1) 
+                    continue;
+                Node const * const x2 = x + f2;
+                float z = model.W[f1][j1*nr_field*nr_factor+f2*nr_factor+d];
+                float a = model.W[f2][x2->j*nr_field*nr_factor+x1->f*nr_factor+d]*x1->v*x2->v;
+                S1[i1] += z*a;
+                A1[f2][i1] = a;
+            }
         }
 
-        float &z = model.W[f1][j*nr_field*nr_factor+f2*nr_factor+d];
-        size_t const idx = aux_mat.P[j];
-        z = solve_z(&aux_mat.Y[idx], &aux_mat.S[idx], &aux_mat.A[idx], z, lambda, aux_mat.P[j+1]-aux_mat.P[j]);
+        for(size_t tt = 0; tt < nr_inner_iter; ++tt)
+        {
+            for(size_t f2 = 0; f2 < nr_field; ++f2)
+            {
+                if(f2 == f1)
+                    continue;
+                float &z = model.W[f1][j1*nr_field*nr_factor+f2*nr_factor+d];
+
+                for(size_t i1 = 0; i1 < nnz; ++i1)
+                    S1[i1] -= z*A1[f2][i1];
+                z = solve_z(&aux_mat.Y[idx_begin], S1.data(), A1[f2].data(), z, lambda, nnz);
+                for(size_t i1 = 0; i1 < nnz; ++i1)
+                    S1[i1] += z*A1[f2][i1];
+            }
+        }
     }
 }
 
@@ -311,28 +343,22 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
         {
             for(size_t f1 = 0; f1 < nr_field; ++f1)
             {
-                for(size_t f2 = f1+1; f2 < nr_field; ++f2)
-                {
-                    timer.tic();
-                    update_s(Tr, model, Tr_S, d, f1, f2, false);
-                    update_s(Va, model, Va_S, d, f1, f2, false);
+                timer.tic();
 
-                    for(size_t tt = 0; tt < opt.inner_iter; ++tt)
-                    {
-                        update_w(Tr, model, Tr_S, d, f1, f2, Tr_aux, opt.lambda);
-                        update_w(Tr, model, Tr_S, d, f2, f1, Tr_aux, opt.lambda);
-                    }
+                update_s(Tr, model, Tr_S, d, f1, false);
+                update_s(Va, model, Va_S, d, f1, false);
 
-                    update_s(Tr, model, Tr_S, d, f1, f2, true);
-                    update_s(Va, model, Va_S, d, f1, f2, true);
+                update_w(Tr, model, Tr_S, d, f1, Tr_aux, opt.lambda, opt.inner_iter);
 
-                    printf("%3ld %3ld %3ld %3ld %8.2f %10.5f", 
-                        t, d, f1+1, f2+1, timer.toc(), calc_loss(Tr.Y, Tr_S));
-                    if(Va.Y.size() != 0)
-                        printf(" %10.5f", calc_loss(Va.Y, Va_S));
-                    printf("\n");
-                    fflush(stdout);
-                }
+                update_s(Tr, model, Tr_S, d, f1, true);
+                update_s(Va, model, Va_S, d, f1, true);
+
+                printf("%3ld %3ld %3ld %8.2f %10.5f", 
+                    t, d, f1+1, timer.toc(), calc_loss(Tr.Y, Tr_S));
+                if(Va.Y.size() != 0)
+                    printf(" %10.5f", calc_loss(Va.Y, Va_S));
+                printf("\n");
+                fflush(stdout);
             }
         }
     }

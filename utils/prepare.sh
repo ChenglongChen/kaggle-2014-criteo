@@ -71,9 +71,9 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-newton
 #ln -sf solvers/fm-newton/fm-newton-train .
 #ln -sf solvers/fm-newton/fm-newton-predict .
-make -C solvers/fm-als-sgd
-ln -sf solvers/fm-als-sgd/fm-als-sgd-train .
-ln -sf solvers/fm-als-sgd/fm-als-sgd-predict .
+make -C solvers/fm-als
+ln -sf solvers/fm-als/fm-als-train .
+ln -sf solvers/fm-als/fm-als-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
