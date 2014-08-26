@@ -62,15 +62,18 @@ ln -sf solvers/fm-sse/fm-sse-predict .
 #make -C solvers/fm-ccd
 #ln -sf solvers/fm-ccd/fm-ccd-train .
 #ln -sf solvers/fm-ccd/fm-ccd-predict .
-make -C solvers/fm-ccd-sgd
-ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-train .
-ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-predict .
-make -C solvers/fm-sp11
-ln -sf solvers/fm-sp11/fm-sp11-train .
-ln -sf solvers/fm-sp11/fm-sp11-predict .
-make -C solvers/fm-newton
-ln -sf solvers/fm-newton/fm-newton-train .
-ln -sf solvers/fm-newton/fm-newton-predict .
+#make -C solvers/fm-ccd-sgd
+#ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-train .
+#ln -sf solvers/fm-ccd-sgd/fm-ccd-sgd-predict .
+#make -C solvers/fm-sp11
+#ln -sf solvers/fm-sp11/fm-sp11-train .
+#ln -sf solvers/fm-sp11/fm-sp11-predict .
+#make -C solvers/fm-newton
+#ln -sf solvers/fm-newton/fm-newton-train .
+#ln -sf solvers/fm-newton/fm-newton-predict .
+make -C solvers/fm-als-sgd
+ln -sf solvers/fm-als-sgd/fm-als-sgd-train .
+ln -sf solvers/fm-als-sgd/fm-als-sgd-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
