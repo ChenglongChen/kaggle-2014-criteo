@@ -37,8 +37,9 @@ struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor) 
         : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
+          W1(nr_feature*nr_factor*kW_NODE_SIZE, 0), 
           nr_feature(nr_feature), nr_factor(nr_factor) {}
-    std::vector<float> W;
+    std::vector<float> W, W1;
     const size_t nr_feature, nr_factor;
 };
 
@@ -57,7 +58,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+inline float wTx0(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -140,6 +141,94 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     _mm_store_ss(&t, XMMt);
 
     return t;
+}
+
+inline float wTx1(SpMat const &problem, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
+{
+    size_t const nr_factor = model.nr_factor;
+    __m128 const XMMkappa = _mm_load1_ps(&kappa);
+    __m128 const XMMeta = _mm_load1_ps(&eta);
+    __m128 const XMMlambda = _mm_load1_ps(&lambda);
+
+    std::vector<float> sv(nr_factor, 0);
+    float * const s = sv.data();
+
+    __m128 XMMt = _mm_setzero_ps();
+    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+    {
+        size_t const j = problem.X[idx].j;
+        __m128 const XMMx = _mm_load1_ps(&problem.X[idx].v);
+        float * const w = model.W1.data()+j*nr_factor*kW_NODE_SIZE;
+
+        for(size_t d = 0; d < nr_factor; d += 4)
+        {
+            __m128 XMMs = _mm_load_ps(s+d);
+            __m128 const XMMw = _mm_load_ps(w+d);
+
+            XMMs = _mm_add_ps(XMMs, _mm_mul_ps(XMMw, XMMx));
+
+            _mm_store_ps(s+d, XMMs);
+        }
+    }
+
+    for(size_t idx = problem.P[i]; idx < problem.P[i+1]; ++idx)
+    {
+        size_t const j = problem.X[idx].j;
+        __m128 const XMMx = _mm_load1_ps(&problem.X[idx].v);
+        float * const w = model.W1.data()+j*nr_factor*kW_NODE_SIZE;
+        
+        if(do_update)
+        {
+            for(size_t d = 0; d < nr_factor; d += 4)
+            {
+                __m128 XMMs = _mm_load_ps(s+d);
+                __m128 XMMw = _mm_load_ps(w+d);
+                __m128 XMMwg = _mm_load_ps(w+nr_factor+d);
+
+                __m128 XMMg = _mm_add_ps(_mm_mul_ps(XMMlambda, XMMw), 
+                    _mm_mul_ps(XMMkappa, _mm_mul_ps(_mm_sub_ps(XMMs, _mm_mul_ps(XMMw, XMMx)), XMMx)));
+
+                XMMwg = _mm_add_ps(XMMwg, _mm_mul_ps(XMMg, XMMg));
+
+                XMMw = _mm_sub_ps(XMMw,
+                    _mm_mul_ps(XMMeta, 
+                    _mm_mul_ps(_mm_rsqrt_ps(XMMwg), XMMg)));
+
+                _mm_store_ps(w+d, XMMw);
+                _mm_store_ps(w+nr_factor+d, XMMwg);
+            }
+        }
+        else
+        {
+            for(size_t d = 0; d < nr_factor; d += 4)
+            {
+                __m128 XMMs = _mm_load_ps(s+d);
+                __m128 XMMw = _mm_load_ps(w+d);
+                __m128 XMMwx = _mm_mul_ps(XMMw, XMMx);
+                XMMt = _mm_add_ps(XMMt, 
+                    _mm_mul_ps(XMMwx, _mm_sub_ps(XMMs, XMMwx)));
+            }
+        }
+    }
+
+    XMMt = _mm_hadd_ps(XMMt, XMMt);
+    XMMt = _mm_hadd_ps(XMMt, XMMt);
+    float t;
+    _mm_store_ss(&t, XMMt);
+
+    return t/2.0f;
+}
+
+inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
+{
+    float const t0 = wTx0(spmat, model, i, kappa, eta, lambda, do_update);
+    float const t1 = wTx1(spmat, model, i, kappa, eta, lambda, do_update);
+
+    return t0+t1;
 }
 
 float predict(SpMat const &spmat, Model &model, 
