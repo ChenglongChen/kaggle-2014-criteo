@@ -9,16 +9,16 @@ inline float solve_z(
 {
     if(nr_instance == 0)
         return z_init;
-	float z = z_init;
-	float z_new = 0;
-	float f = 0;
-	float f_new = 0;
-	float g = 0;
-	float h = 0;
-	float d = 0;
-	float exp_dec = 0;
-	const float beta = 0.5;
-	const float gamma = 0.1f;
+	double z = z_init;
+	double z_new = 0;
+	double f = 0;
+	double f_new = 0;
+	double g = 0;
+	double h = 0;
+	double d = 0;
+	double exp_dec = 0;
+	const double beta = 0.5;
+	const double gamma = 0.1f;
 	const size_t max_iter = 2;
 
 	for(size_t t = 1; t <= max_iter; t++){
@@ -29,7 +29,7 @@ inline float solve_z(
 			exp_dec = std::exp(-Y[i] * (S[i] + z * A[i]));
 			f += std::log(1 + exp_dec);
 			g += -Y[i] * A[i] * exp_dec / (1 + exp_dec);
-			h += exp_dec * static_cast<float>(pow(A[i] / (1 + exp_dec), 2));
+			h += exp_dec * pow(A[i] / (1 + exp_dec), 2);
 		}
 		d = -g / h;
 		

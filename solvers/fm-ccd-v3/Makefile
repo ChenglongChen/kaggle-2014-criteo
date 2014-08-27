@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native -fopenmp
 MAIN = fm-ccd-v3-train #fm-ccd-v3-predict
 FILES = common.cpp timer.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
-HEADERS = $(FILES:%.cpp=src/%.h)
+HEADERS = $(FILES:%.cpp=src/%.h) src/solvez.h
 
 all: $(MAIN)
 
