@@ -67,5 +67,5 @@ with open(args['svm_path'], 'w') as f:
             if type == 'C':
                 field += 13
             feats.append((field, feat))
-        feats = gen_hashed_fm_feats_(feats)
+        feats = gen_hashed_fm_feats_(feats, 0.05)
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
