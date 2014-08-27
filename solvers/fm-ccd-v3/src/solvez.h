@@ -19,7 +19,7 @@ inline float solve_z(
 	double exp_dec = 0;
 	const double beta = 0.5;
 	const double gamma = 0.1f;
-	const size_t max_iter = 2;
+	const size_t max_iter = 1;
 
 	for(size_t t = 1; t <= max_iter; t++){
 		f = lambda / 2 * z * z;
