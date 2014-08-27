@@ -76,31 +76,58 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             size_t const f2 = spmat.X[idx2].f;
             float const v2 = spmat.X[idx2].v;
 
-            float * w1 = 
-                model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
-            float * w2 = 
-                model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
-
-            if(do_update)
+            for(size_t idx3 = idx2+1; idx3 < spmat.P[i+1]; ++idx3)
             {
-                float * wg1 = w1 + nr_factor;
-                float * wg2 = w2 + nr_factor;
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
+                size_t const j3 = spmat.X[idx3].j;
+                size_t const f3 = spmat.X[idx3].f;
+                float const v3 = spmat.X[idx3].v;
+
+                float * w12 = model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                float * w13 = model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f3*nr_factor*kW_NODE_SIZE;
+                float * w21 = model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                float * w23 = model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f3*nr_factor*kW_NODE_SIZE;
+                float * w31 = model.W.data()+j3*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                float * w32 = model.W.data()+j3*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+
+                if(do_update)
                 {
-                    float const g1 = lambda*(*w1) + kappa*v1*v2*(*w2);
-                    float const g2 = lambda*(*w2) + kappa*v1*v2*(*w1);
+                    float * wg12 = w12 + nr_factor; 
+                    float * wg13 = w13 + nr_factor; 
+                    float * wg21 = w21 + nr_factor; 
+                    float * wg23 = w23 + nr_factor; 
+                    float * wg31 = w31 + nr_factor; 
+                    float * wg32 = w32 + nr_factor; 
+                    for(size_t d = 0; d < nr_factor; ++d, ++w12, ++w13, ++w21, ++w23, ++w31, ++w32, ++wg12, ++wg13, ++wg21, ++wg23, ++wg31, ++wg32)
+                    {
+                        float const wall = (*w12)*(*w13)*(*w21)*(*w23)*(*w31)*(*w32);
 
-                    *wg1 += g1*g1;
-                    *wg2 += g2*g2;
+                        float const g12 = lambda*(*w12) + kappa*v1*v2*v3*wall/(*w12);
+                        float const g13 = lambda*(*w13) + kappa*v1*v2*v3*wall/(*w13);
+                        float const g21 = lambda*(*w21) + kappa*v1*v2*v3*wall/(*w21);
+                        float const g23 = lambda*(*w23) + kappa*v1*v2*v3*wall/(*w23);
+                        float const g31 = lambda*(*w31) + kappa*v1*v2*v3*wall/(*w31);
+                        float const g32 = lambda*(*w32) + kappa*v1*v2*v3*wall/(*w32);
 
-                    *w1 -= eta*qrsqrt(*wg1)*g1;
-                    *w2 -= eta*qrsqrt(*wg2)*g2;
+                        *wg12 += g12*g12;
+                        *wg13 += g13*g13;
+                        *wg21 += g21*g21;
+                        *wg23 += g23*g23;
+                        *wg31 += g31*g31;
+                        *wg32 += g32*g32;
+
+                        *w12 -= eta*qrsqrt(*wg12)*g12;
+                        *w13 -= eta*qrsqrt(*wg13)*g13;
+                        *w21 -= eta*qrsqrt(*wg21)*g21;
+                        *w23 -= eta*qrsqrt(*wg23)*g23;
+                        *w31 -= eta*qrsqrt(*wg31)*g31;
+                        *w32 -= eta*qrsqrt(*wg32)*g32;
+                    }
                 }
-            }
-            else
-            {
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
-                    t += (*w1)*(*w2)*v1*v2;
+                else
+                {
+                    for(size_t d = 0; d < nr_factor; ++d, ++w12, ++w13, ++w21, ++w23, ++w31, ++w32)
+                        t += (*w12)*(*w13)*(*w21)*(*w23)*(*w31)*(*w32)*v1*v2*v3;
+                }
             }
         }
     }
