@@ -60,7 +60,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = opt.nr_factor_real;//static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
