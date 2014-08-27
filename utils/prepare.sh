@@ -77,9 +77,12 @@ ln -sf solvers/fm/fm-predict .
 #make -C solvers/fm-ccd-v3
 #ln -sf solvers/fm-ccd-v3/fm-ccd-v3-train .
 #ln -sf solvers/fm-ccd-v3/fm-ccd-v3-predict .
-make -C solvers/fm-sp12
-ln -sf solvers/fm-sp12/fm-sp12-train .
-ln -sf solvers/fm-sp12/fm-sp12-predict .
+#make -C solvers/fm-sp12
+#ln -sf solvers/fm-sp12/fm-sp12-train .
+#ln -sf solvers/fm-sp12/fm-sp12-predict .
+make -C solvers/fm-sse-tensor3/
+ln -sf solvers/fm-sse-tensor3/fm-sse-tensor3-train .
+ln -sf solvers/fm-sse-tensor3/fm-sse-tensor3-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv

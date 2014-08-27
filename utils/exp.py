@@ -26,8 +26,8 @@ for size in ["100", "10", "1"]:
             .format(data_csv=data_csv, data_svm=data_svm)
         subprocess.call(cmd, shell=True)
 
-    cmd = './fm-sse-train -s 24 -t 15 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
-    cmd += ' && ./fm-sse-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
+    cmd = './fm-train -s 24 -t 15 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
+    cmd += ' && ./fm-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
     cmd += ' && ./utils/calc_log_loss.py {va_svm} {out}'.format(va_svm=va_svm, out=out)
     worker = subprocess.Popen(cmd, shell=True, stdout=open(log_path, 'w')) 
     worker.communicate()
