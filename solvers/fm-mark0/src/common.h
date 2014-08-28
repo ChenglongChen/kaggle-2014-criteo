@@ -62,9 +62,6 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
-    __m128 const XMMkappa = _mm_load1_ps(&kappa);
-    __m128 const XMMeta = _mm_load1_ps(&eta);
-    __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     std::vector<float> cache(nr_factor, 0);
     float * const s = cache.data();
@@ -72,66 +69,42 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     for(size_t idx = spmat.P[i]; idx < spmat.P[i+1]; ++idx)
     {
         size_t const j = spmat.X[idx].j;
-        __m128 const XMMv = _mm_load1_ps(&spmat.X[idx].v);
+        float const v = spmat.X[idx].v;
         float * const w = model.W.data()+j*nr_factor*kW_NODE_SIZE;
 
-        for(size_t d = 0; d < nr_factor; d += 4)
-        {
-            __m128 XMMs = _mm_load_ps(s+d);
-            __m128 const XMMw = _mm_load_ps(w+d);
-
-            XMMs = _mm_add_ps(XMMs, _mm_mul_ps(XMMw, XMMv));
-
-            _mm_store_ps(s+d, XMMs);
-        }
+        for(size_t d = 0; d < nr_factor; ++d)
+            s[d] += w[d]*v;
     }
 
-    __m128 XMMt = _mm_setzero_ps();
+    float t = 0;
     for(size_t idx = spmat.P[i]; idx < spmat.P[i+1]; ++idx)
     {
         size_t const j = spmat.X[idx].j;
-        __m128 const XMMv = _mm_load1_ps(&spmat.X[idx].v);
+        float const v = spmat.X[idx].v;
 
         float * const w = model.W.data()+j*nr_factor*kW_NODE_SIZE;
 
         if(do_update)
         {
-            for(size_t d = 0; d < nr_factor; d += 4)
+            float * const wg = w + nr_factor;
+            for(size_t d = 0; d < nr_factor; ++d)
             {
-                __m128 XMMs = _mm_load_ps(s+d);
-                __m128 XMMw = _mm_load_ps(w+d);
-                __m128 XMMwg = _mm_load_ps(w+nr_factor+d);
+                float const g = lambda*w[d] + kappa*v*(s[d]-w[d]*v);
 
-                __m128 XMMg = _mm_add_ps(_mm_mul_ps(XMMlambda, XMMw), 
-                    _mm_mul_ps(XMMkappa, _mm_mul_ps(_mm_sub_ps(XMMs, _mm_mul_ps(XMMw, XMMv)), XMMv)));
+                wg[d] += g*g;
 
-                XMMwg = _mm_add_ps(XMMwg, _mm_mul_ps(XMMg, XMMg));
-
-                XMMw = _mm_sub_ps(XMMw,
-                    _mm_mul_ps(XMMeta, 
-                    _mm_mul_ps(_mm_rsqrt_ps(XMMwg), XMMg)));
-
-                _mm_store_ps(w+d, XMMw);
-                _mm_store_ps(w+nr_factor+d, XMMwg);
+                w[d] -= eta*qrsqrt(wg[d])*g;
             }
         }
         else
         {
-            for(size_t d = 0; d < nr_factor; d += 4)
+            for(size_t d = 0; d < nr_factor; ++d)
             {
-                __m128 XMMs = _mm_load_ps(s+d);
-                __m128 XMMw = _mm_load_ps(w+d);
-                __m128 XMMwv = _mm_mul_ps(XMMw, XMMv);
-                XMMt = _mm_add_ps(XMMt, 
-                    _mm_mul_ps(XMMwv, _mm_sub_ps(XMMs, XMMwv)));
+                float const vw = v*w[d];
+                t += vw*(s[d]-vw);
             }
         }
     }
-
-    XMMt = _mm_hadd_ps(XMMt, XMMt);
-    XMMt = _mm_hadd_ps(XMMt, XMMt);
-    float t;
-    _mm_store_ss(&t, XMMt);
 
     return t/2.0f;
 }
