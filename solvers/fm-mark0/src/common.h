@@ -36,8 +36,9 @@ struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor) 
         : W(nr_feature*nr_factor*kW_NODE_SIZE, 0), 
+          WL(nr_feature*kW_NODE_SIZE, 0),
           nr_feature(nr_feature), nr_factor(nr_factor) {}
-    std::vector<float> W;
+    std::vector<float> W, WL;
     const size_t nr_feature, nr_factor;
 };
 
@@ -82,10 +83,15 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
         float const v = spmat.X[idx].v;
 
         float * const w = model.W.data()+j*nr_factor*kW_NODE_SIZE;
+        float * const wl = model.WL.data()+j*kW_NODE_SIZE;
 
         if(do_update)
         {
-            float * const wg = w + nr_factor;
+            float const g = lambda*(*wl) + kappa*spmat.X[idx].v;
+            *(wl+1) += g*g;
+            *wl -= eta*qrsqrt(*(wl+1))*g;
+
+            float * const wg = w+nr_factor;
             for(size_t d = 0; d < nr_factor; ++d)
             {
                 float const g = lambda*w[d] + kappa*v*(s[d]-w[d]*v);
@@ -97,6 +103,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
         }
         else
         {
+            t += (*wl)*spmat.X[idx].v;
             for(size_t d = 0; d < nr_factor; ++d)
             {
                 float const vw = v*w[d];
