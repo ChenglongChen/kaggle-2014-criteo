@@ -62,8 +62,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 {
     size_t const nr_factor = model.nr_factor;
 
-    std::vector<float> cache(nr_factor, 0);
-    float * const s = cache.data();
+    std::vector<float> cache1(nr_factor, 0), cache2(nr_factor, 0);
+    float * const s1 = cache1.data(), * const s2 = cache2.data();
 
     for(size_t idx = spmat.P[i]; idx < spmat.P[i+1]; ++idx)
     {
@@ -72,7 +72,27 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
         float * const w = model.W.data()+j*nr_factor*kW_NODE_SIZE;
 
         for(size_t d = 0; d < nr_factor; ++d)
-            s[d] += w[d]*v;
+        {
+            float const vw = v*w[d];
+            s1[d] += vw;
+            s2[d] += vw;
+        }
+    }
+
+    for(size_t d = 0; d < nr_factor; ++d)
+        s2[d] = s2[d]*s2[d];
+
+    for(size_t idx = spmat.P[i]; idx < spmat.P[i+1]; ++idx)
+    {
+        size_t const j = spmat.X[idx].j;
+        float const v = spmat.X[idx].v;
+        float * const w = model.W.data()+j*nr_factor*kW_NODE_SIZE;
+
+        for(size_t d = 0; d < nr_factor; ++d)
+        {
+            float const vw = v*w[d];
+            s2[d] -= vw*vw;
+        }
     }
 
     float t = 0;
@@ -88,7 +108,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             float * const wg = w+nr_factor;
             for(size_t d = 0; d < nr_factor; ++d)
             {
-                float const g = lambda*w[d] + kappa*v*(s[d]-w[d]*v);
+                float const vw = v*w[d];
+                float const g = lambda*w[d] + kappa*v*(s2[d]-vw*(s1[d]-vw));
 
                 wg[d] += g*g;
 
@@ -100,12 +121,12 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             for(size_t d = 0; d < nr_factor; ++d)
             {
                 float const vw = v*w[d];
-                t += vw*(s[d]-vw);
+                t += vw*(s2[d]-vw*(s1[d]-vw));
             }
         }
     }
 
-    return t/2.0f;
+    return t/6.0f;
 }
 
 float predict(SpMat const &spmat, Model &model, 
