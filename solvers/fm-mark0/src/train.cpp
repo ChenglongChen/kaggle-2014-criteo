@@ -131,15 +131,12 @@ void init_model(Model &model, size_t const nr_factor_real)
     float * w = model.W.data();
     for(size_t j = 0; j < model.nr_feature; ++j)
     {
-        for(size_t f = 0; f < kNR_FIELD; ++f)
-        {
-            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
-                *w = 0;
-            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
-                *w = 1;
-        }
+        for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+            *w = coef*static_cast<float>(drand48());
+        for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
+            *w = 0;
+        for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
+            *w = 1;
     }
 }
 

@@ -83,6 +83,9 @@ ln -sf solvers/fm/fm-predict .
 make -C solvers/fm-tensor3-v2/
 ln -sf solvers/fm-tensor3-v2/fm-tensor3-v2-train .
 ln -sf solvers/fm-tensor3-v2/fm-tensor3-v2-predict .
+make -C solvers/fm-mark0/
+ln -sf solvers/fm-mark0/fm-mark0-train .
+ln -sf solvers/fm-mark0/fm-mark0-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
