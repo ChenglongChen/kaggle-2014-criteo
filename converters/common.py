@@ -15,15 +15,15 @@ def gen_feats(row):
     for j in range(1, 14):
         field = 'I{0}'.format(j)
         value = row[field]
-        if j == 5 and value != '':
-            value = int(math.log(float(value)+1)**2)
-        elif j in [2, 3, 6, 7, 9] and value != '':
-            value = int(float(value)/10)
+        if value != '':
+            value = int(value)
+            if value > 2:
+                value = int(math.log(float(value))**2)
+            else:
+                value = 'SP'+str(value)
         key = field + '-' + str(value)
         feats.append(key)
     for j in range(1, 27):
-        if j in [21]:
-            continue
         field = 'C{0}'.format(j)
         value = row[field]
         key = field + '-' + value
