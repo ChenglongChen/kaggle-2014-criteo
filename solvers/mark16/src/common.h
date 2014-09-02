@@ -37,7 +37,7 @@ struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor) 
         : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
-          WB(kNR_FIELD*kNR_FIELD*kW_NODE_SIZE),
+          WB(kNR_FIELD*kNR_FIELD*kW_NODE_SIZE, 0),
           nr_feature(nr_feature), nr_factor(nr_factor) {}
     std::vector<float> W, WB;
     const size_t nr_feature, nr_factor;
