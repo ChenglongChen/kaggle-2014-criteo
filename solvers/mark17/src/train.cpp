@@ -34,6 +34,7 @@ std::string train_help()
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
 "-v <path>: you know\n"
+"-w <f1 f2 value>: you know\n"
 "-q: you know\n");
 }
 
@@ -85,6 +86,15 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-w") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            int f1 = std::stoi(args[++i]);
+            int f2 = std::stoi(args[++i]);
+            float weight = std::stof(args[++i]);
+            weights[f1*kNR_FIELD+f2] = weight;
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -189,6 +199,8 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 
 int main(int const argc, char const * const * const argv)
 {
+    weights.assign(kNR_FIELD*kNR_FIELD, 1.0f);
+
     Option opt;
     try
     {
@@ -216,8 +228,6 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
-
-    weights.assign(kNR_FIELD*kNR_FIELD, 1.0f);
 
     train(Tr, Va, model, opt);
 
