@@ -37,7 +37,7 @@ def gen_hashed_svm_feats(feats, nr_bins, coef=None):
     if coef is not None:
         val = coef
     else:
-        val = 1/math.sqrt(float(len(feats)))
+        val = round(1/math.sqrt(float(len(feats))), 5)
     feats = ['{0}:{1}'.format(idx, val) for idx in feats]
     return feats
 
@@ -55,6 +55,6 @@ def gen_hashed_fm_feats(feats, nr_bins, coef=None):
     if coef is not None:
         val = coef
     else:
-        val = 1/math.sqrt(float(len(feats)))
+        val = round(1/math.sqrt(float(len(feats))), 5)
     feats = ['{0}:{1}:{2}'.format(field, idx, val) for (field, idx) in feats]
     return feats
