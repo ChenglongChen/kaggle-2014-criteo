@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import subprocess, sys, os, time, itertools
+import subprocess, sys, os, time
 
 UUID = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 LOG_DIR = 'logs/{0}'.format(UUID)
@@ -12,7 +12,7 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 start = time.time()
-for size in ["x"]:
+for size in ["100", "10", "1"]:
     tr_csv = 'tr.r{size}.csv'.format(size=size)
     tr_svm = 'tr.r{size}.svm'.format(size=size)
     va_csv = 'va.r{size}.csv'.format(size=size)
@@ -20,21 +20,17 @@ for size in ["x"]:
     model = 'model.r{size}'.format(size=size)
     out = 'out.r{size}'.format(size=size)
     log_path = '{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size)
-    f_log = open(log_path, 'w')
 
     for data_csv, data_svm in [(tr_csv, tr_svm), (va_csv, va_svm)]:
         cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data_csv} {data_svm}'\
             .format(data_csv=data_csv, data_svm=data_svm)
         subprocess.call(cmd, shell=True)
 
-    for f1, f2 in itertools.combinations(range(1, 40), 2):
-        cmd = './mark17-train -w {f1} {f2} 2 -s 24 -t 15 -v {va_svm} {tr_svm} {model}'\
-            .format(va_svm=va_svm, tr_svm=tr_svm, model=model, f1=f1, f2=f2) 
-        #cmd += ' && ./fm-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
-        #cmd += ' && ./utils/calc_log_loss.py {va_svm} {out}'.format(va_svm=va_svm, out=out)
-        worker = subprocess.Popen(cmd, shell=True, stdout=f_log) 
-        worker.communicate()
-    f_log.close()
+    cmd = './fm-train -s 24 -t 15 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
+    cmd += ' && ./fm-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
+    cmd += ' && ./utils/calc_log_loss.py {va_svm} {out}'.format(va_svm=va_svm, out=out)
+    worker = subprocess.Popen(cmd, shell=True, stdout=open(log_path, 'w')) 
+    worker.communicate()
 print('time used = {0}'.format(time.time()-start))
 
 if UUID != 'exp':

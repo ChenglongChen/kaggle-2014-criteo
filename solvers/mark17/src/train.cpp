@@ -95,7 +95,6 @@ Option parse_option(std::vector<std::string> const &args)
             int f2 = std::stoi(args[++i]);
             float weight = std::stof(args[++i]);
             weights[f1*kNR_FIELD+f2] = weight;
-            printf("f1 = %2d, f2 = %2d, weight = %.3f\n", f1, f2, weight);
         }
         else if(args[i].compare("-q") == 0)
         {
