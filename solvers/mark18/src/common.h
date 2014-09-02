@@ -37,8 +37,9 @@ struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor) 
         : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
+          A(kNR_FIELD*kNR_FIELD*kW_NODE_SIZE, 1), 
           nr_feature(nr_feature), nr_factor(nr_factor) {}
-    std::vector<float> W;
+    std::vector<float> W, A;
     const size_t nr_feature, nr_factor;
 };
 
@@ -50,8 +51,6 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
-
-extern std::vector<float> weights;
 
 inline float qrsqrt(float x)
 {
@@ -170,7 +169,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             float * w2 = 
                 model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
 
-            float weight = weights[f1*kNR_FIELD+f2];
+            float a = model.A[f1*kNR_FIELD+f2];
 
             if(do_update)
             {
@@ -179,8 +178,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
                 for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
                 {
-                    float const g1 = lambda*(*w1) + weight*kappa*v1*v2*(*w2);
-                    float const g2 = lambda*(*w2) + weight*kappa*v1*v2*(*w1);
+                    float const g1 = lambda*(*w1) + a*kappa*v1*v2*(*w2);
+                    float const g2 = lambda*(*w2) + a*kappa*v1*v2*(*w1);
 
                     *wg1 += g1*g1;
                     *wg2 += g2*g2;
@@ -192,7 +191,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             else
             {
                 for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
-                    t += weight*(*w1)*(*w2)*v1*v2;
+                    t += a*(*w1)*(*w2)*v1*v2;
             }
         }
     }

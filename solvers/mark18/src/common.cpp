@@ -13,8 +13,6 @@ inline float logistic_func(float const t)
 
 } //unamed namespace
 
-std::vector<float> weights;
-
 SpMat read_data(std::string const path)
 {
     SpMat spmat;
