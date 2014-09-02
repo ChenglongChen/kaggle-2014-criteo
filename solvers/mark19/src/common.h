@@ -32,6 +32,7 @@ SpMat read_data(std::string const path);
 
 size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
+float const alpha = 1.0f/741.0f;
 
 struct Model
 {
@@ -139,7 +140,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     float t;
     _mm_store_ss(&t, XMMt);
 
-    return t;
+    return t*alpha;
 }
 
 /*
