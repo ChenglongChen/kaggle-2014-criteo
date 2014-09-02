@@ -217,6 +217,8 @@ int main(int const argc, char const * const * const argv)
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
+    weights.assign(kNR_FIELD*kNR_FIELD, 1.0f);
+
     train(Tr, Va, model, opt);
 
     if(opt.save_model)
