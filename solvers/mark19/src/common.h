@@ -32,6 +32,7 @@ SpMat read_data(std::string const path);
 
 size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
+float const alpha = 1.0f/741.0f;
 
 struct Model
 {
@@ -70,8 +71,6 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
     {
         size_t const j1 = spmat.X[idx1].j;
-        if(j1 >= model.nr_feature)
-            continue;
         size_t const f1 = spmat.X[idx1].f;
         __m128 const XMMv1 = _mm_load1_ps(&spmat.X[idx1].v);
         __m128 const XMMkappa_v1 = _mm_mul_ps(XMMkappa, XMMv1);
@@ -79,8 +78,6 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
         for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
         {
             size_t const j2 = spmat.X[idx2].j;
-            if(j2 >= model.nr_feature)
-                continue;
             size_t const f2 = spmat.X[idx2].f;
             __m128 const XMMv2 = _mm_load1_ps(&spmat.X[idx2].v);
             __m128 const XMMkappa_v1_v2 = _mm_mul_ps(XMMkappa_v1, XMMv2);
@@ -143,7 +140,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     float t;
     _mm_store_ss(&t, XMMt);
 
-    return t;
+    return t*alpha;
 }
 
 /*
