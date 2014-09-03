@@ -79,8 +79,8 @@ with open(args['svm_path'], 'w') as f:
 				feat = feat.split('-')[0]+'less'
 			if type == 'C':
 				field += 13
-			#feats.append((field, feat)) # for fac. model
-			feats.append(feat) # for svm
-		#feats = gen_hashed_fm_feats(feats, args['nr_bins']) # for fac. model
-		feats = gen_hashed_svm_feats(feats, args['nr_bins']) # for fac. model
+			feats.append((field, feat)) # for fac. model
+			#feats.append(feat) # for svm
+		feats = gen_hashed_fm_feats(feats, args['nr_bins']) # for fac. model
+		#feats = gen_hashed_svm_feats(feats, args['nr_bins']) # for fac. model
 		f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
