@@ -14,23 +14,24 @@ if not os.path.exists(LOG_DIR):
 start = time.time()
 for size in ["100", "10", "1"]:
     tr_csv = 'tr.r{size}.csv'.format(size=size)
-    tr_svm = 'tr.r{size}.svm'.format(size=size)
+    tr_fm = 'tr.r{size}.fm'.format(size=size)
     va_csv = 'va.r{size}.csv'.format(size=size)
-    va_svm = 'va.r{size}.svm'.format(size=size)
+    va_fm = 'va.r{size}.fm'.format(size=size)
     model = 'model.r{size}'.format(size=size)
-    out = 'out.r{size}'.format(size=size)
-    log_path = '{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size)
+    out = 'r{size}.out'.format(size=size)
+    log_file = open('{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size), 'w')
 
-    for data_csv, data_svm in [(tr_csv, tr_svm), (va_csv, va_svm)]:
-        cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data_csv} {data_svm}'\
-            .format(data_csv=data_csv, data_svm=data_svm)
+    for data_csv, data_fm in [(tr_csv, tr_fm), (va_csv, va_fm)]:
+        cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data_csv} {data_fm}'\
+            .format(data_csv=data_csv, data_fm=data_fm)
         subprocess.call(cmd, shell=True)
 
-    cmd = './fm-train -s 24 -t 15 -v {va_svm} {tr_svm} {model}'.format(va_svm=va_svm, tr_svm=tr_svm, model=model) 
-    cmd += ' && ./fm-predict {va_svm} {model} {out}'.format(va_svm=va_svm, model=model, out=out)
-    cmd += ' && ./utils/calc_log_loss.py {va_svm} {out}'.format(va_svm=va_svm, out=out)
-    worker = subprocess.Popen(cmd, shell=True, stdout=open(log_path, 'w')) 
+    cmd = './fm-train -s 24 -t 15 -v {va_fm} {tr_fm} {model}'.format(va_fm=va_fm, tr_fm=tr_fm, model=model) 
+    cmd += ' && ./fm-predict {va_fm} {model} {out}'.format(va_fm=va_fm, model=model, out=out)
+    cmd += ' && ./utils/calc_log_loss.py {va_fm} {out}'.format(va_fm=va_fm, out=out)
+    worker = subprocess.Popen(cmd, shell=True, stdout=log_file) 
     worker.communicate()
+    log_file.close()
 print('time used = {0}'.format(time.time()-start))
 
 if UUID != 'exp':
