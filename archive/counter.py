@@ -13,7 +13,7 @@ args = vars(parser.parse_args())
 
 counts = collections.defaultdict(lambda : [0, 0, 0])
 
-for row in csv.DictReader(open(args['csv_path'])):
+for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
     label = row['Label']
     for j in range(1, 27):
         field = 'C{0}'.format(j)
@@ -23,8 +23,12 @@ for row in csv.DictReader(open(args['csv_path'])):
         else:
             counts[field+','+value][1] += 1
         counts[field+','+value][2] += 1
+    if i % 100000 == 0:
+        sys.stderr.write('{0}k\n'.format(int(i/1000)))
 
 print('Field,Value,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
+    if total == 1:
+        continue
     ratio = round(float(pos)/total, 5)
     print(key+','+str(neg)+','+str(pos)+','+str(total)+','+str(ratio))
