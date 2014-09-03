@@ -37,7 +37,7 @@ SpMat read_data(std::string const path)
                 break;
             size_t field = static_cast<size_t>(atoi(field_char));
             size_t idx = static_cast<size_t>(atoi(idx_char))*2;
-            float const val = static_cast<float>(atof(val_char));
+            float const val = static_cast<float>(atof(val_char))/1.414f;
             spmat.nr_feature = std::max(spmat.nr_feature, idx);
             spmat.X.emplace_back(field-1, idx-1, val);
         }
