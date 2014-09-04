@@ -13,7 +13,7 @@ inline float logistic_func(float const t)
 
 } //unamed namespace
 
-SpMat read_data(std::string const path)
+SpMat read_data(std::string const path, size_t const reserved_size)
 {
     SpMat spmat;
     if(path.empty())
@@ -24,6 +24,7 @@ SpMat read_data(std::string const path)
     char line[kMaxLineSize];
 
     spmat.P.push_back(0);
+    spmat.X.reserve(reserved_size);
     while(fgets(line, kMaxLineSize, f) != nullptr)
     {
         char *p = strtok(line, " \t");

@@ -28,7 +28,7 @@ struct SpMat
     size_t nr_feature, nr_instance;
 };
 
-SpMat read_data(std::string const path);
+SpMat read_data(std::string const path, size_t const reserved_size=0);
 
 size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
