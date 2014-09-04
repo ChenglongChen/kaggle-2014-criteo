@@ -165,7 +165,7 @@ inline float wTx2(SpMat const &problem, Model &model, size_t const i,
     {
         size_t const j = problem.X[idx].j;
         __m128 const XMMx = _mm_load1_ps(&problem.X[idx].v);
-        float * const w = model.W.data()+j*k*kW_NODE_SIZE;
+        float * const w = model.WA.data()+j*k*kW_NODE_SIZE;
 
         for(size_t d = 0; d < k; d += 4)
         {
@@ -182,7 +182,7 @@ inline float wTx2(SpMat const &problem, Model &model, size_t const i,
     {
         size_t const j = problem.X[idx].j;
         __m128 const XMMx = _mm_load1_ps(&problem.X[idx].v);
-        float * const w = model.W.data()+j*k*kW_NODE_SIZE;
+        float * const w = model.WA.data()+j*k*kW_NODE_SIZE;
         
         if(do_update)
         {

@@ -125,6 +125,7 @@ Option parse_option(std::vector<std::string> const &args)
 void init_model(Model &model, size_t const nr_factor_real)
 {
     size_t const nr_factor = model.nr_factor;
+    size_t const nr_factor2 = model.nr_factor2;
     float const coef = 
         static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
 
@@ -140,6 +141,15 @@ void init_model(Model &model, size_t const nr_factor_real)
             for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
                 *w = 1;
         }
+    }
+
+    w = model.WA.data();
+    for(size_t j = 0; j < model.nr_feature; ++j)
+    {
+        for(size_t d = 0; d < nr_factor2; ++d, ++w)
+            *w = coef*static_cast<float>(drand48());
+        for(size_t d = nr_factor2; d < 2*nr_factor2; ++d, ++w)
+            *w = 1;
     }
 }
 
@@ -163,7 +173,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 
             float const y = Tr.Y[i];
             
-            float const t = wTx(Tr, model, i);
+            float const t = wTx(Tr, model, i)+wTx2(Tr, model, i);
 
             float const expnyt = static_cast<float>(exp(-y*t));
 
@@ -172,6 +182,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
             float const kappa = -y*expnyt/(1+expnyt);
 
             wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx2(Tr, model, i, kappa, opt.eta, opt.lambda, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
