@@ -5,7 +5,7 @@ import argparse, csv, sys, collections
 from common import *
 
 records = collections.defaultdict(lambda: [0, 0, 0])
-for row in csv.DictReader(open('tr.r100.csv')):
+for row in csv.DictReader(open('tr.r10.csv')):
     sp_feat = []
     sp_feat.append('C9' +'-'+row['C9'])
     sp_feat.append('C17'+'-'+row['C17'])
