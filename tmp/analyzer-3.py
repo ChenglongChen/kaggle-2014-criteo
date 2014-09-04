@@ -17,5 +17,5 @@ for row in csv.DictReader(open('tr.r100.csv')):
         records[sp_feat][0] += 1
     records[sp_feat][2] += 1
 
-for key, (pos, neg, total) in sorted(records.items(), key=lambda x: x[1][2]):
-    print('{0:20} {1:10} {2:10} {3:10}'.format(key, pos, neg, total))
+for key, (neg, pos, total) in sorted(records.items(), key=lambda x: x[1][2]):
+    print('{0:20} {1:10} {2:10} {3:10} {4:10.3f}'.format(key, pos, neg, total, float(pos)/total))
