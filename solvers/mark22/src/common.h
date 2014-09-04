@@ -150,9 +150,11 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
-    bool const do_update=false)
+    float const sigma=0, bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
+
+    float const sigma2 = sigma*sigma;
 
     float t = 0;
     for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)

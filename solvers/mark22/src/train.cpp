@@ -15,9 +15,9 @@ namespace {
 
 struct Option
 {
-    Option() : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
+    Option() : sigma(1.0f), eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    float eta, lambda;
+    float sigma, eta, lambda;
     size_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
@@ -33,6 +33,7 @@ std::string train_help()
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
+"-u <sigma>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
 }
@@ -67,6 +68,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.eta = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-u") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.sigma = std::stof(args[++i]);
         }
         else if(args[i].compare("-l") == 0)
         {
@@ -171,7 +178,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, opt.sigma, true);
         }
 
         printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
