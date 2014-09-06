@@ -10,7 +10,7 @@ if len(sys.argv) == 1:
 parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--nr_bins', type=int, default=int(1e+7))
 parser.add_argument('-t', '--threshold', type=int, default=int(10))
-parser.add_argument('-z', '--type', type=int, default=0)
+parser.add_argument('-z', '--type', type=int, default=1)
 parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
