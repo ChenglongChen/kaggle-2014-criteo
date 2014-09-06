@@ -152,6 +152,20 @@ void init_model(Model &model, size_t const nr_factor_real)
                 *w = 1;
         }
     }
+
+    w = model.WA.data();
+    for(size_t j = 0; j < model.nr_feature; ++j)
+    {
+        for(size_t f = 0; f < kNR_FIELD; ++f)
+        {
+            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+                *w = 0;
+            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
+                *w = 0;
+            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
+                *w = 1;
+        }
+    }
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
@@ -196,6 +210,48 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     }
 }
 
+void train2(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
+{
+    std::vector<size_t> order(Tr.Y.size());
+    for(size_t i = 0; i < Tr.Y.size(); ++i)
+        order[i] = i;
+
+    Timer timer;
+    for(size_t iter = 0; iter < opt.iter; ++iter)
+    {
+        timer.tic();
+
+        double Tr_loss = 0;
+        std::random_shuffle(order.begin(), order.end());
+#pragma omp parallel for schedule(static)
+        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        {
+            size_t const i = order[i_];
+
+            float const y = Tr.Y[i];
+            
+            float const t = wTx2(Tr, model, i);
+
+            float const expnyt = static_cast<float>(exp(-y*t));
+
+            Tr_loss += log(1+expnyt);
+               
+            float const kappa = -y*expnyt/(1+expnyt);
+
+            wTx2(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+        }
+
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr.Y.size()));
+
+        if(Va.Y.size() != 0)
+            printf(" %10.5f", predict2(Va, model));
+
+        printf("\n");
+        fflush(stdout);
+    }
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -229,6 +285,7 @@ int main(int const argc, char const * const * const argv)
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
     train(Tr, Va, model, opt);
+    train2(Tr, Va, model, opt);
 
     if(opt.save_model)
         save_model(model, opt.model_path);

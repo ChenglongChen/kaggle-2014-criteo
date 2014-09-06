@@ -123,3 +123,34 @@ float predict(SpMat const &spmat, Model &model,
 
     return static_cast<float>(loss/static_cast<double>(spmat.Y.size()));
 }
+
+float predict2(SpMat const &spmat, Model &model, 
+    std::string const &output_path)
+{
+    FILE *f = nullptr;
+    if(!output_path.empty())
+        f = open_c_file(output_path, "w");
+
+    double loss = 0;
+#pragma omp parallel for schedule(static) reduction(+:loss)
+    for(size_t i = 0; i < spmat.Y.size(); ++i)
+    {
+        float const y = spmat.Y[i];
+
+        float const t = wTx2(spmat, model, i);
+        
+        float const prob = logistic_func(t);
+
+        float const expnyt = static_cast<float>(exp(-y*t));
+
+        loss += log(1+expnyt);
+
+        if(f)
+            fprintf(f, "%lf\n", prob);
+    }
+
+    if(f)
+        fclose(f);
+
+    return static_cast<float>(loss/static_cast<double>(spmat.Y.size()));
+}
