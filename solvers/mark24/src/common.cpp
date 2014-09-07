@@ -22,12 +22,12 @@ size_t get_nr_line(std::string const &path)
 
 } //unamed namespace
 
-Mat read_data(std::string const &path)
+Problem read_data(std::string const &path)
 {
     if(path.empty())
-        return Mat(0);
+        return Problem(0);
 
-    Mat spmat(get_nr_line(path));
+    Problem spmat(get_nr_line(path));
 
     int const kMaxLineSize = 1000000;
 
@@ -45,7 +45,7 @@ Mat read_data(std::string const &path)
 
             float const val = static_cast<float>(atof(val_char));
 
-            spmat.X[j][i] = val;
+            spmat.X[j][i] = Node(i, val);
         }
         spmat.Y.push_back(y);
     }

@@ -108,8 +108,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Mat const Tr = read_data(opt.Tr_path);
-    Mat const Va = read_data(opt.Va_path);
+    Problem const Tr = read_data(opt.Tr_path);
+    Problem const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 

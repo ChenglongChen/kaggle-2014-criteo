@@ -16,23 +16,24 @@ size_t const kNR_FEAT = 13;
 
 struct Node
 {
-    Node(size_t const j, float const v) : j(j), v(v) {}
-    size_t j;
+    Node() : i(0), v(0) {}
+    Node(size_t const i, float const v) : i(i), v(v) {}
+    size_t i;
     float v;
 };
 
-struct Mat
+struct Problem
 {
-    Mat(size_t const nr_instance) 
+    Problem(size_t const nr_instance) 
         : nr_instance(0), 
-          X(kNR_FEAT, std::vector<float>(nr_instance, 0)), 
+          X(kNR_FEAT, std::vector<Node>(nr_instance)), 
           Y(nr_instance, 0) {}
     size_t  nr_instance;
-    std::vector<std::vector<float>> X;
+    std::vector<std::vector<Node>> X;
     std::vector<float> Y;
 };
 
-Mat read_data(std::string const &path);
+Problem read_data(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
