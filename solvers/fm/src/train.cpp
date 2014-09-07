@@ -213,8 +213,10 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
     SpMat const Va = read_data(opt.Va_path);
+    printf("Va...");
+    fflush(stdout);
+    SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
     printf("done\n");
     fflush(stdout);
 
