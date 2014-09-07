@@ -13,7 +13,7 @@ namespace {
 
 struct Option
 {
-    Option() : lambda(1.0), eta(0.01), iter(10) {}
+    Option() : lambda(0), eta(0.1), iter(10) {}
     std::string Tr_path, model_path, Va_path;
     double lambda, eta;
     size_t iter;
