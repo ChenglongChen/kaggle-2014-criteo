@@ -14,9 +14,9 @@ namespace {
 
 struct Option
 {
-    Option() : nr_trees(10), reserved_size(0), save_model(true) {}
+    Option() : nr_trees(10), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
-    size_t nr_trees, reserved_size;
+    size_t nr_trees;
     bool save_model;
 };
 
@@ -28,7 +28,6 @@ std::string train_help()
 "options:\n"
 "-m <size>: you know\n"
 "-v <path>: you know\n"
-"-u <size>: you know\n"
 "-q: you know\n");
 }
 
@@ -55,13 +54,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.Va_path = args[++i];
-        }
-        else if(args[i].compare("-u") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            double reserved_size_in_gb = std::stod(args[++i]);
-            opt.reserved_size = static_cast<size_t>(reserved_size_in_gb*pow(10, 9));
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -116,8 +108,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
-    SpMat const Va = read_data(opt.Va_path);
+    Mat const Tr = read_data(opt.Tr_path);
+    Mat const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 

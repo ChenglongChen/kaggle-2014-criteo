@@ -12,23 +12,27 @@
 
 #include <pmmintrin.h>
 
+size_t const kNR_FEAT = 13;
+
 struct Node
 {
-    Node(size_t const f, size_t const j, float const v) : f(f), j(j), v(v) {}
-    size_t f, j;
+    Node(size_t const j, float const v) : j(j), v(v) {}
+    size_t j;
     float v;
 };
 
-struct SpMat
+struct Mat
 {
-    SpMat() : nr_feature(0), nr_instance(0) {}
-    std::vector<size_t> P;
-    std::vector<Node> X;
+    Mat(size_t const nr_instance) 
+        : nr_instance(0), 
+          X(kNR_FEAT, std::vector<float>(nr_instance, 0)), 
+          Y(nr_instance, 0) {}
+    size_t  nr_instance;
+    std::vector<std::vector<float>> X;
     std::vector<float> Y;
-    size_t nr_feature, nr_instance;
 };
 
-SpMat read_data(std::string const path, size_t const reserved_size=0);
+Mat read_data(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
