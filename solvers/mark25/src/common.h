@@ -30,7 +30,7 @@ struct SpMat
 
 SpMat read_data(std::string const path, size_t const reserved_size=0);
 
-size_t const kNR_FIELD = 39;
+size_t const kNR_FIELD = 52;
 size_t const kW_NODE_SIZE = 2;
 
 struct Model
