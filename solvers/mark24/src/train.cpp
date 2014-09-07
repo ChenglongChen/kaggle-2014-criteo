@@ -26,7 +26,7 @@ std::string train_help()
 "usage: mark24 [<options>] <train_path> [<model_path>]\n"
 "\n"
 "options:\n"
-"-m <size>: you know\n"
+"-t <size>: you know\n"
 "-v <path>: you know\n"
 "-q: you know\n");
 }
@@ -43,7 +43,7 @@ Option parse_option(std::vector<std::string> const &args)
     size_t i = 0;
     for(; i < argc; ++i)
     {
-        if(args[i].compare("-m") == 0)
+        if(args[i].compare("-t") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
