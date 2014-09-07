@@ -1,6 +1,5 @@
 #include <stdexcept>
 #include <cstring>
-#include <omp.h>
 
 #include "common.h"
 
@@ -52,30 +51,6 @@ SpMat read_data(std::string const path, size_t const reserved_size)
     return spmat;
 }
 
-void save_model(Model const &model, std::string const &path)
-{
-    FILE *f = fopen(path.c_str(), "wb");
-    fwrite(&model.nr_feature, sizeof(size_t), 1, f);
-    fwrite(&model.nr_factor, sizeof(size_t), 1, f);
-    fwrite(model.W.data(), sizeof(float), 
-        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
-    fclose(f);
-}
-
-Model load_model(std::string const &path)
-{
-    FILE *f = fopen(path.c_str(), "rb");
-    size_t nr_factor, nr_feature;
-    fread(&nr_feature, sizeof(size_t), 1, f);
-    fread(&nr_factor, sizeof(size_t), 1, f);
-
-    Model model(nr_feature, nr_factor);
-    fread(model.W.data(), sizeof(float), 
-        model.nr_feature*kNR_FIELD*model.nr_factor*kW_NODE_SIZE, f);
-    fclose(f);
-    return model;
-}
-
 FILE *open_c_file(std::string const &path, std::string const &mode)
 {
     FILE *f = fopen(path.c_str(), mode.c_str());
@@ -91,35 +66,4 @@ argv_to_args(int const argc, char const * const * const argv)
     for(int i = 1; i < argc; ++i)
         args.emplace_back(argv[i]);
     return args;
-}
-
-float predict(SpMat const &spmat, Model &model, 
-    std::string const &output_path)
-{
-    FILE *f = nullptr;
-    if(!output_path.empty())
-        f = open_c_file(output_path, "w");
-
-    double loss = 0;
-#pragma omp parallel for schedule(static) reduction(+:loss)
-    for(size_t i = 0; i < spmat.Y.size(); ++i)
-    {
-        float const y = spmat.Y[i];
-
-        float const t = wTx(spmat, model, i);
-        
-        float const prob = logistic_func(t);
-
-        float const expnyt = static_cast<float>(exp(-y*t));
-
-        loss += log(1+expnyt);
-
-        if(f)
-            fprintf(f, "%lf\n", prob);
-    }
-
-    if(f)
-        fclose(f);
-
-    return static_cast<float>(loss/static_cast<double>(spmat.Y.size()));
 }
