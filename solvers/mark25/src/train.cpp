@@ -1,0 +1,239 @@
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <omp.h>
+
+#include "common.h"
+#include "timer.h"
+
+namespace {
+
+struct Option
+{
+    Option() 
+        : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
+          nr_factor_real(4), nr_threads(1), reserved_size(0), 
+          save_model(true) {}
+    std::string Tr_path, model_path, Va_path;
+    float eta, lambda;
+    size_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
+    bool save_model;
+};
+
+std::string train_help()
+{
+    return std::string(
+"usage: sgd-poly2-train [<options>] <train_path>\n"
+"\n"
+"options:\n"
+"-l <lambda>: you know\n"
+"-k <dimension>: you know\n"
+"-t <iteration>: you know\n"
+"-r <eta>: you know\n"
+"-s <nr_threads>: you know\n"
+"-v <path>: you know\n"
+"-u <size>: you know\n"
+"-q: you know\n");
+}
+
+Option parse_option(std::vector<std::string> const &args)
+{
+    size_t const argc = args.size();
+
+    if(argc == 0)
+        throw std::invalid_argument(train_help());
+
+    Option opt; 
+
+    size_t i = 0;
+    for(; i < argc; ++i)
+    {
+        if(args[i].compare("-t") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.iter = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-k") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.nr_factor_real = std::stoi(args[++i]);
+            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+        }
+        else if(args[i].compare("-r") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.eta = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-l") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.lambda = std::stof(args[++i]);
+        }
+        else if(args[i].compare("-v") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.Va_path = args[++i];
+        }
+        else if(args[i].compare("-s") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.nr_threads = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-u") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            double reserved_size_in_gb = std::stod(args[++i]);
+            opt.reserved_size = static_cast<size_t>(reserved_size_in_gb*pow(10, 9));
+        }
+        else if(args[i].compare("-q") == 0)
+        {
+            opt.save_model = false;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if(i >= argc)
+        throw std::invalid_argument("training data not specified");
+
+    opt.Tr_path = args[i++];
+
+    if(i < argc)
+    {
+        opt.model_path = std::string(args[i]);
+    }
+    else if(i == argc)
+    {
+        const char *ptr = strrchr(&*opt.Tr_path.begin(),'/');
+        if(!ptr)
+            ptr = opt.Tr_path.c_str();
+        else
+            ++ptr;
+        opt.model_path = std::string(ptr) + ".model";
+    }
+    else
+    {
+        throw std::invalid_argument("invalid argument");
+    }
+
+    return opt;
+}
+
+void init_model(Model &model, size_t const nr_factor_real)
+{
+    size_t const nr_factor = model.nr_factor;
+    float const coef = 
+        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
+
+    float * w = model.W.data();
+    for(size_t j = 0; j < model.nr_feature; ++j)
+    {
+        for(size_t f = 0; f < kNR_FIELD; ++f)
+        {
+            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+                *w = coef*static_cast<float>(drand48());
+            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
+                *w = 0;
+            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
+                *w = 1;
+        }
+    }
+}
+
+void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
+{
+    std::vector<size_t> order(Tr.Y.size());
+    for(size_t i = 0; i < Tr.Y.size(); ++i)
+        order[i] = i;
+
+    Timer timer;
+    for(size_t iter = 0; iter < opt.iter; ++iter)
+    {
+        timer.tic();
+
+        double Tr_loss = 0;
+        std::random_shuffle(order.begin(), order.end());
+#pragma omp parallel for schedule(static)
+        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        {
+            size_t const i = order[i_];
+
+            float const y = Tr.Y[i];
+            
+            float const t = wTx(Tr, model, i);
+
+            float const expnyt = static_cast<float>(exp(-y*t));
+
+            Tr_loss += log(1+expnyt);
+               
+            float const kappa = -y*expnyt/(1+expnyt);
+
+            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+        }
+
+        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr.Y.size()));
+
+        if(Va.Y.size() != 0)
+            printf(" %10.5f", predict(Va, model));
+
+        printf("\n");
+        fflush(stdout);
+    }
+}
+
+} //unnamed namespace
+
+int main(int const argc, char const * const * const argv)
+{
+    Option opt;
+    try
+    {
+        opt = parse_option(argv_to_args(argc, argv));
+    }
+    catch(std::invalid_argument const &e)
+    {
+        std::cout << "\n" << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
+
+    printf("reading data...");
+    fflush(stdout);
+    SpMat const Va = read_data(opt.Va_path);
+    printf("Va...");
+    fflush(stdout);
+    SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
+    printf("done\n");
+    fflush(stdout);
+
+    printf("initializing model...");
+    fflush(stdout);
+    Model model(Tr.nr_feature, opt.nr_factor);
+
+    init_model(model, opt.nr_factor_real);
+    printf("done\n");
+    fflush(stdout);
+
+	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+
+    train(Tr, Va, model, opt);
+
+    if(opt.save_model)
+        save_model(model, opt.model_path);
+
+    return EXIT_SUCCESS;
+}
