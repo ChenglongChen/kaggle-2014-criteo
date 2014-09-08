@@ -25,9 +25,9 @@ struct Node
 struct Problem
 {
     Problem(size_t const nr_instance) 
-        : nr_instance(0), 
+        : nr_instance(nr_instance), 
           X(kNR_FEATURE, std::vector<Node>(nr_instance)), 
-          Y(nr_instance, 0) {}
+          Y(nr_instance) {}
     size_t  nr_instance;
     std::vector<std::vector<Node>> X;
     std::vector<float> Y;

@@ -27,7 +27,7 @@ Problem read_data(std::string const &path)
     if(path.empty())
         return Problem(0);
 
-    Problem spmat(get_nr_line(path));
+    Problem problem(get_nr_line(path));
 
     int const kMaxLineSize = 1000000;
 
@@ -45,14 +45,14 @@ Problem read_data(std::string const &path)
 
             float const val = static_cast<float>(atof(val_char));
 
-            spmat.X[j][i] = Node(i, val);
+            problem.X[j][i] = Node(i, val);
         }
-        spmat.Y.push_back(y);
+        problem.Y.push_back(y);
     }
 
     fclose(f);
 
-    return spmat;
+    return problem;
 }
 
 FILE *open_c_file(std::string const &path, std::string const &mode)

@@ -4,17 +4,19 @@
 
 struct TreeNode
 {
-    std::vector<size_t> I;
+    TreeNode() : is_leaf(true) {}
+    std::vector<size_t> II;
     size_t feature;
-    float threshold;
+    float threshold, dec_val;
+    bool is_leaf;
     std::shared_ptr<TreeNode> left, right;
 
-    void split(Problem const &problem, float const threshold);
+    void fit(std::vector<std::vector<Node>> const &X, std::vector<float> const &R)
 };
 
 class CART 
 {
-    void fit(Problem const &problem, std::vector<float> const &R);
+    void fit(Problem const &problem);
     void save(std::string const &path);
     void load(std::string const &path);
 
@@ -24,6 +26,7 @@ private:
 
 class GBDT
 {
+    GBDT(size_t const nr_tree) : trees(nr_tree) {}
     void fit(Problem const &problem);
     void save(std::string const &path);
     void load(std::string const &path);
