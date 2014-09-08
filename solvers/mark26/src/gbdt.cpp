@@ -84,7 +84,7 @@ void TreeNode::fit(
     std::vector<float> const &R, 
     std::vector<float> &F1)
 {
-    if(depth >= max_depth)
+    if(depth >= max_depth || I.size() < 100)
     {
         double a = 0, b = 0;
         for(auto i : I)

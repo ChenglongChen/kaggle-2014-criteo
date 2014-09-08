@@ -23,12 +23,12 @@ struct Option
 std::string train_help()
 {
     return std::string(
-"usage: mark24 [<options>] <train_path> [<model_path>]\n"
+"usage: mark26 [<options>] <train_path> [<model_path>]\n"
 "\n"
 "options:\n"
-"-t <size>: you know\n"
-"-v <path>: you know\n"
-"-q: you know\n");
+"-t <nr_tree>: you know\n"
+"-d <depth>: you know\n"
+"-v <path>: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -48,6 +48,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_trees = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-d") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            TreeNode::max_depth = std::stoi(args[++i]);
         }
         else if(args[i].compare("-v") == 0)
         {
