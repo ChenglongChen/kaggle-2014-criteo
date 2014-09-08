@@ -92,6 +92,8 @@ ln -sf solvers/fm/fm-predict .
 #make -C solvers/fm-mark2/
 #ln -sf solvers/fm-mark2/fm-mark2-train .
 #ln -sf solvers/fm-mark2/fm-mark2-predict .
+make -C solvers/gbdt/
+ln -sf solvers/gbdt/gbdt .
 make -C solvers/mark29/
 ln -sf solvers/mark29/mark29 .
 

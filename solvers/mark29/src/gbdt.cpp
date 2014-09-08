@@ -73,7 +73,7 @@ void update_F(DenseColMat const &problem, CART const &tree, std::vector<float> &
         std::vector<float> x(kNR_FEATURE);
         for(size_t j = 0; j < kNR_FEATURE; ++j)
             x[j] = problem.X[j][i];
-        F[i] += tree.predict(x.data());
+        F[i] += tree.predict(x.data()).second;
     }
 }
 
@@ -155,8 +155,8 @@ void TreeNode::fit(
         return;
     }
 
-    left.reset(new TreeNode(depth+1)); 
-    right.reset(new TreeNode(depth+1)); 
+    left.reset(new TreeNode(depth+1, idx*2)); 
+    right.reset(new TreeNode(depth+1, idx*2+1)); 
 
     for(auto i : I)
     {
@@ -175,10 +175,10 @@ void TreeNode::fit(
         thread.join();
 }
 
-float TreeNode::predict(float const * const x) const
+std::pair<size_t, float> TreeNode::predict(float const * const x) const
 {
     if(is_leaf)
-        return gamma;
+        return std::make_pair(idx, gamma);
     else if(x[feature] <= threshold)
         return left->predict(x);
     else
@@ -187,16 +187,16 @@ float TreeNode::predict(float const * const x) const
 
 void CART::fit(DenseColMat const &problem, std::vector<float> const &R, std::vector<float> &F1)
 {
-    root.reset(new TreeNode(0));
+    root.reset(new TreeNode(0, 1));
     root->I = gen_init_I(problem.nr_instance);
 
     root->fit(problem.X, R, F1);
 }
 
-float CART::predict(float const * const x) const
+std::pair<size_t, float> CART::predict(float const * const x) const
 {
     if(!root)
-        return 0;
+        return std::make_pair(0, 0);
     else
         return root->predict(x); 
 }
@@ -254,7 +254,17 @@ float GBDT::predict(float const * const x) const
     float s = bias;
     for(auto &tree : trees)
     {
-        s += tree.predict(x);
+        s += tree.predict(x).second;
     }
     return s;
+}
+
+std::vector<size_t> GBDT::get_indices(float const * const x) const
+{
+    size_t const nr_tree = trees.size();
+
+    std::vector<size_t> indices(nr_tree);
+    for(size_t t = 0; t < nr_tree; ++t)
+        indices[t] = trees[t].predict(x).first;
+    return indices;
 }
