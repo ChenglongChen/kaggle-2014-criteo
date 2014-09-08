@@ -19,6 +19,7 @@ struct TreeNode
         std::vector<float> const &R, 
         std::vector<float> &F1, 
         size_t &nr_leaf);
+    float predict(float const * const x) const;
 };
 
 class CART 
@@ -28,6 +29,7 @@ public:
         Problem const &problem, 
         std::vector<float> const &R, 
         std::vector<float> &F1);
+    float predict(float const * const x) const;
 
 private:
     std::shared_ptr<TreeNode> root;
@@ -37,7 +39,7 @@ class GBDT
 {
 public:
     GBDT(size_t const nr_tree) : trees(nr_tree), bias(0) {}
-    void fit(Problem const &problem);
+    void fit(Problem const &Tr, Problem const &Va);
 
 private:
     std::vector<CART> trees;

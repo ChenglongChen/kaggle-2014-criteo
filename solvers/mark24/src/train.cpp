@@ -115,7 +115,7 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
 
     GBDT gbdt(opt.nr_trees);
-    gbdt.fit(Tr);
+    gbdt.fit(Tr, Va);
 
     return EXIT_SUCCESS;
 }

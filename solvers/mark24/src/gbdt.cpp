@@ -63,6 +63,17 @@ void clean_vector(std::vector<Type> &vec)
     vec.shrink_to_fit();
 }
 
+void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
+{
+    for(size_t i = 0; i < problem.nr_instance; ++i)
+    {
+        std::vector<float> x(kNR_FEATURE);
+        for(size_t j = 0; j < kNR_FEATURE; ++j)
+            x[j] = problem.X[j][i];
+        F[i] += tree.predict(x.data());
+    }
+}
+
 } //unnamed namespace
 
 void TreeNode::fit(
@@ -144,6 +155,16 @@ void TreeNode::fit(
     }
 }
 
+float TreeNode::predict(float const * const x) const
+{
+    if(is_leaf)
+        return gamma;
+    else if(x[feature] <= threshold)
+        return left->predict(x);
+    else
+        return right->predict(x);
+}
+
 void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> &F1)
 {
     root.reset(new TreeNode);
@@ -153,30 +174,45 @@ void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<
     root->fit(problem.X, R, F1, nr_leaf);
 }
 
-void GBDT::fit(Problem const &problem)
+float CART::predict(float const * const x) const
 {
-    size_t const nr_instance = problem.nr_instance;
+    if(!root)
+        return 0;
+    else
+        return root->predict(x); 
+}
 
-    bias = calc_bias(problem.Y);
+void GBDT::fit(Problem const &Tr, Problem const &Va)
+{
+    size_t const nr_instance = Tr.nr_instance;
 
-    std::vector<float> F(nr_instance, bias);
+    bias = calc_bias(Tr.Y);
+
+    std::vector<float> F_Tr(nr_instance, bias), F_Va(Va.nr_instance, bias);
 
     for(size_t t = 0; t < trees.size(); ++t)
     {
-        std::vector<float> const &Y = problem.Y;
+        std::vector<float> const &Y = Tr.Y;
         std::vector<float> R(nr_instance), F1(nr_instance);
 
         for(size_t i = 0; i < nr_instance; ++i) 
-            R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F[i])));
+            R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
         
-        trees[t].fit(problem, R, F1);
+        trees[t].fit(Tr, R, F1);
 
         double Tr_loss = 0;
         for(size_t i = 0; i < nr_instance; ++i) 
         {
-            F[i] += F1[i];
-            Tr_loss += log(1+exp(-Y[i]*F[i]));
+            F_Tr[i] += F1[i];
+            Tr_loss += log(1+exp(-Y[i]*F_Tr[i]));
         }
-        printf("%4ld %.5lf\n", t, Tr_loss/static_cast<double>(nr_instance));
+
+        update_F(Va, trees[t], F_Va);
+
+        double Va_loss = 0;
+        for(size_t i = 0; i < Va.nr_instance; ++i) 
+            Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
+
+        printf("%4ld %.5lf %.5lf\n", t, Tr_loss/static_cast<double>(nr_instance), Va_loss/static_cast<double>(Va.nr_instance));
     }
 }
