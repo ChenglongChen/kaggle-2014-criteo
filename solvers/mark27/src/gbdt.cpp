@@ -116,7 +116,7 @@ void TreeNode::fit(
     is_leaf = false;
 
     double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
-    double base_ese = sr0*sr0/nr0, best_ese = base_ese;
+    double best_ese = sr0*sr0/nr0;
 
     #pragma omp parallel for schedule(dynamic)
     for(size_t j = 0; j < kNR_FEATURE; ++j)
