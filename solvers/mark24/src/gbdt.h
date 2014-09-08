@@ -2,12 +2,14 @@
 
 #include "common.h"
 
+size_t const kMAX_NR_LEAF;
+
 struct TreeNode
 {
     TreeNode() : is_leaf(true) {}
     std::vector<size_t> II;
     size_t feature;
-    float threshold, dec_val;
+    float threshold, gamma;
     bool is_leaf;
     std::shared_ptr<TreeNode> left, right;
 
@@ -26,11 +28,14 @@ private:
 
 class GBDT
 {
-    GBDT(size_t const nr_tree) : trees(nr_tree) {}
+    GBDT(size_t const nr_tree) : trees(nr_tree), bias(0) {}
     void fit(Problem const &problem);
     void save(std::string const &path);
     void load(std::string const &path);
 
 private:
+    void calc_bias(Problem const &problem);
+
     std::vector<CART> trees;
+    float bias;
 };
