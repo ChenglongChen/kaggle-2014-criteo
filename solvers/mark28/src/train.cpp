@@ -17,20 +17,21 @@ namespace {
 struct Option
 {
     Option() : nr_trees(10), nr_threads(1) {}
-    std::string Tr_path, Va_path;
+    std::string gbdt_Tr_path, gbdt_Va_path, linear_Tr_path, linear_Va_path;
     size_t nr_trees, nr_threads;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: mark26 [<options>] <train_path> \n"
+"usage: mark26 [<options>] <gbdt_train_path> <linear_train_path>\n"
 "\n"
 "options:\n"
 "-d <depth>: you know\n"
 "-s <nr_threads>: you know\n"
 "-t <nr_tree>: you know\n"
-"-v <path>: you know\n");
+"-v0 <path>: you know\n"
+"-v1 <path>: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -63,11 +64,17 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
         }
-        else if(args[i].compare("-v") == 0)
+        else if(args[i].compare("-v0") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.Va_path = args[++i];
+            opt.gbdt_Va_path = args[++i];
+        }
+        else if(args[i].compare("-v1") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.linear_Va_path = args[++i];
         }
         else
         {
@@ -75,10 +82,11 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc)
+    if(i >= argc-1)
         throw std::invalid_argument("training data not specified");
 
-    opt.Tr_path = args[i++];
+    opt.gbdt_Tr_path = args[i++];
+    opt.linear_Tr_path = args[i++];
 
     return opt;
 }
@@ -121,8 +129,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    DenseColMat const Tr = read_dcm(opt.Tr_path);
-    DenseColMat const Va = read_dcm(opt.Va_path);
+    DenseColMat const Tr = read_dcm(opt.gbdt_Tr_path);
+    DenseColMat const Va = read_dcm(opt.gbdt_Va_path);
     printf("done\n");
     fflush(stdout);
 
