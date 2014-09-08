@@ -49,8 +49,8 @@ get_ordered_nodes(std::vector<float> const &Xj, std::vector<size_t> const &I)
     };
 
     std::vector<Node> nodes(I.size());
-    for(auto i : I)
-        nodes[i] = Node(i, Xj[i]);
+    for(size_t ii = 0; ii < I.size(); ++ii)
+        nodes[ii] = Node(I[ii], Xj[I[ii]]);
     std::sort(nodes.begin(), nodes.end(), sort_by_v());
 
     return nodes;
