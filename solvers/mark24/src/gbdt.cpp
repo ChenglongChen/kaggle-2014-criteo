@@ -14,12 +14,12 @@ struct Node
     float v;
 };
 
-inline double calc_ese(std::vector<float> const &R, std::vector<size_t> const &I)
+inline double partial_sum(std::vector<float> const &R, std::vector<size_t> const &I)
 {
-    double ese = 0;
+    double sum = 0;
     for(auto i : I)
-        ese += R[i];
-    return ese*ese/static_cast<double>(I.size());
+        sum += R[i];
+    return sum;
 }
 
 inline std::vector<size_t> gen_init_I(size_t const nr_instance)
@@ -96,7 +96,7 @@ void TreeNode::fit(
     for(size_t j = 0; j < kNR_FEATURE; ++j)
     {
         double nl = 0, nr = static_cast<double>(I.size());
-        double sl = 0, sr = calc_ese(R, I);
+        double sl = 0, sr = partial_sum(R, I);
 
         std::vector<Node> nodes = get_ordered_nodes(X[j], I);
         for(size_t ii = 0; ii < nodes.size()-1; ++ii)
@@ -161,7 +161,7 @@ void GBDT::fit(Problem const &problem)
 
     std::vector<float> F(nr_instance, bias);
 
-    for(auto &tree : trees)
+    for(size_t t = 0; t < trees.size(); ++t)
     {
         std::vector<float> const &Y = problem.Y;
         std::vector<float> R(nr_instance), F1(nr_instance);
@@ -169,9 +169,14 @@ void GBDT::fit(Problem const &problem)
         for(size_t i = 0; i < nr_instance; ++i) 
             R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F[i])));
         
-        tree.fit(problem, R, F1);
+        trees[t].fit(problem, R, F1);
 
+        double Tr_loss = 0;
         for(size_t i = 0; i < nr_instance; ++i) 
+        {
             F[i] += F1[i];
+            Tr_loss += log(1+exp(-Y[i]*F[i]));
+        }
+        printf("%4ld %.3lf\n", t, Tr_loss/static_cast<double>(nr_instance));
     }
 }
