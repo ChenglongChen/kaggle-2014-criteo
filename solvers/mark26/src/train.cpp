@@ -15,10 +15,9 @@ namespace {
 
 struct Option
 {
-    Option() : nr_trees(2), save_model(true) {}
+    Option() : nr_trees(10) {}
     std::string Tr_path, model_path, Va_path;
     size_t nr_trees;
-    bool save_model;
 };
 
 std::string train_help()
@@ -55,10 +54,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.Va_path = args[++i];
-        }
-        else if(args[i].compare("-q") == 0)
-        {
-            opt.save_model = false;
         }
         else
         {

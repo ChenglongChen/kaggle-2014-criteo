@@ -184,24 +184,22 @@ float CART::predict(float const * const x) const
 
 void GBDT::fit(Problem const &Tr, Problem const &Va)
 {
-    size_t const nr_instance = Tr.nr_instance;
-
     bias = calc_bias(Tr.Y);
 
-    std::vector<float> F_Tr(nr_instance, bias), F_Va(Va.nr_instance, bias);
+    std::vector<float> F_Tr(Tr.nr_instance, bias), F_Va(Va.nr_instance, bias);
 
     for(size_t t = 0; t < trees.size(); ++t)
     {
         std::vector<float> const &Y = Tr.Y;
-        std::vector<float> R(nr_instance), F1(nr_instance);
+        std::vector<float> R(Tr.nr_instance), F1(Tr.nr_instance);
 
-        for(size_t i = 0; i < nr_instance; ++i) 
+        for(size_t i = 0; i < Tr.nr_instance; ++i) 
             R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
         
         trees[t].fit(Tr, R, F1);
 
         double Tr_loss = 0;
-        for(size_t i = 0; i < nr_instance; ++i) 
+        for(size_t i = 0; i < Tr.nr_instance; ++i) 
         {
             F_Tr[i] += F1[i];
             Tr_loss += log(1+exp(-Y[i]*F_Tr[i]));
@@ -213,6 +211,8 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
         for(size_t i = 0; i < Va.nr_instance; ++i) 
             Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
 
-        printf("%4ld %.5lf %.5lf\n", t, Tr_loss/static_cast<double>(nr_instance), Va_loss/static_cast<double>(Va.nr_instance));
+        printf("%4ld %.5lf %.5lf\n", t, 
+            Tr_loss/static_cast<double>(Tr.nr_instance), 
+            Va_loss/static_cast<double>(Va.nr_instance));
     }
 }
