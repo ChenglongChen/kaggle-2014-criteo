@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "gbdt.h"
+#include "timer.h"
 
 namespace {
 
@@ -188,8 +189,11 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
 
     std::vector<float> F_Tr(Tr.nr_instance, bias), F_Va(Va.nr_instance, bias);
 
+    Timer timer;
     for(size_t t = 0; t < trees.size(); ++t)
     {
+        timer.tic();
+
         std::vector<float> const &Y = Tr.Y;
         std::vector<float> R(Tr.nr_instance), F1(Tr.nr_instance);
 
@@ -205,14 +209,21 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
             Tr_loss += log(1+exp(-Y[i]*F_Tr[i]));
         }
 
-        update_F(Va, trees[t], F_Va);
+        printf("%3ld %8.2f %10.5f", t, timer.toc(), 
+            Tr_loss/static_cast<double>(Tr.Y.size()));
 
-        double Va_loss = 0;
-        for(size_t i = 0; i < Va.nr_instance; ++i) 
-            Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
+        if(Va.nr_instance != 0)
+        {
+            update_F(Va, trees[t], F_Va);
 
-        printf("%4ld %.5lf %.5lf\n", t, 
-            Tr_loss/static_cast<double>(Tr.nr_instance), 
-            Va_loss/static_cast<double>(Va.nr_instance));
+            double Va_loss = 0;
+            for(size_t i = 0; i < Va.nr_instance; ++i) 
+                Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
+
+            printf(" %10.5f", Va_loss/static_cast<double>(Va.nr_instance));
+        }
+
+        printf("\n");
+        fflush(stdout);
     }
 }
