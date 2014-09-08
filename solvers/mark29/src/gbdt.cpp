@@ -88,7 +88,7 @@ void fit_proxy(
 
 } //unnamed namespace
 
-size_t TreeNode::max_depth = 3;
+size_t TreeNode::max_depth = 5;
 
 void TreeNode::fit(
     std::vector<std::vector<float>> const &X, 

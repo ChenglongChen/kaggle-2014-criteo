@@ -16,7 +16,7 @@ namespace {
 
 struct Option
 {
-    Option() : nr_trees(10), nr_threads(1) {}
+    Option() : nr_trees(20), nr_threads(1) {}
     std::string Tr_path, Va_path;
     size_t nr_trees, nr_threads;
 };
