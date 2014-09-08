@@ -15,7 +15,7 @@ namespace {
 
 struct Option
 {
-    Option() : nr_trees(1), save_model(true) {}
+    Option() : nr_trees(2), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     size_t nr_trees;
     bool save_model;
