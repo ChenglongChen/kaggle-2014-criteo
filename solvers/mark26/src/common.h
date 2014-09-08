@@ -25,7 +25,7 @@ struct DenseColMat
     std::vector<float> Y;
 };
 
-DenseColMat read_data(std::string const &path);
+DenseColMat read_dcm(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 

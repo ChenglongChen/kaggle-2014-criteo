@@ -16,14 +16,14 @@ namespace {
 struct Option
 {
     Option() : nr_trees(10) {}
-    std::string Tr_path, model_path, Va_path;
+    std::string Tr_path, Va_path;
     size_t nr_trees;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: mark26 [<options>] <train_path> [<model_path>]\n"
+"usage: mark26 [<options>] <train_path> \n"
 "\n"
 "options:\n"
 "-t <nr_tree>: you know\n"
@@ -72,26 +72,29 @@ Option parse_option(std::vector<std::string> const &args)
 
     opt.Tr_path = args[i++];
 
-    if(i < argc)
-    {
-        opt.model_path = std::string(args[i]);
-    }
-    else if(i == argc)
-    {
-        const char *ptr = strrchr(&*opt.Tr_path.begin(),'/');
-        if(!ptr)
-            ptr = opt.Tr_path.c_str();
-        else
-            ++ptr;
-        opt.model_path = std::string(ptr) + ".model";
-    }
-    else
-    {
-        throw std::invalid_argument("invalid argument");
-    }
-
     return opt;
 }
+
+//void predict(
+//    DenseColMat const &problem, GBDT const &gbdt, std::string const &path)
+//{
+//    FILE *f = open_c_file(path, "w");
+//
+//    for(size_t i = 0; i < problem.nr_instance; ++i)
+//    {
+//        std::vector<float> x(kNR_FEATURE);
+//        for(size_t j = 0; j < kNR_FEATURE; ++j)
+//            x[j] = problem.X[j][i];
+//
+//        float const s = gbdt.predict(x.data());
+//
+//        float const prob = static_cast<float>(1/(1+exp(-s)));
+//
+//        fprintf(f, "%lf\n", prob);
+//    }
+//
+//    fclose(f);
+//}
 
 } //unnamed namespace
 
@@ -110,13 +113,15 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    DenseColMat const Tr = read_data(opt.Tr_path);
-    DenseColMat const Va = read_data(opt.Va_path);
+    DenseColMat const Tr = read_dcm(opt.Tr_path);
+    DenseColMat const Va = read_dcm(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 
     GBDT gbdt(opt.nr_trees);
     gbdt.fit(Tr, Va);
+
+    //predict(Va, gbdt, opt.Va_path+".out");
 
     return EXIT_SUCCESS;
 }

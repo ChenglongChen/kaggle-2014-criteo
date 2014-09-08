@@ -226,5 +226,5 @@ float GBDT::predict(float const * const x) const
     {
         s += tree.predict(x);
     }
-    return static_cast<float>(1/(1+exp(-s)));
+    return s;
 }

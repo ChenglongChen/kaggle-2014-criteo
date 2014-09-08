@@ -22,7 +22,7 @@ size_t get_nr_line(std::string const &path)
 
 } //unamed namespace
 
-DenseColMat read_data(std::string const &path)
+DenseColMat read_dcm(std::string const &path)
 {
     if(path.empty())
         return DenseColMat(0);
