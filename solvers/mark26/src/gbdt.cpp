@@ -77,13 +77,14 @@ void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
 
 } //unnamed namespace
 
+size_t TreeNode::max_depth = 3;
+
 void TreeNode::fit(
     std::vector<std::vector<float>> const &X, 
     std::vector<float> const &R, 
-    std::vector<float> &F1, 
-    size_t &nr_leaf)
+    std::vector<float> &F1)
 {
-    if(nr_leaf >= kMAX_NR_LEAF)
+    if(depth >= max_depth)
     {
         double a = 0, b = 0;
         for(auto i : I)
@@ -101,7 +102,6 @@ void TreeNode::fit(
         return;
     }
 
-    nr_leaf += 2;
     is_leaf = false;
 
     double best_ese = 0;
@@ -131,8 +131,8 @@ void TreeNode::fit(
         }
     }
 
-    left.reset(new TreeNode); 
-    right.reset(new TreeNode); 
+    left.reset(new TreeNode(depth+1)); 
+    right.reset(new TreeNode(depth+1)); 
 
     for(auto i : I)
     {
@@ -144,16 +144,8 @@ void TreeNode::fit(
 
     clean_vector(I);
 
-    if(left->I.size() > right->I.size())
-    {
-        left->fit(X, R, F1, nr_leaf);
-        right->fit(X, R, F1, nr_leaf);
-    }
-    else
-    {
-        right->fit(X, R, F1, nr_leaf);
-        left->fit(X, R, F1, nr_leaf);
-    }
+    left->fit(X, R, F1);
+    right->fit(X, R, F1);
 }
 
 float TreeNode::predict(float const * const x) const
@@ -168,11 +160,10 @@ float TreeNode::predict(float const * const x) const
 
 void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> &F1)
 {
-    root.reset(new TreeNode);
+    root.reset(new TreeNode(0));
     root->I = gen_init_I(problem.nr_instance);
 
-    size_t nr_leaf = 1;
-    root->fit(problem.X, R, F1, nr_leaf);
+    root->fit(problem.X, R, F1);
 }
 
 float CART::predict(float const * const x) const
