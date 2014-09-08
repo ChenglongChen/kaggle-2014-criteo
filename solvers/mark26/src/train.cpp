@@ -110,8 +110,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Problem const Tr = read_data(opt.Tr_path);
-    Problem const Va = read_data(opt.Va_path);
+    DenseColMat const Tr = read_data(opt.Tr_path);
+    DenseColMat const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 

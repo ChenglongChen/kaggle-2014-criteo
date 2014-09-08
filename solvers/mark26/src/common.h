@@ -14,9 +14,9 @@
 
 size_t const kNR_FEATURE = 13;
 
-struct Problem
+struct DenseColMat
 {
-    Problem(size_t const nr_instance) 
+    DenseColMat(size_t const nr_instance) 
         : nr_instance(nr_instance), 
           X(kNR_FEATURE, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
@@ -25,7 +25,7 @@ struct Problem
     std::vector<float> Y;
 };
 
-Problem read_data(std::string const &path);
+DenseColMat read_data(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 

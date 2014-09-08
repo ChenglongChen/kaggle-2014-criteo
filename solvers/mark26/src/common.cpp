@@ -22,12 +22,12 @@ size_t get_nr_line(std::string const &path)
 
 } //unamed namespace
 
-Problem read_data(std::string const &path)
+DenseColMat read_data(std::string const &path)
 {
     if(path.empty())
-        return Problem(0);
+        return DenseColMat(0);
 
-    Problem problem(get_nr_line(path));
+    DenseColMat problem(get_nr_line(path));
 
     int const kMaxLineSize = 1000000;
 
