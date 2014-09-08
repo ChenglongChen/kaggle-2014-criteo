@@ -10,9 +10,12 @@ struct Node
     float v;
 };
 
-inline double calc_ese(std::vector<float> const &R)
+inline double calc_ese(std::vector<float> const &R, std::vector<size_t> const &I)
 {
-    return pow(std::accumulate(R.begin(), R.end(), 0.0), 2)/static_cast<double>(R.size());
+    double ese = 0;
+    for(auto i : I)
+        ese += R[i];
+    return ese*ese/static_cast<double>(I.size());
 }
 
 inline std::vector<size_t> gen_init_I(size_t const nr_instance)
@@ -67,19 +70,15 @@ void TreeNode::fit(
     if(nr_leaf >= kMAX_NR_LEAF)
     {
         double a = 0, b = 0;
-        for(auto i = I.begin(); i != I.end(); ++i)
+        for(auto i : I)
         {
-            Node const &node = X[feat][*i];
             a += R[node.i];
             b += fabs(R[node.i])*(1-fabs(R[node.i]));
         }
         gamma = a/b;
 
-        for(auto i = I.begin(); i != I.end()-1; ++i)
-        {
-            Node const &node = X[j][*i];
-            F1[node.i] = gamma;
-        }
+        for(auto i : I)
+            F1[i] = gamma;
 
         clean_vector(I);
 
@@ -91,29 +90,28 @@ void TreeNode::fit(
 
     std::vector<std::vector<Node>> const &X = problem.X;
 
-    threshold = 0, feature = 0;
-    double base_ese = calc_ese(R), best_ese = base_ese;
+    double best_ese = std::numeric_limits<double>::max();
     for(size_t j = 0; j < kNR_FEATURE; ++j)
     {
-        double nl = 0, nr = static_cast<double>(R.size());
-        double sl = 0, sr = std::accumulate(R.begin(), R.end(), 0.0f);
-        for(size_t j = 1; j < kNR_FEATURE; ++j)
+        double nl = 0, nr = static_cast<double>(I.size());
+        double sl = 0, sr = calc_ese(R, I);
+
+        std::vector<Node> nodes = get_ordered_nodes(X[j], I);
+        for(size_t ii = 0; ii < nodes.size()-1; ++ii)
         {
-            std::vector<Node> nodes = get_ordered_nodes(X[j], I);
-            for(size_t ii = 0; ii < nodes.size()-1; ++ii)
+            Node const &node = nodes[ii], &node_next = nodes[ii+1];
+            sl += R[node.i]; 
+            sr -= R[node.i]; 
+            --nl;
+            ++nr;
+            if(node.i != node_next.i)
             {
-                Node const &node = nodes[ii], &node_next = nodes[ii+1];
-                sl += R[node.i]; 
-                sr -= R[node.i]; 
-                if(node.i != node_next.i)
+                double const current_ese = sl*sl/nl + sr*sr/nr;
+                if(current_ese > best_ese)
                 {
-                    double const current_ese = sl*sl/nl + sr*sr/nr;
-                    if(current_ese > best_ese)
-                    {
-                        best_ese = current_ese;
-                        feat = j;
-                        threshold = node.v;
-                    }
+                    best_ese = current_ese;
+                    feature = j;
+                    threshold = node.v;
                 }
             }
         }
@@ -124,13 +122,13 @@ void TreeNode::fit(
 
     for(auto i : I)
     {
-        if(problem.X[feature][i] < threshold)
+        if(X[feature][i] < threshold)
             left->I.push_back(i);
         else
             right->I.push_back(i);
     }
 
-    I.clear();
+    clean_vector(I);
 
     if(left->I.size() > right->I.size())
     {
@@ -164,7 +162,7 @@ void GBDT::fit(Problem const &problem)
     for(auto &tree : trees)
     {
         std::vector<float> const &Y = problem.Y;
-        std::vector<float> F1(nr_instance), R(nr_instance);
+        std::vector<float> R(nr_instance), F1(nr_instance);
 
         for(size_t i = 0; i < nr_instance; ++i) 
             R[i] = Y[i]/(1+exp(Y[i]*F[i]));

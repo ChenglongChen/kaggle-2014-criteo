@@ -6,19 +6,26 @@ size_t const kMAX_NR_LEAF;
 
 struct TreeNode
 {
-    TreeNode() : is_leaf(true) {}
+    TreeNode() : feature(-1), threshold(0), gamma(0), is_leaf(true) {}
     std::vector<size_t> I;
     size_t feature;
     float threshold, gamma;
     bool is_leaf;
     std::shared_ptr<TreeNode> left, right;
 
-    void fit(std::vector<std::vector<Node>> const &X, std::vector<float> const &R, std::vector<float> &F1, size_t &nr_leaf)
+    void fit(
+        std::vector<std::vector<Node>> const &X, 
+        std::vector<float> const &R, 
+        std::vector<float> &F1, 
+        size_t &nr_leaf)
 };
 
 class CART 
 {
-    void fit(Problem const &problem, std::vector<float> const &R, std::vector<float> F1)
+    void fit(
+        Problem const &problem, 
+        std::vector<float> const &R, 
+        std::vector<float> F1)
 
 private:
     std::shared_ptr<TreeNode> root;
