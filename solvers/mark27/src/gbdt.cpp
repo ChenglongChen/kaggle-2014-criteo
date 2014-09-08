@@ -215,12 +215,14 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
         std::vector<float> const &Y = Tr.Y;
         std::vector<float> R(Tr.nr_instance), F1(Tr.nr_instance);
 
+        #pragma omp parallel for schedule(static)
         for(size_t i = 0; i < Tr.nr_instance; ++i) 
             R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
         
         trees[t].fit(Tr, R, F1);
 
         double Tr_loss = 0;
+        #pragma omp parallel for schedule(static) reduction(+: Tr_loss)
         for(size_t i = 0; i < Tr.nr_instance; ++i) 
         {
             F_Tr[i] += F1[i];
@@ -235,6 +237,7 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
             update_F(Va, trees[t], F_Va);
 
             double Va_loss = 0;
+            #pragma omp parallel for schedule(static) reduction(+: Va_loss)
             for(size_t i = 0; i < Va.nr_instance; ++i) 
                 Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
 
