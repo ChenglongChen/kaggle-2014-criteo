@@ -119,6 +119,7 @@ void TreeNode::fit(
         }
     }
 
+flag
     left.reset(new TreeNode); 
     right.reset(new TreeNode); 
 
@@ -130,6 +131,7 @@ void TreeNode::fit(
             right->I.push_back(i);
     }
 
+flag
     clean_vector(I);
 
     if(left->I.size() > right->I.size())
