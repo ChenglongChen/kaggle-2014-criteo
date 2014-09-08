@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native
+CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native -fopenmp
 MAIN = mark26
 FILES = common.cpp timer.cpp gbdt.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)

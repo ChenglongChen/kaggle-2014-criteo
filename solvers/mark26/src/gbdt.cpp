@@ -1,6 +1,7 @@
 #include <limits>
 #include <numeric>
 #include <algorithm>
+#include <omp.h>
 
 #include "gbdt.h"
 #include "timer.h"
@@ -106,6 +107,8 @@ void TreeNode::fit(
 
     double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
     double base_ese = sr0*sr0/nr0, best_ese = base_ese;
+
+    #pragma omp parallel for schedule(dynamic)
     for(size_t j = 0; j < kNR_FEATURE; ++j)
     {
         double nl = 0, nr = nr0;
@@ -124,9 +127,12 @@ void TreeNode::fit(
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
                 if(current_ese > best_ese)
                 {
-                    best_ese = current_ese;
-                    feature = j;
-                    threshold = node.v;
+                    #pragma omp critical
+                    {
+                        best_ese = current_ese;
+                        feature = j;
+                        threshold = node.v;
+                    }
                 }
             }
         }
