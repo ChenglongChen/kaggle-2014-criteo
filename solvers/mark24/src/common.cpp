@@ -37,7 +37,7 @@ Problem read_data(std::string const &path)
     for(size_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
         char *p = strtok(line, " \t");
-        float const y = (atoi(p)>0)? 1.0f : -1.0f;
+        problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
         for(size_t j = 0; j < kNR_FEATURE; ++j)
         {
             strtok(nullptr,":");
@@ -47,7 +47,6 @@ Problem read_data(std::string const &path)
 
             problem.X[j][i] = val;
         }
-        problem.Y.push_back(y);
     }
 
     fclose(f);

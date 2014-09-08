@@ -92,7 +92,7 @@ void TreeNode::fit(
     nr_leaf += 2;
     is_leaf = false;
 
-    double best_ese = std::numeric_limits<double>::max();
+    double best_ese = 0;
     for(size_t j = 0; j < kNR_FEATURE; ++j)
     {
         double nl = 0, nr = static_cast<double>(I.size());
