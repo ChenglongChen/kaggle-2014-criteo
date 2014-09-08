@@ -104,11 +104,11 @@ void TreeNode::fit(
             Node const &node = nodes[ii], &node_next = nodes[ii+1];
             sl += R[node.i]; 
             sr -= R[node.i]; 
-            --nl;
-            ++nr;
+            ++nl;
+            --nr;
             if(node.i != node_next.i)
             {
-                double const current_ese = sl*sl/nl + sr*sr/nr;
+                double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
                 if(current_ese > best_ese)
                 {
                     best_ese = current_ese;
