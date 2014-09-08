@@ -84,7 +84,7 @@ void TreeNode::fit(
     std::vector<float> const &R, 
     std::vector<float> &F1)
 {
-    if(depth >= max_depth || I.size() < 100)
+    if(depth >= max_depth || I.size() < 100 || saturated)
     {
         double a = 0, b = 0;
         for(auto i : I)
@@ -104,11 +104,12 @@ void TreeNode::fit(
 
     is_leaf = false;
 
-    double best_ese = 0;
+    double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
+    double base_ese = sr0*sr0/nr0, best_ese = base_ese;
     for(size_t j = 0; j < kNR_FEATURE; ++j)
     {
-        double nl = 0, nr = static_cast<double>(I.size());
-        double sl = 0, sr = partial_sum(R, I);
+        double nl = 0, nr = nr0;
+        double sl = 0, sr = sr0;
 
         std::vector<Node> nodes = get_ordered_nodes(X[j], I);
         for(size_t ii = 0; ii < nodes.size()-1; ++ii)
@@ -129,6 +130,13 @@ void TreeNode::fit(
                 }
             }
         }
+    }
+
+    if(feature == -1)
+    {
+        saturated = true;
+        this->fit(X, R, F1);
+        return;
     }
 
     left.reset(new TreeNode(depth+1)); 

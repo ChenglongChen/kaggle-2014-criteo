@@ -6,11 +6,13 @@
 struct TreeNode
 {
     TreeNode(size_t const depth) 
-        : depth(depth), feature(-1), threshold(0), gamma(0), is_leaf(true) {}
+        : depth(depth), feature(-1), threshold(0), gamma(0), 
+          is_leaf(true), saturated(false) {}
     std::vector<size_t> I;
-    size_t depth, feature;
+    size_t depth;
+    int64_t feature;
     float threshold, gamma;
-    bool is_leaf;
+    bool is_leaf, saturated;
     std::shared_ptr<TreeNode> left, right;
     static size_t max_depth;
 
