@@ -83,26 +83,26 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-//void predict(
-//    DenseColMat const &problem, GBDT const &gbdt, std::string const &path)
-//{
-//    FILE *f = open_c_file(path, "w");
-//
-//    for(size_t i = 0; i < problem.nr_instance; ++i)
-//    {
-//        std::vector<float> x(kNR_FEATURE);
-//        for(size_t j = 0; j < kNR_FEATURE; ++j)
-//            x[j] = problem.X[j][i];
-//
-//        float const s = gbdt.predict(x.data());
-//
-//        float const prob = static_cast<float>(1/(1+exp(-s)));
-//
-//        fprintf(f, "%lf\n", prob);
-//    }
-//
-//    fclose(f);
-//}
+void write(
+    DenseColMat const &problem, GBDT const &gbdt, std::string const &path)
+{
+    FILE *f = open_c_file(path, "w");
+
+    for(size_t i = 0; i < problem.nr_instance; ++i)
+    {
+        std::vector<float> x(kNR_FEATURE);
+        for(size_t j = 0; j < kNR_FEATURE; ++j)
+            x[j] = problem.X[j][i];
+
+        std::vector<size_t> indices = gbdt.get_indices(x.data());
+
+        for(size_t t = 0; t < indices.size(); ++t)
+            fprintf(f, "%ld:%ld ", t+1, indices[t]);
+        fprintf(f, "\n");
+    }
+
+    fclose(f);
+}
 
 } //unnamed namespace
 
@@ -131,7 +131,8 @@ int main(int const argc, char const * const * const argv)
     GBDT gbdt(opt.nr_trees);
     gbdt.fit(Tr, Va);
 
-    //predict(Va, gbdt, opt.Va_path+".out");
+    write(Tr, gbdt, opt.Tr_path+".gbdt");
+    write(Va, gbdt, opt.Va_path+".gbdt");
 
     return EXIT_SUCCESS;
 }
