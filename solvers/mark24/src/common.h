@@ -14,22 +14,14 @@
 
 size_t const kNR_FEATURE = 13;
 
-struct Node
-{
-    Node() : i(0), v(0) {}
-    Node(size_t const i, float const v) : i(i), v(v) {}
-    size_t i;
-    float v;
-};
-
 struct Problem
 {
     Problem(size_t const nr_instance) 
         : nr_instance(nr_instance), 
-          X(kNR_FEATURE, std::vector<Node>(nr_instance)), 
+          X(kNR_FEATURE, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
     size_t  nr_instance;
-    std::vector<std::vector<Node>> X;
+    std::vector<std::vector<float>> X;
     std::vector<float> Y;
 };
 

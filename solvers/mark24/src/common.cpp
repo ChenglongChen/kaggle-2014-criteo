@@ -45,7 +45,7 @@ Problem read_data(std::string const &path)
 
             float const val = static_cast<float>(atof(val_char));
 
-            problem.X[j][i] = Node(i, val);
+            problem.X[j][i] = val;
         }
         problem.Y.push_back(y);
     }

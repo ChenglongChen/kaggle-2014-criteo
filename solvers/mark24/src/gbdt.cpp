@@ -2,20 +2,36 @@
 
 namespace {
 
+struct Node
+{
+    Node() : i(0), v(0) {}
+    Node(size_t const i, float const v) : i(i), v(v) {}
+    size_t i;
+    float v;
+};
+
 inline double calc_ese(std::vector<float> const &R)
 {
     return pow(std::accumulate(R.begin(), R.end(), 0.0), 2)/static_cast<double>(R.size());
 }
 
-inline std::vector<size_t> gen_init_II(size_t const nr_instance)
+inline std::vector<size_t> gen_init_I(size_t const nr_instance)
 {
-    std::vector<size_t> II(nr_instance, 0);
-    for(size_t ii = 0; ii < nr_instance; ++ii)
-        II[ii] = ii;
-    return II;
+    std::vector<size_t> I(nr_instance, 0);
+    for(size_t i = 0; i < nr_instance; ++i)
+        I[i] = i;
+    return I;
 }
 
-void sort_problem_by_v(Problem &problem)
+float GBDT::calc_bias(std::vector<float> &Y)
+{
+    float y_bar = static_cast<float>(std::accumulate(Y.begin(), Y.end(), 0.0) /
+        static_cast<double>(Y.size()));
+    return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
+}
+
+std::vector<Node> 
+get_ordered_nodes(std::vector<float> const &Xj, std::vector<size_t> const &I)
 {
     struct sort_by_v
     {
@@ -25,49 +41,47 @@ void sort_problem_by_v(Problem &problem)
         }
     };
 
-    for(size_t j = 0; j < kNR_FEATURE; ++j)
-        std::sort(problem.X[j].begin(), problem.X[j].end(), sort_by_v());
+    std::vector<Node> nodes(I.size());
+    for(auto i : I)
+        nodes[i] = node(i, Xj[i]);
+    std::sort(nodes.begin(), nodes.end(), sort_by_v());
+
+    return nodes;
 }
 
-void sort_problem_by_i(Problem &problem)
+template<typename Type>
+void clean_vector(std::vector<Type> &vec)
 {
-    struct sort_by_i
-    {
-        bool operator() (Node const lhs, Node const rhs)
-        {
-            return lhs.i < rhs.i;
-        }
-    };
-
-    for(size_t j = 0; j < kNR_FEATURE; ++j)
-        std::sort(problem.X[j].begin(), problem.X[j].end(), sort_by_i());
-}
-
-inline float logistic_func(float const s)
-{
-    return 1/(1+static_cast<float>(exp(-s)));
+    vec.clear();
+    vec.shrink_to_fit();
 }
 
 } //unnamed namespace
 
-void TreeNode::fit(std::vector<std::vector<Node>> const &X, std::vector<float> const &R, std::vector<float> &F1, size_t &nr_leaf)
+void TreeNode::fit(
+    std::vector<std::vector<Node>> const &X, 
+    std::vector<float> const &R, 
+    std::vector<float> &F1, 
+    size_t &nr_leaf)
 {
     if(nr_leaf >= kMAX_NR_LEAF)
     {
         double a = 0, b = 0;
-        for(auto ii = II.begin(); ii != II.end()-1; ++ii)
+        for(auto i = I.begin(); i != I.end(); ++i)
         {
-            Node const &node = X[j][*ii];
+            Node const &node = X[feat][*i];
             a += R[node.i];
             b += fabs(R[node.i])*(1-fabs(R[node.i]));
         }
         gamma = a/b;
 
-        for(auto ii = II.begin(); ii != II.end()-1; ++ii)
+        for(auto i = I.begin(); i != I.end()-1; ++i)
         {
-            Node const &node = X[j][*ii];
+            Node const &node = X[j][*i];
             F1[node.i] = gamma;
         }
+
+        clean_vector(I);
 
         return;
     }
@@ -85,9 +99,10 @@ void TreeNode::fit(std::vector<std::vector<Node>> const &X, std::vector<float> c
         double sl = 0, sr = std::accumulate(R.begin(), R.end(), 0.0f);
         for(size_t j = 1; j < kNR_FEATURE; ++j)
         {
-            for(auto ii = II.begin(); ii != II.end()-1; ++ii)
+            std::vector<Node> nodes = get_ordered_nodes(X[j], I);
+            for(size_t ii = 0; ii < nodes.size()-1; ++ii)
             {
-                Node const &node = X[j][*ii], &node_next = X[j][*(ii+1)];
+                Node const &node = nodes[ii], &node_next = nodes[ii+1];
                 sl += R[node.i]; 
                 sr -= R[node.i]; 
                 if(node.i != node_next.i)
@@ -132,36 +147,31 @@ void TreeNode::fit(std::vector<std::vector<Node>> const &X, std::vector<float> c
 void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> F1)
 {
     root.reset(new TreeNode);
-    root->II = gen_init_II(problem.nr_instance);
+    root->I = gen_init_I(problem.nr_instance);
 
     size_t nr_leaf = 1;
-    root->fit(problem.X, R, nr_leaf);
+    root->fit(problem.X, R, F1, nr_leaf);
 }
 
-void GBDT::fit(Problem &problem)
+void GBDT::fit(Problem const &problem)
 {
     size_t const nr_instance = problem.nr_instance;
-    std::vector<float> &Y = problem.Y;
 
-    calc_bias(problem);
+    bias = calc_bias(problem);
 
     std::vector<float> F(nr_instance, bias);
 
-    sort_problem_by_v(problem);
     for(auto &tree : trees)
     {
-        std::vector<float> R(nr_instance), F1(nr_instance);
+        std::vector<float> const &Y = problem.Y;
+        std::vector<float> F1(nr_instance), R(nr_instance);
+
         for(size_t i = 0; i < nr_instance; ++i) 
             R[i] = Y[i]/(1+exp(Y[i]*F[i]));
         
         tree.fit(problem, R, F1);
-    }
-    sort_problem_by_i(problem);
-}
 
-void GBDT::calc_bias(std::vector<float> &Y)
-{
-    float y_bar = static_cast<float>(std::accumulate(Y.begin(), Y.end(), 0.0) /
-        static_cast<double>(Y.size()));
-    return log((1.0f+y_bar)/(1.0f-y_bar));
+        for(size_t i = 0; i < nr_instance; ++i) 
+            F[i] += F1[i];
+    }
 }
