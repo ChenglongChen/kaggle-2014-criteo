@@ -12,7 +12,7 @@
 
 #include <pmmintrin.h>
 
-size_t const kNR_FEAT = 13;
+size_t const kNR_FEATURE = 13;
 
 struct Node
 {
@@ -26,7 +26,7 @@ struct Problem
 {
     Problem(size_t const nr_instance) 
         : nr_instance(0), 
-          X(kNR_FEAT, std::vector<Node>(nr_instance)), 
+          X(kNR_FEATURE, std::vector<Node>(nr_instance)), 
           Y(nr_instance, 0) {}
     size_t  nr_instance;
     std::vector<std::vector<Node>> X;

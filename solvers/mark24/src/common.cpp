@@ -38,7 +38,7 @@ Problem read_data(std::string const &path)
     {
         char *p = strtok(line, " \t");
         float const y = (atoi(p)>0)? 1.0f : -1.0f;
-        for(size_t j = 0; j < kNR_FEAT; ++j)
+        for(size_t j = 0; j < kNR_FEATURE; ++j)
         {
             strtok(nullptr,":");
             char *val_char = strtok(nullptr," \t");

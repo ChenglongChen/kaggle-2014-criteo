@@ -1,3 +1,4 @@
+#include <vector>
 
 #include "common.h"
 
@@ -8,7 +9,7 @@ struct TreeNode
     float threshold;
     std::shared_ptr<TreeNode> left, right;
 
-    void split();
+    void split(Problem const &problem, float const threshold);
 };
 
 class CART 
