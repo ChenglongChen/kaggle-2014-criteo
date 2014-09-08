@@ -144,7 +144,7 @@ void TreeNode::fit(
     }
 }
 
-void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> F1)
+void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> &F1)
 {
     root.reset(new TreeNode);
     root->I = gen_init_I(problem.nr_instance);

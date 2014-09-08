@@ -27,7 +27,7 @@ public:
     void fit(
         Problem const &problem, 
         std::vector<float> const &R, 
-        std::vector<float> F1);
+        std::vector<float> &F1);
 
 private:
     std::shared_ptr<TreeNode> root;
