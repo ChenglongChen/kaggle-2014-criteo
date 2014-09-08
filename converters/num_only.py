@@ -18,17 +18,9 @@ args = vars(parser.parse_args())
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
         feats = []
-        for feat in gen_feats(row):
-            field = feat.split('-')[0]
-            type, field = field[0], int(field[1:])
-            if type == 'C':
-                continue
-            if args['type'] == 0:
-                feats.append(feat)
-            else:
-                feats.append((field, feat))
-        if args['type'] == 0:
-            feats = gen_hashed_svm_feats(feats, args['nr_bins'])
-        else:
-            feats = gen_hashed_fm_feats(feats, args['nr_bins'])
+        for j in range(1, 14):
+            val = row['I{0}'.format(j)]
+            if val == '':
+                val = 0
+            feats.append('{0}:{1}'.format(j, val))
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
