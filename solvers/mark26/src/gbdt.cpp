@@ -218,3 +218,13 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
         fflush(stdout);
     }
 }
+
+float GBDT::predict(float const * const x) const
+{
+    float s = bias;
+    for(auto &tree : trees)
+    {
+        s += tree.predict(x);
+    }
+    return static_cast<float>(1/(1+exp(-s)));
+}

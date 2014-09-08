@@ -39,6 +39,7 @@ class GBDT
 public:
     GBDT(size_t const nr_tree) : trees(nr_tree), bias(0) {}
     void fit(DenseColMat const &Tr, DenseColMat const &Va);
+    float predict(float const * const x) const;
 
 private:
     std::vector<CART> trees;
