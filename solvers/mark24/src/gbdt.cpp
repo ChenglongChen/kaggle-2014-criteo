@@ -106,7 +106,7 @@ void TreeNode::fit(
             sr -= R[node.i]; 
             ++nl;
             --nr;
-            if(node.i != node_next.i)
+            if(node.v != node_next.v)
             {
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
                 if(current_ese > best_ese)
@@ -177,6 +177,6 @@ void GBDT::fit(Problem const &problem)
             F[i] += F1[i];
             Tr_loss += log(1+exp(-Y[i]*F[i]));
         }
-        printf("%4ld %.3lf\n", t, Tr_loss/static_cast<double>(nr_instance));
+        printf("%4ld %.5lf\n", t, Tr_loss/static_cast<double>(nr_instance));
     }
 }
