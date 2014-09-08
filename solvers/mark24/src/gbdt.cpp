@@ -104,8 +104,8 @@ void TreeNode::fit(
             Node const &node = nodes[ii], &node_next = nodes[ii+1];
             sl += R[node.i]; 
             sr -= R[node.i]; 
-            ++nl;
-            --nr;
+            nl += 1;
+            nr -= 1;
             if(node.v != node_next.v)
             {
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
@@ -124,7 +124,7 @@ void TreeNode::fit(
 
     for(auto i : I)
     {
-        if(X[feature][i] < threshold)
+        if(X[feature][i] <= threshold)
             left->I.push_back(i);
         else
             right->I.push_back(i);
