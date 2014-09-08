@@ -1,6 +1,7 @@
 #include <limits>
 #include <numeric>
 #include <algorithm>
+#include <thread>
 #include <omp.h>
 
 #include "gbdt.h"
@@ -74,6 +75,15 @@ void update_F(DenseColMat const &problem, CART const &tree, std::vector<float> &
             x[j] = problem.X[j][i];
         F[i] += tree.predict(x.data());
     }
+}
+
+void fit_proxy(
+    TreeNode * const node,
+    std::vector<std::vector<float>> const &X, 
+    std::vector<float> const &R, 
+    std::vector<float> &F1)
+{
+    node->fit(X, R, F1); 
 }
 
 } //unnamed namespace
@@ -158,8 +168,11 @@ void TreeNode::fit(
 
     clean_vector(I);
 
-    left->fit(X, R, F1);
-    right->fit(X, R, F1);
+    std::vector<std::thread> threads;
+    threads.emplace_back(fit_proxy, left.get(), std::ref(X), std::ref(R), std::ref(F1));
+    threads.emplace_back(fit_proxy, right.get(), std::ref(X), std::ref(R), std::ref(F1));
+    for(auto &thread : threads)
+        thread.join();
 }
 
 float TreeNode::predict(float const * const x) const
