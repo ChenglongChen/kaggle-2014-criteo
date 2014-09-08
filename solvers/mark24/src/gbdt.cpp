@@ -1,4 +1,8 @@
 #include <limits>
+#include <numeric>
+#include <algorithm>
+
+#include "gbdt.h"
 
 namespace {
 
@@ -26,7 +30,7 @@ inline std::vector<size_t> gen_init_I(size_t const nr_instance)
     return I;
 }
 
-float GBDT::calc_bias(std::vector<float> &Y)
+float calc_bias(std::vector<float> const &Y)
 {
     float y_bar = static_cast<float>(std::accumulate(Y.begin(), Y.end(), 0.0) /
         static_cast<double>(Y.size()));
@@ -46,7 +50,7 @@ get_ordered_nodes(std::vector<float> const &Xj, std::vector<size_t> const &I)
 
     std::vector<Node> nodes(I.size());
     for(auto i : I)
-        nodes[i] = node(i, Xj[i]);
+        nodes[i] = Node(i, Xj[i]);
     std::sort(nodes.begin(), nodes.end(), sort_by_v());
 
     return nodes;
@@ -62,7 +66,7 @@ void clean_vector(std::vector<Type> &vec)
 } //unnamed namespace
 
 void TreeNode::fit(
-    std::vector<std::vector<Node>> const &X, 
+    std::vector<std::vector<float>> const &X, 
     std::vector<float> const &R, 
     std::vector<float> &F1, 
     size_t &nr_leaf)
@@ -72,10 +76,10 @@ void TreeNode::fit(
         double a = 0, b = 0;
         for(auto i : I)
         {
-            a += R[node.i];
-            b += fabs(R[node.i])*(1-fabs(R[node.i]));
+            a += R[i];
+            b += fabs(R[i])*(1-fabs(R[i]));
         }
-        gamma = a/b;
+        gamma = static_cast<float>(a/b);
 
         for(auto i : I)
             F1[i] = gamma;
@@ -87,8 +91,6 @@ void TreeNode::fit(
 
     nr_leaf += 2;
     is_leaf = false;
-
-    std::vector<std::vector<Node>> const &X = problem.X;
 
     double best_ese = std::numeric_limits<double>::max();
     for(size_t j = 0; j < kNR_FEATURE; ++j)
@@ -132,13 +134,13 @@ void TreeNode::fit(
 
     if(left->I.size() > right->I.size())
     {
-        left->fit(X, R, nr_leaf);
-        right->fit(X, R, nr_leaf);
+        left->fit(X, R, F1, nr_leaf);
+        right->fit(X, R, F1, nr_leaf);
     }
     else
     {
-        right->fit(X, R, nr_leaf);
-        left->fit(X, R, nr_leaf);
+        right->fit(X, R, F1, nr_leaf);
+        left->fit(X, R, F1, nr_leaf);
     }
 }
 
@@ -155,7 +157,7 @@ void GBDT::fit(Problem const &problem)
 {
     size_t const nr_instance = problem.nr_instance;
 
-    bias = calc_bias(problem);
+    bias = calc_bias(problem.Y);
 
     std::vector<float> F(nr_instance, bias);
 
@@ -165,7 +167,7 @@ void GBDT::fit(Problem const &problem)
         std::vector<float> R(nr_instance), F1(nr_instance);
 
         for(size_t i = 0; i < nr_instance; ++i) 
-            R[i] = Y[i]/(1+exp(Y[i]*F[i]));
+            R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F[i])));
         
         tree.fit(problem, R, F1);
 

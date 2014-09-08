@@ -1,8 +1,9 @@
 #include <vector>
+#include <memory>
 
 #include "common.h"
 
-size_t const kMAX_NR_LEAF;
+size_t const kMAX_NR_LEAF = 10;
 
 struct TreeNode
 {
@@ -14,18 +15,19 @@ struct TreeNode
     std::shared_ptr<TreeNode> left, right;
 
     void fit(
-        std::vector<std::vector<Node>> const &X, 
+        std::vector<std::vector<float>> const &X, 
         std::vector<float> const &R, 
         std::vector<float> &F1, 
-        size_t &nr_leaf)
+        size_t &nr_leaf);
 };
 
 class CART 
 {
+public:
     void fit(
         Problem const &problem, 
         std::vector<float> const &R, 
-        std::vector<float> F1)
+        std::vector<float> F1);
 
 private:
     std::shared_ptr<TreeNode> root;
@@ -33,12 +35,11 @@ private:
 
 class GBDT
 {
+public:
     GBDT(size_t const nr_tree) : trees(nr_tree), bias(0) {}
     void fit(Problem const &problem);
 
 private:
-    void calc_bias(Problem const &problem);
-
     std::vector<CART> trees;
     float bias;
 };

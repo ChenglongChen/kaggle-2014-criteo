@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "timer.h"
+#include "gbdt.h"
 
 namespace {
 
@@ -112,6 +113,9 @@ int main(int const argc, char const * const * const argv)
     Problem const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
+
+    GBDT gbdt(opt.nr_trees);
+    gbdt.fit(Tr);
 
     return EXIT_SUCCESS;
 }
