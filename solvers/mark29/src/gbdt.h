@@ -1,5 +1,6 @@
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #include "common.h"
 
@@ -14,7 +15,8 @@ struct TreeNode
     float threshold, gamma;
     bool is_leaf, saturated;
     std::shared_ptr<TreeNode> left, right;
-    static size_t max_depth;
+    static size_t max_depth, nr_thread;
+    static std::mutex mtx;
 
     void fit(
         std::vector<std::vector<float>> const &X, 

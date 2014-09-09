@@ -89,6 +89,8 @@ void fit_proxy(
 } //unnamed namespace
 
 size_t TreeNode::max_depth = 5;
+size_t TreeNode::nr_thread = 1;
+std::mutex TreeNode::mtx;
 
 void TreeNode::fit(
     std::vector<std::vector<float>> const &X, 
@@ -168,11 +170,28 @@ void TreeNode::fit(
 
     clean_vector(I);
 
-    if(depth == 0)
+    bool do_parallel;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        do_parallel = (nr_thread < 4);
+    }
+
+    if(do_parallel)
     {
         std::thread thread(fit_proxy, left.get(), std::ref(X), std::ref(R), std::ref(F1));
+
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            ++nr_thread;
+        }
+
         right->fit(X, R, F1);
         thread.join();
+
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            --nr_thread;
+        }
     }
     else
     {
