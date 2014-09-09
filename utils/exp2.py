@@ -7,6 +7,7 @@ subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 start = time.time()
 for size in ["100", "10", "1"]:
+    print('size = {size}'.format(size=size))
 
     for data in ['tr', 'va']:
         cmd = 'converters/parallelizer.py -n 24 converters/num.py {data}.r{size}.csv {data}.r{size}.svm.num'.format(size=size, data=data)
