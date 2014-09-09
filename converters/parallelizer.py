@@ -33,11 +33,11 @@ def parse_args():
     if len(sys.argv) == 1:
         sys.argv.append('-h')
 
-    parser = argparse.ArgumentParser(description='parallel convert')
-    parser.add_argument('-n', default=12, type=int, help='set number of threads')
-    parser.add_argument('cvt_path', type=str, help='set the path to your desired converter')
-    parser.add_argument('csv_path', type=str, help='set path to the csv file')
-    parser.add_argument('svm_paths', nargs='+', help='set path to the svm files')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', default=12, type=int)
+    parser.add_argument('cvt_path')
+    parser.add_argument('csv_path')
+    parser.add_argument('svm_path')
     args = vars(parser.parse_args())
 
     return args
@@ -49,8 +49,7 @@ def parallel_convert(args):
         cmd = '{0} {1}'.format(
             os.path.join('.', args['cvt_path']),
             args['csv_path']+'.__tmp__.{0}'.format(i))
-        for svm_path in args['svm_paths']:
-            cmd += ' {0}'.format(svm_path+'.__tmp__.{0}'.format(i))
+        cmd += ' {0}'.format(args['svm_path']+'.__tmp__.{0}'.format(i))
         worker = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         workers.append(worker)
     for worker in workers:
@@ -58,20 +57,18 @@ def parallel_convert(args):
 
 def cat_svm_files(args):
     
-    for svm_path in args['svm_paths']:
-        if os.path.exists(svm_path):
-            os.remove(svm_path)
-        for i in range(args['n']):
-            cmd = 'cat {svm}.__tmp__.{idx} >> {svm}'.format(svm=svm_path, idx=i)
-            p = subprocess.Popen(cmd, shell=True)
-            p.communicate()
+    if os.path.exists(args['svm_path']):
+        os.remove(args['svm_path'])
+    for i in range(args['n']):
+        cmd = 'cat {svm}.__tmp__.{idx} >> {svm}'.format(svm=args['svm_path'], idx=i)
+        p = subprocess.Popen(cmd, shell=True)
+        p.communicate()
 
 def del_files(args):
     
     for i in range(args['n']):
         os.remove('{0}.__tmp__.{1}'.format(args['csv_path'], i))
-        for svm_path in args['svm_paths']:
-            os.remove('{0}.__tmp__.{1}'.format(svm_path, i))
+        os.remove('{0}.__tmp__.{1}'.format(args['svm_path'], i))
 
 def main():
     
