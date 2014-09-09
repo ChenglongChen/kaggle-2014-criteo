@@ -166,7 +166,7 @@ inline float wTx1(SpMat const &spmat, Model &model, size_t const i,
 
         if(do_update)
         {
-            float const g = lambda*w.v + kappa*x.v;
+            float const g = kappa*x.v;
 
             w.sg2 += g*g;
 
