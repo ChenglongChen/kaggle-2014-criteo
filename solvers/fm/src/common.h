@@ -21,25 +21,24 @@ struct Node
 
 struct SpMat
 {
-    SpMat() : nr_feature(0), nr_instance(0) {}
+    SpMat() : nr_feature(0), nr_instance(0), nr_field(0) {}
     std::vector<size_t> P;
     std::vector<Node> X;
     std::vector<float> Y;
-    size_t nr_feature, nr_instance;
+    size_t nr_feature, nr_instance, nr_field;
 };
 
 SpMat read_data(std::string const path, size_t const reserved_size=0);
 
-size_t const kNR_FIELD = 39;
 size_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const nr_feature, size_t const nr_factor) 
-        : W(nr_feature*kNR_FIELD*nr_factor*kW_NODE_SIZE, 0), 
-          nr_feature(nr_feature), nr_factor(nr_factor) {}
+    Model(size_t const nr_feature, size_t const nr_factor, size_t const nr_field) 
+        : W(nr_feature*nr_field*nr_factor*kW_NODE_SIZE, 0), 
+          nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
     std::vector<float> W;
-    const size_t nr_feature, nr_factor;
+    const size_t nr_feature, nr_factor, nr_field;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -62,6 +61,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
+    size_t const nr_field = model.nr_field;
     __m128 const XMMkappa = _mm_load1_ps(&kappa);
     __m128 const XMMeta = _mm_load1_ps(&eta);
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
@@ -86,9 +86,9 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             __m128 const XMMkappa_v1_v2 = _mm_mul_ps(XMMkappa_v1, XMMv2);
 
             float * const w1 = 
-                model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                model.W.data()+j1*nr_field*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
             float * const w2 = 
-                model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                model.W.data()+j2*nr_field*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
 
             if(do_update)
             {
@@ -167,9 +167,9 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             float const v2 = spmat.X[idx2].v;
 
             float * w1 = 
-                model.W.data()+j1*kNR_FIELD*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                model.W.data()+j1*nr_field*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
             float * w2 = 
-                model.W.data()+j2*kNR_FIELD*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                model.W.data()+j2*nr_field*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
 
             if(do_update)
             {
