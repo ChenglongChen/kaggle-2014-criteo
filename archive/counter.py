@@ -23,12 +23,12 @@ for i, row in enumerate(csv.DictReader(open(args['csv_path'])), start=1):
         else:
             counts[field+','+value][1] += 1
         counts[field+','+value][2] += 1
-    if i % 100000 == 0:
-        sys.stderr.write('{0}k\n'.format(int(i/1000)))
+    if i % 1000000 == 0:
+        sys.stderr.write('{0}m\n'.format(int(i/1000000)))
 
 print('Field,Value,Neg,Pos,Total,Ratio')
 for key, (neg, pos, total) in sorted(counts.items(), key=lambda x: x[1][2]):
-    if total == 1:
+    if total < 10:
         continue
     ratio = round(float(pos)/total, 5)
     print(key+','+str(neg)+','+str(pos)+','+str(total)+','+str(ratio))
