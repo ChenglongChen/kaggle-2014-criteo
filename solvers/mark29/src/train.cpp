@@ -96,8 +96,9 @@ void write(
 
         std::vector<size_t> indices = gbdt.get_indices(x.data());
 
+        fprintf(f, "%d", static_cast<int>(problem.Y[i]));
         for(size_t t = 0; t < indices.size(); ++t)
-            fprintf(f, "%ld:%ld ", t+1, indices[t]);
+            fprintf(f, " %ld:%ld", t+1, indices[t]);
         fprintf(f, "\n");
     }
 
