@@ -16,12 +16,11 @@ namespace {
 struct Option
 {
     Option() 
-        : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), reserved_size(0), 
-          save_model(true) {}
+        : eta(0.1f), lambda(0), iter(15), nr_threads(1), 
+          reserved_size(0), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    size_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
+    size_t iter, nr_threads, reserved_size;
     bool save_model;
 };
 
@@ -32,7 +31,6 @@ std::string train_help()
 "\n"
 "options:\n"
 "-l <lambda>: you know\n"
-"-k <dimension>: you know\n"
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
@@ -58,13 +56,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.iter = std::stoi(args[++i]);
-        }
-        else if(args[i].compare("-k") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -131,27 +122,6 @@ Option parse_option(std::vector<std::string> const &args)
     }
 
     return opt;
-}
-
-void init_model(Model &model, size_t const nr_factor_real)
-{
-    size_t const nr_factor = model.nr_factor;
-    float const coef = 
-        static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
-
-    float * w = model.W.data();
-    for(size_t j = 0; j < model.nr_feature; ++j)
-    {
-        for(size_t f = 0; f < model.nr_field; ++f)
-        {
-            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
-                *w = coef*static_cast<float>(drand48());
-            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
-                *w = 0;
-            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
-                *w = 1;
-        }
-    }
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
@@ -222,9 +192,7 @@ int main(int const argc, char const * const * const argv)
 
     printf("initializing model...");
     fflush(stdout);
-    Model model(Tr.nr_feature, opt.nr_factor, Tr.nr_field);
-
-    init_model(model, opt.nr_factor_real);
+    Model model(Tr.nr_feature);
     printf("done\n");
     fflush(stdout);
 
