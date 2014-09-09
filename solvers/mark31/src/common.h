@@ -32,12 +32,20 @@ SpMat read_data(std::string const path, size_t const reserved_size=0);
 
 size_t const kW_NODE_SIZE = 2;
 
+struct WNode
+{
+    WNode() : v(0), sg2(1) {}
+    float v, sg2;
+};
+
 struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor, size_t const nr_field) 
         : W(nr_feature*nr_field*nr_factor*kW_NODE_SIZE, 0), 
-          nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
+          W1(nr_feature), nr_feature(nr_feature), nr_factor(nr_factor), 
+          nr_field(nr_field) {}
     std::vector<float> W;
+    std::vector<WNode> W1;
     const size_t nr_feature, nr_factor, nr_field;
 };
 
@@ -56,7 +64,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+inline float wTx0(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -146,6 +154,32 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     return t;
 }
 
+inline float wTx1(SpMat const &spmat, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
+{
+    float t = 0;
+    for(size_t p = spmat.P[i]; p < spmat.P[i+1]; ++p)
+    {
+        Node const &x = spmat.X[p];
+        WNode &w = model.W1[x.j];
+
+        if(do_update)
+        {
+            float const g = lambda*w.v + kappa*x.v;
+
+            w.sg2 += g*g;
+
+            w.v -= eta*qrsqrt(w.sg2)*g;
+        }
+        else
+        {
+            t += w.v*x.v;
+        }
+    }
+
+    return t;
+}
 /*
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
@@ -198,6 +232,15 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     return t;
 }
 */
+
+inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
+{
+    return wTx0(spmat, model, i, kappa, eta, lambda, do_update) +
+           wTx1(spmat, model, i, kappa, eta, lambda, do_update);
+}
+
 
 float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));

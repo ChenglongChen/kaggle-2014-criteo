@@ -19,7 +19,7 @@ struct Option
         : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
           nr_factor_real(4), nr_threads(1), reserved_size(0), 
           save_model(true) {}
-    std::string Tr_path, model_path, Va_path;
+    std::string Tr_path, Tr1_path, model_path, Va_path, Va1_path;
     float eta, lambda;
     size_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
     bool save_model;
@@ -28,7 +28,7 @@ struct Option
 std::string train_help()
 {
     return std::string(
-"usage: sgd-poly2-train [<options>] <train_path>\n"
+"usage: sgd-poly2-train [<options>] <train_path> <train1_path>\n"
 "\n"
 "options:\n"
 "-l <lambda>: you know\n"
@@ -37,6 +37,7 @@ std::string train_help()
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
 "-v <path>: you know\n"
+"-v1 <path>: you know\n"
 "-u <size>: you know\n"
 "-q: you know\n");
 }
@@ -84,6 +85,12 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             opt.Va_path = args[++i];
         }
+        else if(args[i].compare("-v1") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.Va1_path = args[++i];
+        }
         else if(args[i].compare("-s") == 0)
         {
             if(i == argc-1)
@@ -111,6 +118,7 @@ Option parse_option(std::vector<std::string> const &args)
         throw std::invalid_argument("training data not specified");
 
     opt.Tr_path = args[i++];
+    opt.Tr1_path = args[i++];
 
     if(i < argc)
     {
@@ -154,7 +162,13 @@ void init_model(Model &model, size_t const nr_factor_real)
     }
 }
 
-void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
+void train(
+    SpMat const &Tr, 
+    SpMat const &Tr1, 
+    SpMat const &Va, 
+    SpMat const &Va1, 
+    Model &model, 
+    Option const &opt)
 {
     std::vector<size_t> order(Tr.Y.size());
     for(size_t i = 0; i < Tr.Y.size(); ++i)
@@ -214,15 +228,17 @@ int main(int const argc, char const * const * const argv)
     printf("reading data...");
     fflush(stdout);
     SpMat const Va = read_data(opt.Va_path);
+    SpMat const Va1 = read_data(opt.Va1_path);
     printf("Va...");
     fflush(stdout);
     SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
+    SpMat const Tr1 = read_data(opt.Tr1_path, opt.reserved_size);
     printf("done\n");
     fflush(stdout);
 
     printf("initializing model...");
     fflush(stdout);
-    Model model(Tr.nr_feature, opt.nr_factor, Tr.nr_field);
+    Model model(std::max(Tr.nr_feature, Tr1.nr_feature), opt.nr_factor, Tr.nr_field);
 
     init_model(model, opt.nr_factor_real);
     printf("done\n");
@@ -230,7 +246,7 @@ int main(int const argc, char const * const * const argv)
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
-    train(Tr, Va, model, opt);
+    train(Tr, Tr1, Va, Va1, model, opt);
 
     if(opt.save_model)
         save_model(model, opt.model_path);
