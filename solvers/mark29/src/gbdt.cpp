@@ -168,11 +168,19 @@ void TreeNode::fit(
 
     clean_vector(I);
 
-    std::vector<std::thread> threads;
-    threads.emplace_back(fit_proxy, left.get(), std::ref(X), std::ref(R), std::ref(F1));
-    threads.emplace_back(fit_proxy, right.get(), std::ref(X), std::ref(R), std::ref(F1));
-    for(auto &thread : threads)
-        thread.join();
+    if(depth == 0)
+    {
+        std::vector<std::thread> threads;
+        threads.emplace_back(fit_proxy, left.get(), std::ref(X), std::ref(R), std::ref(F1));
+        threads.emplace_back(fit_proxy, right.get(), std::ref(X), std::ref(R), std::ref(F1));
+        for(auto &thread : threads)
+            thread.join();
+    }
+    else
+    {
+        left->fit(X, R, F1);
+        right->fit(X, R, F1);
+    }
 }
 
 std::pair<size_t, float> TreeNode::predict(float const * const x) const
