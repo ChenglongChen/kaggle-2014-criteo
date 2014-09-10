@@ -220,7 +220,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
             float t1 = 0;
             for(size_t d = 0; d < nr_factor; ++d)
-                t1 += w1[d]*w2[d]*x1.v*x2.v;
+                t1 += w1[d]*w2[d];
             float const e = wp2 - t1;
 
             if(do_update)
@@ -229,8 +229,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
                 float * const wg2 = w2 + nr_factor; 
                 for(size_t d = 0; d < nr_factor; ++d)
                 {
-                    float const g1 = lambda*w1[d] - e*x1.v*x2.v*w2[d];
-                    float const g2 = lambda*w2[d] - e*x1.v*x2.v*w1[d];
+                    float const g1 = lambda*w1[d] - e*w2[d];
+                    float const g2 = lambda*w2[d] - e*w1[d];
 
                     wg1[d] += g1*g1;
                     wg2[d] += g2*g2;
@@ -241,7 +241,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             }
             else
             {
-                t += t1;
+                t += t1*x1.v*x2.v;
             }
         }
     }
