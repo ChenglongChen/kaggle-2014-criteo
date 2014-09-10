@@ -152,6 +152,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
+    size_t const nr_field = model.nr_field;
 
     float t = 0;
     for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
