@@ -205,20 +205,16 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
     float t = 0;
     for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
     {
-        size_t const j1 = spmat.X[idx1].j;
-        size_t const f1 = spmat.X[idx1].f;
-        float const v1 = spmat.X[idx1].v;
+        Node const &x1 = spmat.X[idx1];
 
         for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
         {
-            size_t const j2 = spmat.X[idx2].j;
-            size_t const f2 = spmat.X[idx2].f;
-            float const v2 = spmat.X[idx2].v;
+            Node const &x2 = spmat.X[idx2];
 
             float * w1 = 
-                model.W.data()+j1*nr_field*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
+                model.W.data()+x1.j*nr_field*nr_factor*kW_NODE_SIZE+x2.f*nr_factor*kW_NODE_SIZE;
             float * w2 = 
-                model.W.data()+j2*nr_field*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+                model.W.data()+x2.j*nr_field*nr_factor*kW_NODE_SIZE+x1.f*nr_factor*kW_NODE_SIZE;
 
             if(do_update)
             {
@@ -226,8 +222,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
                 float * wg2 = w2 + nr_factor; 
                 for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
                 {
-                    float const g1 = lambda*(*w1) + kappa*v1*v2*(*w2);
-                    float const g2 = lambda*(*w2) + kappa*v1*v2*(*w1);
+                    float const g1 = lambda*(*w1) + kappa*x1.v*x2.v*(*w2);
+                    float const g2 = lambda*(*w2) + kappa*x1.v*x2.v*(*w1);
 
                     *wg1 += g1*g1;
                     *wg2 += g2*g2;
@@ -239,7 +235,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             else
             {
                 for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
-                    t += (*w1)*(*w2)*v1*v2;
+                    t += (*w1)*(*w2)*x1.v*x2.v;
             }
         }
     }
