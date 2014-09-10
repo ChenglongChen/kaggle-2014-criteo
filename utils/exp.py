@@ -22,11 +22,11 @@ for size in ["100", "10", "1"]:
     log_file = open('{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size), 'w')
 
     for data_csv, data_fm in [(tr_csv, tr_fm), (va_csv, va_fm)]:
-        cmd = 'converters/parallelizer.py -n 24 converters/defender.py {data_csv} {data_fm}'\
+        cmd = 'converters/parallelizer.py -n 96 converters/defender.py {data_csv} {data_fm}'\
             .format(data_csv=data_csv, data_fm=data_fm)
         subprocess.call(cmd, shell=True)
 
-    cmd = './fm-train -q -s 24 -t 15 -v {va_fm} {tr_fm} {model}'.format(va_fm=va_fm, tr_fm=tr_fm, model=model) 
+    cmd = './fm-train -q -s 192 -t 15 -v {va_fm} {tr_fm} {model}'.format(va_fm=va_fm, tr_fm=tr_fm, model=model) 
     #cmd += ' && ./fm-predict {va_fm} {model} {out}'.format(va_fm=va_fm, model=model, out=out)
     #cmd += ' && ./utils/calc_log_loss.py {va_fm} {out}'.format(va_fm=va_fm, out=out)
     worker = subprocess.Popen(cmd, shell=True, stdout=log_file) 
