@@ -56,6 +56,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
+/*
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -145,13 +146,14 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
     return t;
 }
+*/
 
-/*
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
+    size_t const nr_field = model.nr_field;
 
     float t = 0;
     for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
@@ -197,7 +199,6 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
     return t;
 }
-*/
 
 float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
