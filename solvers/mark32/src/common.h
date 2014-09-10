@@ -196,7 +196,7 @@ inline float wTxp2(SpMat const &spmat, Model &model, size_t const i,
 }
 
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
-    float const kappa=0, float const eta=0, float const lambda=0, 
+    float const kappa=0, float eta=0, float const lambda=0, 
     bool const do_update=false)
 {
     size_t const nr_factor = model.nr_factor;
@@ -211,31 +211,37 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
         {
             Node const &x2 = spmat.X[idx2];
 
-            float * w1 = 
+            float * const w1 = 
                 model.W.data()+x1.j*nr_field*nr_factor*kW_NODE_SIZE+x2.f*nr_factor*kW_NODE_SIZE;
-            float * w2 = 
+            float * const w2 = 
                 model.W.data()+x2.j*nr_field*nr_factor*kW_NODE_SIZE+x1.f*nr_factor*kW_NODE_SIZE;
+
+            float const wp2 = model.WP2[calc_w_idx(x1.j, x2.j)].v;
+
+            float t1 = 0;
+            for(size_t d = 0; d < nr_factor; ++d)
+                t1 += w1[d]*w2[d]*x1.v*x2.v;
+            float const e = wp2 - t1;
 
             if(do_update)
             {
-                float * wg1 = w1 + nr_factor; 
-                float * wg2 = w2 + nr_factor; 
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
+                float * const wg1 = w1 + nr_factor; 
+                float * const wg2 = w2 + nr_factor; 
+                for(size_t d = 0; d < nr_factor; ++d)
                 {
-                    float const g1 = lambda*(*w1) + kappa*x1.v*x2.v*(*w2);
-                    float const g2 = lambda*(*w2) + kappa*x1.v*x2.v*(*w1);
+                    float const g1 = lambda*w1[d] - e*x1.v*x2.v*w2[d];
+                    float const g2 = lambda*w2[d] - e*x1.v*x2.v*w1[d];
 
-                    *wg1 += g1*g1;
-                    *wg2 += g2*g2;
+                    wg1[d] += g1*g1;
+                    wg2[d] += g2*g2;
 
-                    *w1 -= eta*qrsqrt(*wg1)*g1;
-                    *w2 -= eta*qrsqrt(*wg2)*g2;
+                    w1[d] -= eta*qrsqrt(wg1[d])*g1;
+                    w2[d] -= eta*qrsqrt(wg2[d])*g2;
                 }
             }
             else
             {
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
-                    t += (*w1)*(*w2)*x1.v*x2.v;
+                t += t1;
             }
         }
     }
