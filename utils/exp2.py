@@ -24,7 +24,7 @@ for size in ["100", "10", "1"]:
         cmd = 'converters/parallelizer.py -n 24 converters/combine.py {data}.r{size}.fm {data}.r{size}.svm.num.gbdt {data}.r{size}.fm2'.format(size=size, data=data)
         subprocess.call(cmd, shell=True)
 
-    cmd = './fm-train -q -s 24 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
+    cmd = './fm-train -u 3 -q -s 24 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
     subprocess.call(cmd, shell=True) 
 
 print('time used = {0}'.format(time.time()-start))
