@@ -17,6 +17,7 @@ struct TreeNode
     std::shared_ptr<TreeNode> left, right;
     static size_t max_depth, nr_thread;
     static std::mutex mtx;
+    static bool verbose;
 
     void fit(
         std::vector<std::vector<float>> const &X, 

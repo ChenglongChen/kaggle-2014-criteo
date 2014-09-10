@@ -91,6 +91,7 @@ void fit_proxy(
 size_t TreeNode::max_depth = 5;
 size_t TreeNode::nr_thread = 1;
 std::mutex TreeNode::mtx;
+bool TreeNode::verbose = false;
 
 void TreeNode::fit(
     std::vector<std::vector<float>> const &X, 
@@ -169,6 +170,13 @@ void TreeNode::fit(
     }
 
     clean_vector(I);
+
+    if(verbose)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        printf("depth = %-10ld   feature = %-10ld   threshold = %-10.0f   left = %-10ld   right = %-10ld\n",
+            depth, feature, threshold, left->I.size(), right->I.size());
+    }
 
     bool do_parallel;
     {
