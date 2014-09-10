@@ -31,13 +31,22 @@ struct SpMat
 SpMat read_data(std::string const path, size_t const reserved_size=0);
 
 size_t const kW_NODE_SIZE = 2;
+size_t const kNR_BINS = 1e+7;
+
+struct WNode
+{
+    WNode() : v(0), sg2(1) {}
+    float v, sg2;
+};
 
 struct Model
 {
     Model(size_t const nr_feature, size_t const nr_factor, size_t const nr_field) 
         : W(nr_feature*nr_field*nr_factor*kW_NODE_SIZE, 0), 
+          WP2(kNR_BINS),
           nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
     std::vector<float> W;
+    std::vector<WNode> WP2;
     const size_t nr_feature, nr_factor, nr_field;
 };
 
@@ -148,6 +157,44 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 }
 */
 
+inline size_t calc_w_idx(size_t const a, size_t const b)
+{
+    return ((a+b)*(a+b+1)/2+b)%kNR_BINS;
+}
+
+inline float wTxp2(SpMat const &spmat, Model &model, size_t const i, 
+    float const kappa=0, float const eta=0, float const lambda=0, 
+    bool const do_update=false)
+{
+    float t = 0;
+    for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+    {
+        Node const &x1 = spmat.X[idx1];
+
+        for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+        {
+            Node const &x2 = spmat.X[idx2];
+
+            WNode &w = model.WP2[calc_w_idx(x1.j, x2.j)];
+
+            if(do_update)
+            {
+                float const g = kappa*x1.v*x2.v;
+
+                w.sg2 += g*g;
+
+                w.v -= eta*qrsqrt(w.sg2)*g;
+            }
+            else
+            {
+                t += w.v*x1.v*x2.v;
+            }
+        }
+    }
+
+    return t;
+}
+
 inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -201,5 +248,8 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 }
 
 float predict(SpMat const &spmat, Model &model, 
+    std::string const &output_path = std::string(""));
+
+float predictp2(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_
