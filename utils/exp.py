@@ -22,7 +22,7 @@ for size in ["100", "10", "1"]:
     log_file = open('{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size), 'w')
 
     for data_csv, data_fm in [(tr_csv, tr_fm), (va_csv, va_fm)]:
-        cmd = 'converters/parallelizer.py -n 96 converters/defender.py {data_csv} {data_fm}'\
+        cmd = 'converters/parallelizer.py -n 64 converters/defender.py {data_csv} {data_fm}'\
             .format(data_csv=data_csv, data_fm=data_fm)
         subprocess.call(cmd, shell=True)
 
