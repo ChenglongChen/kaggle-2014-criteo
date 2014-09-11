@@ -22,7 +22,7 @@ for size in ["100", "10", "1"]:
     cmd = 'converters/parallelizer.py -n 24 converters/defender.py va.r{size}.csv va.r{size}.fm'.format(size=size)
     worker_va = subprocess.Popen(cmd, shell=True) 
 
-    cmd = './mark29 -s 12 -v va.r{size}.svm.num tr.r{size}.svm.num'.format(size=size) 
+    cmd = './mark29 -t 30 -s 12 -v va.r{size}.svm.num tr.r{size}.svm.num'.format(size=size) 
     subprocess.call(cmd, shell=True)
 
     worker_tr.communicate()
@@ -36,7 +36,7 @@ for size in ["100", "10", "1"]:
     worker_tr.communicate()
     worker_va.communicate()
 
-    cmd = './fm-train -u 3 -q -s 192 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
+    cmd = './fm-train -k 8 -u 3 -q -s 192 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
     subprocess.call(cmd, shell=True) 
 
 print('time used = {0}'.format(time.time()-start))
