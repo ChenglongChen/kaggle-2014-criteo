@@ -181,7 +181,7 @@ void TreeNode::fit(
     bool do_parallel;
     {
         std::lock_guard<std::mutex> lock(mtx);
-        do_parallel = (nr_thread < 4);
+        do_parallel = (nr_thread < 2);
     }
 
     if(do_parallel)

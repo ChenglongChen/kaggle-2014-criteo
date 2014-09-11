@@ -9,20 +9,32 @@ start = time.time()
 for size in ["100", "10", "1"]:
     print('size = {size}'.format(size=size))
 
-    for data in ['tr', 'va']:
-        cmd = 'converters/parallelizer.py -n 48 converters/num.py {data}.r{size}.csv {data}.r{size}.svm.num'.format(size=size, data=data)
-        subprocess.call(cmd, shell=True)
+    cmd = 'converters/parallelizer.py -n 48 converters/num.py tr.r{size}.csv tr.r{size}.svm.num'.format(size=size)
+    worker_tr = subprocess.Popen(cmd, shell=True) 
+    cmd = 'converters/parallelizer.py -n 24 converters/num.py va.r{size}.csv va.r{size}.svm.num'.format(size=size)
+    worker_va = subprocess.Popen(cmd, shell=True) 
 
-    for data in ['tr', 'va']:
-        cmd = 'converters/parallelizer.py -n 48 converters/defender.py {data}.r{size}.csv {data}.r{size}.fm'.format(size=size, data=data)
-        subprocess.call(cmd, shell=True)
+    worker_tr.communicate()
+    worker_va.communicate()
 
-    cmd = './mark29 -s 96 -v va.r{size}.svm.num tr.r{size}.svm.num'.format(size=size) 
+    cmd = 'converters/parallelizer.py -n 48 converters/defender.py tr.r{size}.csv tr.r{size}.fm'.format(size=size)
+    worker_tr = subprocess.Popen(cmd, shell=True) 
+    cmd = 'converters/parallelizer.py -n 24 converters/defender.py va.r{size}.csv va.r{size}.fm'.format(size=size)
+    worker_va = subprocess.Popen(cmd, shell=True) 
+
+    cmd = './mark29 -s 12 -v va.r{size}.svm.num tr.r{size}.svm.num'.format(size=size) 
     subprocess.call(cmd, shell=True)
 
-    for data in ['tr', 'va']:
-        cmd = 'converters/parallelizer.py -n 48 converters/combine.py {data}.r{size}.fm {data}.r{size}.svm.num.gbdt {data}.r{size}.fm2'.format(size=size, data=data)
-        subprocess.call(cmd, shell=True)
+    worker_tr.communicate()
+    worker_va.communicate()
+
+    cmd = 'converters/parallelizer.py -n 96 converters/combine.py tr.r{size}.fm tr.r{size}.svm.num.gbdt tr.r{size}.fm2'.format(size=size)
+    worker_tr = subprocess.Popen(cmd, shell=True) 
+    cmd = 'converters/parallelizer.py -n 24 converters/combine.py va.r{size}.fm va.r{size}.svm.num.gbdt va.r{size}.fm2'.format(size=size)
+    worker_va = subprocess.Popen(cmd, shell=True) 
+
+    worker_tr.communicate()
+    worker_va.communicate()
 
     cmd = './fm-train -u 3 -q -s 192 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
     subprocess.call(cmd, shell=True) 
