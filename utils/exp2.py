@@ -36,7 +36,7 @@ for size in ["100", "10", "1"]:
     worker_tr.communicate()
     worker_va.communicate()
 
-    cmd = './fm-train -k 8 -u 3 -q -s 192 -t 20 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
+    cmd = './fm-train -k 8 -u 3 -q -s 192 -t 40 -v va.r{size}.fm2 tr.r{size}.fm2'.format(size=size) 
     subprocess.call(cmd, shell=True) 
 
 print('time used = {0}'.format(time.time()-start))
