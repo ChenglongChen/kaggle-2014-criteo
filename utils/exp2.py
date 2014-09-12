@@ -28,7 +28,7 @@ for size in ["100", "10", "1"]:
     worker_tr.communicate()
     worker_va.communicate()
 
-    cmd = 'converters/parallelizer.py -n 64 converters/combine.py tr.r{size}.fm tr.r{size}.svm.num.gbdt tr.r{size}.fm2'.format(size=size)
+    cmd = 'converters/parallelizer.py -n 48 converters/combine.py tr.r{size}.fm tr.r{size}.svm.num.gbdt tr.r{size}.fm2'.format(size=size)
     worker_tr = subprocess.Popen(cmd, shell=True) 
     cmd = 'converters/parallelizer.py -n 24 converters/combine.py va.r{size}.fm va.r{size}.svm.num.gbdt va.r{size}.fm2'.format(size=size)
     worker_va = subprocess.Popen(cmd, shell=True) 
