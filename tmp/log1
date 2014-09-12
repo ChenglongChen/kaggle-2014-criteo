@@ -2,11 +2,16 @@ baseline 30 trees, k = 8, lambda = 0.00001
 
 
 [lambda]
-lambda = 0.000009    
+lambda = 0.000009   0.44479
 lambda = 0.000011   0.44480
 lambda = 0.000012   0.44480
 
 [k]
 big k has no use..
 
-[depth]
+[depth] t50k8
+3   0.45569
+4   0.45548
+5   0.45563
+6   0.45558
+7   0.45551
