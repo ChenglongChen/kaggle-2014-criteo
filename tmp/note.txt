@@ -7,11 +7,15 @@ lambda = 0.000011   0.44480
 lambda = 0.000012   0.44480
 
 [k]
-big k has no use..
+for r100 and r10, k = 4 is enough; for r1, k = 8 is 0.00001 better than k = 4
 
-[depth] t50k8
+[depth] t50,k8,r10
 3   0.45569
 4   0.45548
 5   0.45563
 6   0.45558
 7   0.45551
+
+but the results seems different on r1..
+4   0.44492
+5   0.44480
