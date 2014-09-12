@@ -94,12 +94,9 @@ ln -sf solvers/fm/fm-predict .
 #ln -sf solvers/fm-mark2/fm-mark2-predict .
 make -C solvers/mark29/
 ln -sf solvers/mark29/mark29 .
-make -C solvers/mark30
-ln -sf solvers/mark30/mark30-train .
-ln -sf solvers/mark30/mark30-predict .
-make -C solvers/mark32
-ln -sf solvers/mark32/mark32-train .
-ln -sf solvers/mark32/mark32-predict .
+make -C solvers/mark33/
+ln -sf solvers/mark33/mark33-train .
+ln -sf solvers/mark33/mark33-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
