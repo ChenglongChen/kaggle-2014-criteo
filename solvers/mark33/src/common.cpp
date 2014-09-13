@@ -11,41 +11,70 @@ inline float logistic_func(float const t)
     return 1/(1+static_cast<float>(exp(-t)));
 }
 
+uint32_t get_nr_line(std::string const &path)
+{
+    int const kMaxLineSize = 1000000;
+    FILE *f = open_c_file(path.c_str(), "r");
+    char line[kMaxLineSize];
+
+    uint32_t nr_line = 0;
+    while(fgets(line, kMaxLineSize, f) != nullptr)
+        ++nr_line;
+
+    fclose(f);
+
+    return nr_line;
+}
+
+uint32_t get_nr_field(std::string const &path)
+{
+    int const kMaxLineSize = 1000000;
+    FILE *f = open_c_file(path.c_str(), "r");
+    char line[kMaxLineSize];
+
+    fgets(line, kMaxLineSize, f);
+    strtok(line, " \t");
+
+    uint32_t nr_field = 0;
+    while(1)
+    {
+        char *idx_char = strtok(nullptr," \t");
+        if(idx_char == nullptr || *idx_char == '\n')
+            break;
+        ++nr_field;
+    }
+
+    fclose(f);
+
+    return nr_field;
+}
+
 } //unamed namespace
 
 SpMat read_data(std::string const path, uint32_t const reserved_size)
 {
-    SpMat spmat;
     if(path.empty())
-        return spmat;
+        return SpMat(0, 0);
+    SpMat spmat(get_nr_line(path), get_nr_field(path));
 
     int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
-    spmat.P.push_back(0);
-    spmat.X.reserve(reserved_size);
-    while(fgets(line, kMaxLineSize, f) != nullptr)
+    for(uint32_t i = 0, p = 0; fgets(line, kMaxLineSize, f) != nullptr;
+        ++i, ++p)
     {
-        char *p = strtok(line, " \t");
-        float const y = (atoi(p)>0)? 1.0f : -1.0f;
-        while(1)
+        char *y_char = strtok(line, " \t");
+        float const y = (atoi(y_char)>0)? 1.0f : -1.0f;
+        spmat.Y[i] = y;
+        for(; ; ++p)
         {
-            char *field_char = strtok(nullptr,":");
-            char *idx_char = strtok(nullptr,":");
-            char *val_char = strtok(nullptr," \t");
-            if(val_char == nullptr || *val_char == '\n')
+            char *idx_char = strtok(nullptr," \t");
+            if(idx_char == nullptr || *idx_char == '\n')
                 break;
-            uint32_t field = static_cast<uint32_t>(atoi(field_char));
             uint32_t idx = static_cast<uint32_t>(atoi(idx_char));
-            float const val = static_cast<float>(atof(val_char));
-            spmat.nr_feature = std::max(spmat.nr_feature, idx);
-            spmat.nr_field = std::max(spmat.nr_field, field);
-            spmat.X.emplace_back(field-1, idx-1, val);
+            spmat.J[p] = idx;
         }
-        spmat.P.push_back(static_cast<uint32_t>(spmat.X.size()));
-        spmat.Y.push_back(y);
-        ++spmat.nr_instance;
     }
 
     fclose(f);
@@ -109,7 +138,7 @@ float predict(SpMat const &spmat, Model &model,
     {
         float const y = spmat.Y[i];
 
-        float const t = wTx(spmat, model, i);
+        float const t = wTx(&spmat.J[i], model, i);
         
         float const prob = logistic_func(t);
 
