@@ -29,7 +29,7 @@ uint32_t const kW_NODE_SIZE = 2;
 struct Model
 {
     Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
-        : W(nr_feature*nr_field*nr_factor*kW_NODE_SIZE, 0), 
+        : W(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
           nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
     std::vector<float> W;
     const uint32_t nr_feature, nr_factor, nr_field;
