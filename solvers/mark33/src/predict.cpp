@@ -31,7 +31,7 @@ std::string train_help()
 
 Option parse_option(std::vector<std::string> const &args)
 {
-    size_t const argc = args.size();
+    uint32_t const argc = static_cast<uint32_t>(args.size());
 
     if(argc != 3)
         throw std::invalid_argument(train_help());

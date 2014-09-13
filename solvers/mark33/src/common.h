@@ -14,31 +14,31 @@
 
 struct Node
 {
-    Node(size_t const f, size_t const j, float const v) : f(f), j(j), v(v) {}
-    size_t f, j;
+    Node(uint32_t const f, uint32_t const j, float const v) : f(f), j(j), v(v) {}
+    uint32_t f, j;
     float v;
 };
 
 struct SpMat
 {
     SpMat() : nr_feature(0), nr_instance(0), nr_field(0) {}
-    std::vector<size_t> P;
+    std::vector<uint32_t> P;
     std::vector<Node> X;
     std::vector<float> Y;
-    size_t nr_feature, nr_instance, nr_field;
+    uint32_t nr_feature, nr_instance, nr_field;
 };
 
-SpMat read_data(std::string const path, size_t const reserved_size=0);
+SpMat read_data(std::string const path, uint32_t const reserved_size=0);
 
-size_t const kW_NODE_SIZE = 2;
+uint32_t const kW_NODE_SIZE = 2;
 
 struct Model
 {
-    Model(size_t const nr_feature, size_t const nr_factor, size_t const nr_field) 
+    Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
         : W(nr_feature*nr_field*nr_factor*kW_NODE_SIZE, 0), 
           nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
     std::vector<float> W;
-    const size_t nr_feature, nr_factor, nr_field;
+    const uint32_t nr_feature, nr_factor, nr_field;
 };
 
 void save_model(Model const &model, std::string const &path);
@@ -56,32 +56,32 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
-    size_t const nr_factor = model.nr_factor;
-    size_t const nr_field = model.nr_field;
+    uint32_t const nr_factor = model.nr_factor;
+    uint32_t const nr_field = model.nr_field;
     __m128 const XMMkappa = _mm_load1_ps(&kappa);
     __m128 const XMMeta = _mm_load1_ps(&eta);
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
-    for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+    for(uint32_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
     {
-        size_t const j1 = spmat.X[idx1].j;
+        uint32_t const j1 = spmat.X[idx1].j;
         if(j1 >= model.nr_feature)
             continue;
-        size_t const f1 = spmat.X[idx1].f;
+        uint32_t const f1 = spmat.X[idx1].f;
         __m128 const XMMv1 = _mm_load1_ps(&spmat.X[idx1].v);
         __m128 const XMMkappa_v1 = _mm_mul_ps(XMMkappa, XMMv1);
 
-        for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+        for(uint32_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
         {
-            size_t const j2 = spmat.X[idx2].j;
+            uint32_t const j2 = spmat.X[idx2].j;
             if(j2 >= model.nr_feature)
                 continue;
-            size_t const f2 = spmat.X[idx2].f;
+            uint32_t const f2 = spmat.X[idx2].f;
             __m128 const XMMv2 = _mm_load1_ps(&spmat.X[idx2].v);
             __m128 const XMMkappa_v1_v2 = _mm_mul_ps(XMMkappa_v1, XMMv2);
 
@@ -92,7 +92,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 
             if(do_update)
             {
-                for(size_t d = 0; d < nr_factor; d += 4)
+                for(uint32_t d = 0; d < nr_factor; d += 4)
                 {
                     __m128 XMMw1 = _mm_load_ps(w1+d);
                     __m128 XMMw2 = _mm_load_ps(w2+d);
@@ -126,7 +126,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             }
             else
             {
-                for(size_t d = 0; d < nr_factor; d += 4)
+                for(uint32_t d = 0; d < nr_factor; d += 4)
                 {
                     __m128 const XMMw1 = _mm_load_ps(w1+d);
                     __m128 const XMMw2 = _mm_load_ps(w2+d);
@@ -147,24 +147,24 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
 }
 
 /*
-inline float wTx(SpMat const &spmat, Model &model, size_t const i, 
+inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
-    size_t const nr_factor = model.nr_factor;
-    size_t const nr_field = model.nr_field;
+    uint32_t const nr_factor = model.nr_factor;
+    uint32_t const nr_field = model.nr_field;
 
     float t = 0;
-    for(size_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+    for(uint32_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
     {
-        size_t const j1 = spmat.X[idx1].j;
-        size_t const f1 = spmat.X[idx1].f;
+        uint32_t const j1 = spmat.X[idx1].j;
+        uint32_t const f1 = spmat.X[idx1].f;
         float const v1 = spmat.X[idx1].v;
 
-        for(size_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+        for(uint32_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
         {
-            size_t const j2 = spmat.X[idx2].j;
-            size_t const f2 = spmat.X[idx2].f;
+            uint32_t const j2 = spmat.X[idx2].j;
+            uint32_t const f2 = spmat.X[idx2].f;
             float const v2 = spmat.X[idx2].v;
 
             float * w1 = 
@@ -176,7 +176,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             {
                 float * wg1 = w1 + nr_factor; 
                 float * wg2 = w2 + nr_factor; 
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
+                for(uint32_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
                 {
                     float const g1 = lambda*(*w1) + kappa*v1*v2*(*w2);
                     float const g2 = lambda*(*w2) + kappa*v1*v2*(*w1);
@@ -190,7 +190,7 @@ inline float wTx(SpMat const &spmat, Model &model, size_t const i,
             }
             else
             {
-                for(size_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
+                for(uint32_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
                     t += (*w1)*(*w2)*v1*v2;
             }
         }

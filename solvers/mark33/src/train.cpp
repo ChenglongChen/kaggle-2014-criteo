@@ -21,7 +21,7 @@ struct Option
           save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    size_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
+    uint32_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
     bool save_model;
 };
 
@@ -43,14 +43,14 @@ std::string train_help()
 
 Option parse_option(std::vector<std::string> const &args)
 {
-    size_t const argc = args.size();
+    uint32_t const argc = static_cast<uint32_t>(args.size());
 
     if(argc == 0)
         throw std::invalid_argument(train_help());
 
     Option opt; 
 
-    size_t i = 0;
+    uint32_t i = 0;
     for(; i < argc; ++i)
     {
         if(args[i].compare("-t") == 0)
@@ -64,7 +64,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<size_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = static_cast<uint32_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -95,7 +95,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             double reserved_size_in_gb = std::stod(args[++i]);
-            opt.reserved_size = static_cast<size_t>(reserved_size_in_gb*pow(10, 9));
+            opt.reserved_size = static_cast<uint32_t>(reserved_size_in_gb*pow(10, 9));
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -133,22 +133,22 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void init_model(Model &model, size_t const nr_factor_real)
+void init_model(Model &model, uint32_t const nr_factor_real)
 {
-    size_t const nr_factor = model.nr_factor;
+    uint32_t const nr_factor = model.nr_factor;
     float const coef = 
         static_cast<float>(0.5/sqrt(static_cast<double>(nr_factor_real)));
 
     float * w = model.W.data();
-    for(size_t j = 0; j < model.nr_feature; ++j)
+    for(uint32_t j = 0; j < model.nr_feature; ++j)
     {
-        for(size_t f = 0; f < model.nr_field; ++f)
+        for(uint32_t f = 0; f < model.nr_field; ++f)
         {
-            for(size_t d = 0; d < nr_factor_real; ++d, ++w)
+            for(uint32_t d = 0; d < nr_factor_real; ++d, ++w)
                 *w = coef*static_cast<float>(drand48());
-            for(size_t d = nr_factor_real; d < nr_factor; ++d, ++w)
+            for(uint32_t d = nr_factor_real; d < nr_factor; ++d, ++w)
                 *w = 0;
-            for(size_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
+            for(uint32_t d = nr_factor; d < 2*nr_factor; ++d, ++w)
                 *w = 1;
         }
     }
@@ -156,21 +156,21 @@ void init_model(Model &model, size_t const nr_factor_real)
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
-    std::vector<size_t> order(Tr.Y.size());
-    for(size_t i = 0; i < Tr.Y.size(); ++i)
+    std::vector<uint32_t> order(Tr.Y.size());
+    for(uint32_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
 
     Timer timer;
-    for(size_t iter = 0; iter < opt.iter; ++iter)
+    for(uint32_t iter = 0; iter < opt.iter; ++iter)
     {
         timer.tic();
 
         double Tr_loss = 0;
         std::random_shuffle(order.begin(), order.end());
 #pragma omp parallel for schedule(static)
-        for(size_t i_ = 0; i_ < order.size(); ++i_)
+        for(uint32_t i_ = 0; i_ < order.size(); ++i_)
         {
-            size_t const i = order[i_];
+            uint32_t const i = order[i_];
 
             float const y = Tr.Y[i];
             
@@ -185,7 +185,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
             wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
         }
 
-        printf("%3ld %8.2f %10.5f", iter, timer.toc(), 
+        printf("%3d %8.2f %10.5f", iter, timer.toc(), 
             Tr_loss/static_cast<double>(Tr.Y.size()));
 
         if(Va.Y.size() != 0)

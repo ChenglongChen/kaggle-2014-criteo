@@ -13,7 +13,7 @@ inline float logistic_func(float const t)
 
 } //unamed namespace
 
-SpMat read_data(std::string const path, size_t const reserved_size)
+SpMat read_data(std::string const path, uint32_t const reserved_size)
 {
     SpMat spmat;
     if(path.empty())
@@ -36,14 +36,14 @@ SpMat read_data(std::string const path, size_t const reserved_size)
             char *val_char = strtok(nullptr," \t");
             if(val_char == nullptr || *val_char == '\n')
                 break;
-            size_t field = static_cast<size_t>(atoi(field_char));
-            size_t idx = static_cast<size_t>(atoi(idx_char));
+            uint32_t field = static_cast<uint32_t>(atoi(field_char));
+            uint32_t idx = static_cast<uint32_t>(atoi(idx_char));
             float const val = static_cast<float>(atof(val_char));
             spmat.nr_feature = std::max(spmat.nr_feature, idx);
             spmat.nr_field = std::max(spmat.nr_field, field);
             spmat.X.emplace_back(field-1, idx-1, val);
         }
-        spmat.P.push_back(spmat.X.size());
+        spmat.P.push_back(static_cast<uint32_t>(spmat.X.size()));
         spmat.Y.push_back(y);
         ++spmat.nr_instance;
     }
@@ -56,9 +56,9 @@ SpMat read_data(std::string const path, size_t const reserved_size)
 void save_model(Model const &model, std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "wb");
-    fwrite(&model.nr_feature, sizeof(size_t), 1, f);
-    fwrite(&model.nr_factor, sizeof(size_t), 1, f);
-    fwrite(&model.nr_field, sizeof(size_t), 1, f);
+    fwrite(&model.nr_feature, sizeof(uint32_t), 1, f);
+    fwrite(&model.nr_factor, sizeof(uint32_t), 1, f);
+    fwrite(&model.nr_field, sizeof(uint32_t), 1, f);
     fwrite(model.W.data(), sizeof(float), 
         model.nr_feature*model.nr_field*model.nr_factor*kW_NODE_SIZE, f);
     fclose(f);
@@ -67,10 +67,10 @@ void save_model(Model const &model, std::string const &path)
 Model load_model(std::string const &path)
 {
     FILE *f = fopen(path.c_str(), "rb");
-    size_t nr_factor, nr_feature, nr_field;
-    fread(&nr_feature, sizeof(size_t), 1, f);
-    fread(&nr_factor, sizeof(size_t), 1, f);
-    fread(&nr_field, sizeof(size_t), 1, f);
+    uint32_t nr_factor, nr_feature, nr_field;
+    fread(&nr_feature, sizeof(uint32_t), 1, f);
+    fread(&nr_factor, sizeof(uint32_t), 1, f);
+    fread(&nr_field, sizeof(uint32_t), 1, f);
 
     Model model(nr_feature, nr_factor, nr_field);
     fread(model.W.data(), sizeof(float), 
@@ -105,7 +105,7 @@ float predict(SpMat const &spmat, Model &model,
 
     double loss = 0;
 #pragma omp parallel for schedule(static) reduction(+:loss)
-    for(size_t i = 0; i < spmat.Y.size(); ++i)
+    for(uint32_t i = 0; i < spmat.Y.size(); ++i)
     {
         float const y = spmat.Y[i];
 
