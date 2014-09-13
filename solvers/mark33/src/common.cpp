@@ -61,8 +61,8 @@ SpMat read_data(std::string const path, uint32_t const reserved_size)
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
-    for(uint32_t i = 0, p = 0; fgets(line, kMaxLineSize, f) != nullptr;
-        ++i, ++p)
+    uint64_t p = 0;
+    for(uint32_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
         char *y_char = strtok(line, " \t");
         float const y = (atoi(y_char)>0)? 1.0f : -1.0f;
@@ -73,7 +73,8 @@ SpMat read_data(std::string const path, uint32_t const reserved_size)
             if(idx_char == nullptr || *idx_char == '\n')
                 break;
             uint32_t idx = static_cast<uint32_t>(atoi(idx_char));
-            spmat.J[p] = idx;
+            spmat.nr_feature = std::max(spmat.nr_feature, idx);
+            spmat.J[p] = idx-1;
         }
     }
 
