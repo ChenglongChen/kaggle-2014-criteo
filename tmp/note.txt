@@ -1,21 +1,18 @@
-baseline 30 trees, k = 8, lambda = 0.00001 
+R1
+=========================================
+baseline (l = 0.00001, k = 4, d = 5)    0.44489
 
-
-[lambda]
+[lambda] (with k = 8)
 lambda = 0.000009   0.44479
 lambda = 0.000011   0.44480
 lambda = 0.000012   0.44480
 
 [k]
-for r100 and r10, k = 4 is enough; for r1, k = 8 is 0.00001 better than k = 4
+k = 8   0.44480
+k = 12  0.44484
+k = 16  0.44483
 
-[depth] t50,k8,r10
-3   0.45569
-4   0.45548
-5   0.45563
-6   0.45558
-7   0.45551
-
-but the results seems different on r1..
-4   0.44492
-5   0.44480
+[d]
+d = 4   0.44503
+d = 6   0.44472
+d = 7   0.44468
