@@ -137,8 +137,8 @@ int main(int const argc, char const * const * const argv)
     GBDT gbdt(opt.nr_trees);
     gbdt.fit(Tr, Va);
 
-    write(Tr, gbdt, opt.Tr_path+".gbdt");
-    write(Va, gbdt, opt.Va_path+".gbdt");
+    write(Tr, gbdt, opt.Tr_path+".out");
+    write(Va, gbdt, opt.Va_path+".out");
 
     return EXIT_SUCCESS;
 }
