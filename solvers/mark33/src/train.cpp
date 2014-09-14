@@ -17,11 +17,11 @@ struct Option
 {
     Option() 
         : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), save_model(true) {}
-    std::string Tr_path, model_path, Va_path;
+          nr_factor_real(4), nr_threads(1), do_prediction(true) {}
+    std::string Tr_path, out_path, Va_path;
     float eta, lambda;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
-    bool save_model;
+    bool do_prediction;
 };
 
 std::string train_help()
@@ -90,7 +90,7 @@ Option parse_option(std::vector<std::string> const &args)
         }
         else if(args[i].compare("-q") == 0)
         {
-            opt.save_model = false;
+            opt.do_prediction = false;
         }
         else
         {
@@ -105,7 +105,7 @@ Option parse_option(std::vector<std::string> const &args)
 
     if(i < argc)
     {
-        opt.model_path = std::string(args[i]);
+        opt.out_path = std::string(args[i]);
     }
     else if(i == argc)
     {
@@ -114,7 +114,7 @@ Option parse_option(std::vector<std::string> const &args)
             ptr = opt.Tr_path.c_str();
         else
             ++ptr;
-        opt.model_path = std::string(ptr) + ".model";
+        opt.out_path = std::string(ptr) + ".out";
     }
     else
     {
@@ -223,8 +223,8 @@ int main(int const argc, char const * const * const argv)
 
     train(Tr, Va, model, opt);
 
-    if(opt.save_model)
-        save_model(model, opt.model_path);
+    if(opt.do_prediction)
+        predict(Va, model, opt.out_path);
 
     return EXIT_SUCCESS;
 }
