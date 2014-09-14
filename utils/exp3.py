@@ -14,7 +14,7 @@ for size in ["100", "10", "1"]:
     cmd = 'converters/parallelizer.py -n 96 converters/num.py va.r{size}.csv va.r{size}.gbdt'.format(size=size)
     subprocess.call(cmd, shell=True) 
 
-    cmd = './mark29 -t 30 -s 96 va.r{size}.gbdt tr.r{size}.gbdt'.format(size=size) 
+    cmd = './mark29 -t 30 -s 13 va.r{size}.gbdt tr.r{size}.gbdt'.format(size=size) 
     subprocess.call(cmd, shell=True)
 
     cmd = 'converters/parallelizer.py -n 96 converters/gbdt.py tr.r{size}.csv tr.r{size}.gbdt.out tr.r{size}.fm'.format(size=size)
