@@ -88,7 +88,7 @@ void fit_proxy(
 
 } //unnamed namespace
 
-size_t TreeNode::max_depth = 5;
+size_t TreeNode::max_depth = 7;
 size_t TreeNode::nr_thread = 1;
 std::mutex TreeNode::mtx;
 bool TreeNode::verbose = false;
