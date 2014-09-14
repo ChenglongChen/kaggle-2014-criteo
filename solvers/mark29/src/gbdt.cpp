@@ -138,9 +138,9 @@ void TreeNode::fit(
             if(node.v != node_next.v)
             {
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
-                if(current_ese > best_ese)
+                #pragma omp critical
                 {
-                    #pragma omp critical
+                    if(current_ese > best_ese || (current_ese == best_ese && static_cast<int>(j) < feature))
                     {
                         best_ese = current_ese;
                         feature = j;
