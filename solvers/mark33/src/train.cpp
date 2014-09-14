@@ -17,18 +17,17 @@ struct Option
 {
     Option() 
         : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), reserved_size(0), 
-          save_model(true) {}
+          nr_factor_real(4), nr_threads(1), save_model(true) {}
     std::string Tr_path, model_path, Va_path;
     float eta, lambda;
-    uint32_t iter, nr_factor, nr_factor_real, nr_threads, reserved_size;
+    uint32_t iter, nr_factor, nr_factor_real, nr_threads;
     bool save_model;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: sgd-poly2-train [<options>] <train_path>\n"
+"usage: mark33 [<options>] <train_path>\n"
 "\n"
 "options:\n"
 "-l <lambda>: you know\n"
@@ -37,7 +36,6 @@ std::string train_help()
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
 "-v <path>: you know\n"
-"-u <size>: you know\n"
 "-q: you know\n");
 }
 
@@ -89,13 +87,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
-        }
-        else if(args[i].compare("-u") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            double reserved_size_in_gb = std::stod(args[++i]);
-            opt.reserved_size = static_cast<uint32_t>(reserved_size_in_gb*pow(10, 9));
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -216,7 +207,7 @@ int main(int const argc, char const * const * const argv)
     SpMat const Va = read_data(opt.Va_path);
     printf("Va...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path, opt.reserved_size);
+    SpMat const Tr = read_data(opt.Tr_path);
     printf("done\n");
     fflush(stdout);
 

@@ -51,7 +51,7 @@ uint32_t get_nr_field(std::string const &path)
 
 } //unamed namespace
 
-SpMat read_data(std::string const path, uint32_t const reserved_size)
+SpMat read_data(std::string const path)
 {
     if(path.empty())
         return SpMat(0, 0);

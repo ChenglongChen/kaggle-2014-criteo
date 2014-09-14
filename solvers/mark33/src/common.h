@@ -24,7 +24,7 @@ struct SpMat
     std::vector<float> Y;
 };
 
-SpMat read_data(std::string const path, uint32_t const reserved_size=0);
+SpMat read_data(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
 
