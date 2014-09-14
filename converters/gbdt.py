@@ -34,8 +34,8 @@ with open(args['out_path'], 'w') as f:
             type, field = field[0], int(field[1:])
             if type == 'C' and feat not in frequent_feats:
                 feat = feat.split('-')[0]+'less'
-            if type == 'I':
-                field += 26
+            if type == 'C':
+                field += 13
             feats.append((field, feat))
 
         for feat in line_gbdt.strip().split()[1:]:
