@@ -1,4 +1,4 @@
-import hashlib, csv, math
+import hashlib, csv, math, os, pickle
 
 HEADER="Id,Label,I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26"
 
@@ -42,6 +42,9 @@ def gen_hashed_svm_feats(feats, nr_bins, coef=None):
     return feats
 
 def read_freqent_feats(threshold=10):
+    if os.path.exists('fc.trva.r1.p1.t10.pickle'):
+        return pickle.load(open('fc.trva.r1.p1.t10.pickle', 'rb'))
+
     frequent_feats = set()
     for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
         if int(row['Total']) < threshold:

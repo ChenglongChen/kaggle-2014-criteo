@@ -2,7 +2,7 @@
 
 import subprocess, sys, os, time
 
-cmd = 'git clean -df && utils/prepare.sh'
+cmd = 'git clean -df && utils/prepare.sh && ./converters/dump.py'
 subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 start = time.time()
