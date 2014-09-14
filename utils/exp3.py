@@ -6,7 +6,7 @@ cmd = 'git clean -df && utils/prepare.sh && ./converters/dump.py'
 subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 start = time.time()
-for size in ["100", "10", "1"]:
+for size in ["x", "1"]:
     print('size = {size}'.format(size=size))
 
     cmd = 'converters/parallelizer.py -n 96 converters/num.py tr.r{size}.csv tr.r{size}.gbdt'.format(size=size)
