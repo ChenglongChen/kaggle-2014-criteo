@@ -16,8 +16,10 @@ struct SpMat
 {
     SpMat(uint32_t const nr_instance, uint32_t const nr_field) 
         : nr_feature(0), nr_instance(nr_instance), nr_field(nr_field), 
-          J(nr_instance*nr_field), Y(nr_instance) {}
+          v(1.0f/static_cast<float>(nr_field)), J(nr_instance*nr_field), 
+          Y(nr_instance) {}
     uint32_t nr_feature, nr_instance, nr_field;
+    float v;
     std::vector<uint32_t> J;
     std::vector<float> Y;
 };
@@ -50,7 +52,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(uint32_t const * const J, Model &model, uint32_t const i, 
+inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -60,20 +62,21 @@ inline float wTx(uint32_t const * const J, Model &model, uint32_t const i,
     uint32_t const align0 = nr_factor*kW_NODE_SIZE;
     uint32_t const align1 = nr_field*align0;
 
-    __m128 const XMMkappa = _mm_load1_ps(&kappa);
+    __m128 const XMMv = _mm_set1_ps(spmat.v);
+    __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
     __m128 const XMMeta = _mm_load1_ps(&eta);
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
-        uint32_t const j1 = J[f1];
+        uint32_t const j1 = spmat.J[i*spmat.nr_field+f1];
         if(j1 >= nr_feature)
             continue;
 
         for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
         {
-            uint32_t const j2 = J[f2];
+            uint32_t const j2 = spmat.J[i*spmat.nr_field+f2];
             if(j2 >= nr_feature)
                 continue;
 
@@ -94,10 +97,10 @@ inline float wTx(uint32_t const * const J, Model &model, uint32_t const i,
 
                     __m128 XMMg1 = _mm_add_ps(
                         _mm_mul_ps(XMMlambda, XMMw1),
-                        _mm_mul_ps(XMMkappa, XMMw2));
+                        _mm_mul_ps(XMMkappav, XMMw2));
                     __m128 XMMg2 = _mm_add_ps(
                         _mm_mul_ps(XMMlambda, XMMw2),
-                        _mm_mul_ps(XMMkappa, XMMw1));
+                        _mm_mul_ps(XMMkappav, XMMw1));
 
                     XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
                     XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
@@ -123,7 +126,7 @@ inline float wTx(uint32_t const * const J, Model &model, uint32_t const i,
                     __m128 const XMMw1 = _mm_load_ps(w1+d);
                     __m128 const XMMw2 = _mm_load_ps(w2+d);
 
-                    XMMt = _mm_add_ps(XMMt, _mm_mul_ps(XMMw1, XMMw2));
+                    XMMt = _mm_add_ps(XMMt, _mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMv));
                 }
             }
         }
