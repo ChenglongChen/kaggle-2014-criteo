@@ -30,7 +30,6 @@ std::string train_help()
 "-d <depth>: you know\n"
 "-s <nr_threads>: you know\n"
 "-t <nr_tree>: you know\n"
-"-v <path>: you know\n"
 "--verbose: you know\n");
 }
 
@@ -64,12 +63,6 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
         }
-        else if(args[i].compare("-v") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            opt.Va_path = args[++i];
-        }
         else if(args[i].compare("--verbose") == 0)
         {
             TreeNode::verbose = true;
@@ -80,9 +73,10 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc)
+    if(i >= argc-1)
         throw std::invalid_argument("training data not specified");
 
+    opt.Va_path = args[i++];
     opt.Tr_path = args[i++];
 
     return opt;

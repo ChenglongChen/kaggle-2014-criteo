@@ -35,7 +35,6 @@ std::string train_help()
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
-"-v <path>: you know\n"
 "-q: you know\n");
 }
 
@@ -76,12 +75,6 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             opt.lambda = std::stof(args[++i]);
         }
-        else if(args[i].compare("-v") == 0)
-        {
-            if(i == argc-1)
-                throw std::invalid_argument("invalid command");
-            opt.Va_path = args[++i];
-        }
         else if(args[i].compare("-s") == 0)
         {
             if(i == argc-1)
@@ -98,28 +91,12 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc)
+    if(i >= argc-2)
         throw std::invalid_argument("training data not specified");
 
+    opt.Va_path = args[i++];
     opt.Tr_path = args[i++];
-
-    if(i < argc)
-    {
-        opt.out_path = std::string(args[i]);
-    }
-    else if(i == argc)
-    {
-        const char *ptr = strrchr(&*opt.Tr_path.begin(),'/');
-        if(!ptr)
-            ptr = opt.Tr_path.c_str();
-        else
-            ++ptr;
-        opt.out_path = std::string(ptr) + ".out";
-    }
-    else
-    {
-        throw std::invalid_argument("invalid argument");
-    }
+    opt.out_path = args[i++];
 
     return opt;
 }

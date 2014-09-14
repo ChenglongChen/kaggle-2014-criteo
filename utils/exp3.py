@@ -17,7 +17,7 @@ for size in ["100"]:
     worker_tr.communicate()
     worker_va.communicate()
 
-    cmd = './mark29 -t 30 -s 24 -v va.r{size}.gbdt tr.r{size}.gbdt'.format(size=size) 
+    cmd = './mark29 -t 30 -s 24 va.r{size}.gbdt tr.r{size}.gbdt'.format(size=size) 
     subprocess.call(cmd, shell=True)
 
     cmd = 'converters/parallelizer.py -n 48 converters/gbdt.py tr.r{size}.csv tr.r{size}.gbdt.out tr.r{size}.fm'.format(size=size)
@@ -28,7 +28,7 @@ for size in ["100"]:
     worker_tr.communicate()
     worker_va.communicate()
 
-    cmd = './mark33 -q -s 192 -t 40 -v va.r{size}.fm tr.r{size}.fm'.format(size=size) 
+    cmd = './mark33 -q -s 192 -t 40 va.r{size}.fm tr.r{size}.fm va.r{size}.out'.format(size=size) 
     subprocess.call(cmd, shell=True) 
 
 print('time used = {0:.0f}'.format(time.time()-start))
