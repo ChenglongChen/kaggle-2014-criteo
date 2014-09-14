@@ -18,7 +18,7 @@ struct Option
     Option() 
         : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
           nr_factor_real(4), nr_threads(1), do_prediction(true) {}
-    std::string Tr_path, out_path, Va_path;
+    std::string Tr_path, Va_path;
     float eta, lambda;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
     bool do_prediction;
@@ -91,12 +91,11 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc-2)
+    if(i >= argc-1)
         throw std::invalid_argument("training data not specified");
 
     opt.Va_path = args[i++];
     opt.Tr_path = args[i++];
-    opt.out_path = args[i++];
 
     return opt;
 }
@@ -203,7 +202,10 @@ int main(int const argc, char const * const * const argv)
 	omp_set_num_threads(1);
 
     if(opt.do_prediction)
-        predict(Va, model, opt.out_path);
+    {
+        predict(Tr, model, opt.Tr_path+".out");
+        predict(Va, model, opt.Va_path+".out");
+    }
 
     return EXIT_SUCCESS;
 }

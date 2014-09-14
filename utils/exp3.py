@@ -22,7 +22,7 @@ for size in ["x", "1"]:
     cmd = 'converters/parallelizer.py -n 96 converters/gbdt.py va.r{size}.csv va.r{size}.gbdt.out va.r{size}.fm'.format(size=size)
     subprocess.call(cmd, shell=True) 
 
-    cmd = './mark33 -q -s 220 -t 40 va.r{size}.fm tr.r{size}.fm va.r{size}.out'.format(size=size) 
+    cmd = './mark33 -s 220 -t 40 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
     subprocess.call(cmd, shell=True) 
 
 print('time used = {0:.0f}'.format(time.time()-start))
