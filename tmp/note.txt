@@ -4,6 +4,7 @@ baseline (l = 0.00001, k = 4, d = 5)    0.44489
 
 [lambda] (with k = 8)
 lambda = 0.000009   0.44479
+lambda = 0.000010   0.44480
 lambda = 0.000011   0.44480
 lambda = 0.000012   0.44480
 
