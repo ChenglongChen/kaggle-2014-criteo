@@ -37,10 +37,6 @@ struct Model
     const uint32_t nr_feature, nr_factor, nr_field;
 };
 
-void save_model(Model const &model, std::string const &path);
-
-Model load_model(std::string const &path);
-
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
 std::vector<std::string> 
@@ -59,8 +55,8 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     uint32_t const nr_factor = model.nr_factor;
     uint32_t const nr_field = model.nr_field;
     uint32_t const nr_feature = model.nr_feature;
-    uint32_t const align0 = nr_factor*kW_NODE_SIZE;
-    uint32_t const align1 = nr_field*align0;
+    uint64_t const align0 = nr_factor*kW_NODE_SIZE;
+    uint64_t const align1 = nr_field*align0;
 
     __m128 const XMMv = _mm_set1_ps(spmat.v);
     __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
