@@ -223,6 +223,8 @@ int main(int const argc, char const * const * const argv)
 
     train(Tr, Va, model, opt);
 
+	omp_set_num_threads(1);
+
     if(opt.do_prediction)
         predict(Va, model, opt.out_path);
 
