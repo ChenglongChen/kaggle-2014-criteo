@@ -3,7 +3,16 @@ R1
 baseline (l = 0.00001, k = 4, d = 7, t = 30)    0.44470
 
 add C9 and C20 to tree 0.44464
+add C9 and C20 to tree, t = 40 0.44463
 
 split C9 and C20: 0.44553
 
 t = 40  0.44468
+t = 50  0.44467
+t = 50, k = 8  0.44459
+
+v*v = 0.75/sqrt(nr_field) 0.44487 @ iter30 (not converge yet)
+v*v = 1.25/sqrt(nr_field) 0.44468 @ iter15
+
+init = 0.25/sqrt(nr_factor) 0.44476
+init = 1/sqrt(nr_factor) <linux10>
