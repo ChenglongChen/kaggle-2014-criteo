@@ -10,7 +10,7 @@ split C9 and C20: 0.44553
 t = 40  0.44468
 t = 50  0.44467
 t = 50, k = 8  0.44459
-t = 30, k = 8  <linux2>
+t = 30, k = 8  0.44463
 
 v*v = 0.75/sqrt(nr_field) 0.44487 @ iter30 (not converge yet)
 v*v = 1.25/sqrt(nr_field) 0.44468 @ iter15
@@ -22,7 +22,6 @@ init = 0.25/sqrt(nr_factor) 0.44476
 init = 1/sqrt(nr_factor) 0.44472
 
 [l]
-0.000005 <linux12>
 0.000006 0.44475@14
 0.000007 0.44474@15
 0.000008 0.44471@18
