@@ -27,7 +27,7 @@ struct SpMat
 SpMat read_data(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
-uint32_t const kNR_BIN = 1e+6;
+uint32_t const kWP2_SIZE = 1e+6;
 
 struct WNode
 {
@@ -40,7 +40,7 @@ struct Model
 {
     Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
         : W(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
-          WP2(nr_feature), nr_feature(nr_feature), 
+          WP2(kWP2_SIZE), nr_feature(nr_feature), 
           nr_factor(nr_factor), nr_field(nr_field) {}
     std::vector<float> W;
     std::vector<WNode> WP2;
@@ -60,7 +60,7 @@ inline float qrsqrt(float x)
 
 inline uint32_t calc_w_idx(uint32_t const a, uint32_t const b)
 {
-    return ((a+b)*(a+b+1)/2+b)%kNR_BIN;
+    return ((a+b)*(a+b+1)/2+b)%kWP2_SIZE;
 }
 
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
@@ -169,7 +169,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     float t;
     _mm_store_ss(&t, XMMt);
 
-    return t;
+    return t+tp2;
 }
 
 /*
