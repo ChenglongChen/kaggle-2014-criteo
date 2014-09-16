@@ -42,9 +42,6 @@ def gen_hashed_svm_feats(feats, nr_bins, coef=None):
     return feats
 
 def read_freqent_feats(threshold=10):
-    if os.path.exists('fc.trva.r1.p1.t10.pickle'):
-        return pickle.load(open('fc.trva.r1.p1.t10.pickle', 'rb'))
-
     frequent_feats = {}
     for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
         if int(row['Total']) < threshold:
