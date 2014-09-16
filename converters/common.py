@@ -45,11 +45,11 @@ def read_freqent_feats(threshold=10):
     if os.path.exists('fc.trva.r1.p1.t10.pickle'):
         return pickle.load(open('fc.trva.r1.p1.t10.pickle', 'rb'))
 
-    frequent_feats = set()
+    frequent_feats = {}
     for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
         if int(row['Total']) < threshold:
             continue
-        frequent_feats.add(row['Field']+'-'+row['Value'])
+        frequent_feats[row['Field']+'-'+row['Value']] = float(row['Ratio'])
     return frequent_feats
 
 def gen_hashed_fm_feats(feats, nr_bins, coef=None):
