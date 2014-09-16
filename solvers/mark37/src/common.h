@@ -63,6 +63,12 @@ inline uint32_t calc_w_idx(uint32_t const a, uint32_t const b)
     return ((a+b)*(a+b+1)/2+b)%kWP2_SIZE;
 }
 
+inline uint32_t calc_w_idx(uint32_t const a, uint32_t const b, uint32_t const c)
+{
+    return calc_w_idx(calc_w_idx(a, b), c);
+}
+
+
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -145,20 +151,27 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
             if(f1 > 38 or f2 > 38)
                 continue;
 
-            WNode &w = model.WP2[calc_w_idx(j1, j2)];
-            if(w.mask)
+            for(uint32_t f3 = f2+1; f3 < nr_field; ++f3)
             {
-                if(do_update)
-                {
-                    float const g = 2*lambda*w.v + kappa*spmat.v;
+                uint32_t const j3 = spmat.J[i*spmat.nr_field+f3];
+                if(j3 >= nr_feature)
+                    continue;
 
-                    w.sg2 += g*g;
-
-                    w.v -= eta*qrsqrt(w.sg2)*g;
-                }
-                else
+                WNode &w = model.WP2[calc_w_idx(j1, j2, j3)];
+                if(w.mask)
                 {
-                    tp2 += w.v*spmat.v;
+                    if(do_update)
+                    {
+                        float const g = 2*lambda*w.v + kappa*spmat.v;
+
+                        w.sg2 += g*g;
+
+                        w.v -= eta*qrsqrt(w.sg2)*g;
+                    }
+                    else
+                    {
+                        tp2 += w.v*spmat.v;
+                    }
                 }
             }
         }

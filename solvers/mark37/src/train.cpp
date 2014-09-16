@@ -176,16 +176,23 @@ void scan(SpMat const &Tr, Model &model)
             for(uint32_t f2 = f1+1; f2 < Tr.nr_field; ++f2)
             {
 
-                if(f1 > 38 or f2 > 38)
-                    continue;
-
                 uint32_t const j2 = Tr.J[i*Tr.nr_field+f2];
                 if(j2 >= model.nr_feature)
                     continue;
 
-                uint32_t w_idx = calc_w_idx(j1, j2);
+                for(uint32_t f3 = f2+1; f3 < Tr.nr_field; ++f3)
+                {
+                    if(f1 > 38 || f2 > 38 || f3 > 38)
+                        continue;
 
-                ++model.WP2[w_idx].mask;
+                    uint32_t const j3 = Tr.J[i*Tr.nr_field+f3];
+                    if(j3 >= model.nr_feature)
+                        continue;
+
+                    uint32_t w_idx = calc_w_idx(j1, j2, j3);
+
+                    ++model.WP2[w_idx].mask;
+                }
             }
         }
     }
