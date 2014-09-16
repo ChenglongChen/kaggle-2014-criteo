@@ -16,10 +16,10 @@ namespace {
 struct Option
 {
     Option() 
-        : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
+        : eta(0.1f), lambda(0.00001f), magic(1), iter(15), nr_factor(4), 
           nr_factor_real(4), nr_threads(1), do_prediction(true) {}
     std::string Tr_path, Va_path;
-    float eta, lambda;
+    float eta, lambda, magic;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
     bool do_prediction;
 };
@@ -35,6 +35,7 @@ std::string train_help()
 "-t <iteration>: you know\n"
 "-r <eta>: you know\n"
 "-s <nr_threads>: you know\n"
+"-m <magic>: you know\n"
 "-q: you know\n");
 }
 
@@ -80,6 +81,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-m") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            opt.magic = std::stof(args[++i]);
         }
         else if(args[i].compare("-q") == 0)
         {
@@ -180,12 +187,15 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    SpMat const Va = read_data(opt.Va_path);
+    SpMat Va = read_data(opt.Va_path);
     printf("Va...");
     fflush(stdout);
-    SpMat const Tr = read_data(opt.Tr_path);
+    SpMat Tr = read_data(opt.Tr_path);
     printf("done\n");
     fflush(stdout);
+
+    Tr.v = opt.magic/static_cast<float>(Tr.nr_field);
+    Va.v = opt.magic/static_cast<float>(Va.nr_field);
 
     printf("initializing model...");
     fflush(stdout);
