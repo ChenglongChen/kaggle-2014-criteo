@@ -27,5 +27,8 @@ with open(args['svm_path'], 'w') as f:
         
         field = 'C{0}'.format(args['cat_feat'])
         key = field + '-' + row[field]
-        feats.append('{0}:{1}'.format(14, frequent_feats[key]))
+        if key in frequent_feats:
+            feats.append('{0}:{1}'.format(14, frequent_feats[key]))
+        else:
+            feats.append('{0}:{1}'.format(14, -1))
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
