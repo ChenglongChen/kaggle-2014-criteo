@@ -229,6 +229,7 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
 
     printf("scanning...");
+    fflush(stdout);
     scan(Tr, model);
     printf("done\n");
     fflush(stdout);
