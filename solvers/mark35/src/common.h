@@ -31,17 +31,18 @@ uint32_t const kNR_BIN = 1e+7;
 
 struct WNode
 {
-    WNode() : v(0), sg2(1) {}
+    WNode() : v(0), sg2(1), mask(0) {}
     float v, sg2;
+    uint32_t mask;
 };
 
 struct Model
 {
     Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
         : W(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
-          WMask(nr_feature, 0), WP2(nr_feature), nr_feature(nr_feature), 
+          WP2(nr_feature), nr_feature(nr_feature), 
           nr_factor(nr_factor), nr_field(nr_field) {}
-    std::vector<float> W, WMask;
+    std::vector<float> W;
     std::vector<WNode> WP2;
     const uint32_t nr_feature, nr_factor, nr_field;
 };
@@ -94,10 +95,9 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
             float * const w1 = model.W.data() + j1*align1 + f2*align0;
             float * const w2 = model.W.data() + j2*align1 + f1*align0;
 
-            uint32_t w_idx = calc_w_idx(j1, j2);
-            if(model.WMask[w_idx])
+            WNode &w = model.WP2[calc_w_idx(j1, j2)];
+            if(w.mask)
             {
-                WNode &w = model.WP2[w_idx];
                 if(do_update)
                 {
                     float const g = lambda*w.v + kappa*spmat.v;

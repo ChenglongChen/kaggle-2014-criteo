@@ -181,13 +181,15 @@ void scan(SpMat const &Tr, Model &model)
 
                 uint32_t w_idx = calc_w_idx(j1, j2);
 
-                ++model.WMask[w_idx];
+                ++model.WP2[w_idx].mask;
             }
         }
     }
 
-    for(auto &m : model.WMask)
-        m = (m <= 10000)? 0 : 1;
+    uint32_t const threshold = 
+        static_cast<uint32_t>(static_cast<double>(Tr.nr_instance)*0.01);
+    for(auto &w : model.WP2)
+        w.mask = (w.mask <= threshold)? 0 : 1;
 }
 
 } //unnamed namespace
@@ -222,9 +224,12 @@ int main(int const argc, char const * const * const argv)
     printf("done\n");
     fflush(stdout);
 
-	omp_set_num_threads(static_cast<int>(opt.nr_threads));
-
+    printf("scanning...");
     scan(Tr, model);
+    printf("done\n");
+    fflush(stdout);
+
+	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
     train(Tr, Va, model, opt);
 
