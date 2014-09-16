@@ -28,8 +28,9 @@ init = 1/sqrt(nr_factor) 0.44472
 0.000009 0.44471@19
 
 [r]
-0.08 
-0.05 <linux7>
+0.4  0.44493
+0.08 not better
+0.05 0.44471
 
 
 negative lambda *= 0.9: 0.44471
