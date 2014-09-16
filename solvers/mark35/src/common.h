@@ -60,7 +60,7 @@ inline float qrsqrt(float x)
 
 inline uint32_t calc_w_idx(uint32_t const a, uint32_t const b)
 {
-    return ((a+b)*(a+b+1)/2+b)%kW_NODE_SIZE;
+    return ((a+b)*(a+b+1)/2+b)%kNR_BIN;
 }
 
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
