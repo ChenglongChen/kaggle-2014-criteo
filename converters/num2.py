@@ -8,13 +8,12 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--threshold', type=int, default=int(10))
 parser.add_argument('-c', '--cat_feat', type=int, default=int(1))
 parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-frequent_feats = read_freqent_feats(args['threshold'])
+frequent_feats = read_freqent_feats(10000)
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):

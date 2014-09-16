@@ -12,7 +12,7 @@ subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 start = time.time()
 for size in ["10"]:
-    for c in range(1, 13):
+    for c in range(1, 14):
         print('size = {size}, c = {c}'.format(size=size, c=c))
 
         cmd = 'converters/parallelizer.py -n 24 "converters/num2.py -c {c}" tr.r{size}.csv tr.r{size}.num'.format(size=size, c=c)
