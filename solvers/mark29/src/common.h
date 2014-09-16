@@ -12,7 +12,7 @@
 
 #include <pmmintrin.h>
 
-size_t const kNR_FEATURE = 14;
+size_t const kNR_FEATURE = 13;
 
 struct DenseColMat
 {
