@@ -27,7 +27,7 @@ struct SpMat
 SpMat read_data(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
-uint32_t const kNR_BIN = 1e+7;
+uint32_t const kNR_BIN = 1e+6;
 
 struct WNode
 {
@@ -95,23 +95,6 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
             float * const w1 = model.W.data() + j1*align1 + f2*align0;
             float * const w2 = model.W.data() + j2*align1 + f1*align0;
 
-            WNode &w = model.WP2[calc_w_idx(j1, j2)];
-            if(w.mask)
-            {
-                if(do_update)
-                {
-                    float const g = lambda*w.v + kappa*spmat.v;
-
-                    w.sg2 += g*g;
-
-                    w.v -= eta*qrsqrt(w.sg2)*g;
-                }
-                else
-                {
-                    tp2 += w.v*spmat.v;
-                }
-            }
-
             if(do_update)
             {
                 float * const wg1 = w1 + nr_factor;
@@ -156,6 +139,26 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
                     __m128 const XMMw2 = _mm_load_ps(w2+d);
 
                     XMMt = _mm_add_ps(XMMt, _mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMv));
+                }
+            }
+
+            if(f1 > 38 or f2 > 38)
+                continue;
+
+            WNode &w = model.WP2[calc_w_idx(j1, j2)];
+            if(w.mask)
+            {
+                if(do_update)
+                {
+                    float const g = lambda*w.v + kappa*spmat.v;
+
+                    w.sg2 += g*g;
+
+                    w.v -= eta*qrsqrt(w.sg2)*g;
+                }
+                else
+                {
+                    tp2 += w.v*spmat.v;
                 }
             }
         }

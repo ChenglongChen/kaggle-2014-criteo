@@ -175,6 +175,10 @@ void scan(SpMat const &Tr, Model &model)
 
             for(uint32_t f2 = f1+1; f2 < Tr.nr_field; ++f2)
             {
+
+                if(f1 > 38 or f2 > 38)
+                    continue;
+
                 uint32_t const j2 = Tr.J[i*Tr.nr_field+f2];
                 if(j2 >= model.nr_feature)
                     continue;
