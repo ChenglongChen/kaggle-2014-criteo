@@ -15,7 +15,7 @@ t = 30, k = 8  0.44463
 v*v = 0.75/sqrt(nr_field) 0.44487 @ iter30 (not converge yet)
 v*v = 1.25/sqrt(nr_field) 0.44468 @ iter15
 v*v = 2/sqrt(nr_field) 0.44482
-v*v = 4/sqrt(nr_field) <linux7>
+v*v = 2/sqrt(nr_field), lambda = 0.00002: 0.44468@10
 v*v = 8/sqrt(nr_field) 0.44603
 
 init = 0.25/sqrt(nr_factor) 0.44476
@@ -25,8 +25,20 @@ init = 1/sqrt(nr_factor) 0.44472
 0.000006 0.44475@14
 0.000007 0.44474@15
 0.000008 0.44471@18
-0.000009 <linux1>
+0.000009 0.44471@19
 
 [r]
 0.08 
 0.05 <linux7>
+
+
+negative lambda *= 0.9: 0.44471
+negative lambda *= 0.5: 0.44472
+
+add all cat to tree: 0.44476
+
+gamma 0.08: 0.44473
+gamma 0.05: 0.44471
+
+tree threshold 10000: 0.44470
+tree threshold 1000: 0.44471
