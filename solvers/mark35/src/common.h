@@ -27,13 +27,22 @@ struct SpMat
 SpMat read_data(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
+uint32_t const kNR_BIN = 1e+7;
+
+struct WNode
+{
+    WNode() : v(0), sg2(1) {}
+    float v, sg2;
+};
 
 struct Model
 {
     Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
         : W(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
-          nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
-    std::vector<float> W;
+          WMask(nr_feature, 0), WP2(nr_feature), nr_feature(nr_feature), 
+          nr_factor(nr_factor), nr_field(nr_field) {}
+    std::vector<float> W, WMask;
+    std::vector<WNode> WP2;
     const uint32_t nr_feature, nr_factor, nr_field;
 };
 
@@ -46,6 +55,11 @@ inline float qrsqrt(float x)
 {
     _mm_store_ss(&x, _mm_rsqrt_ps(_mm_load1_ps(&x)));
     return x;
+}
+
+inline uint32_t calc_w_idx(uint32_t const a, uint32_t const b)
+{
+    return ((a+b)*(a+b+1)/2+b)%kW_NODE_SIZE;
 }
 
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
@@ -64,6 +78,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
+    float tp2 = 0;
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
         uint32_t const j1 = spmat.J[i*spmat.nr_field+f1];
@@ -78,6 +93,24 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
             float * const w1 = model.W.data() + j1*align1 + f2*align0;
             float * const w2 = model.W.data() + j2*align1 + f1*align0;
+
+            uint32_t w_idx = calc_w_idx(j1, j2);
+            if(model.WMask[w_idx])
+            {
+                WNode &w = model.WP2[w_idx];
+                if(do_update)
+                {
+                    float const g = lambda*w.v + kappa*spmat.v;
+
+                    w.sg2 += g*g;
+
+                    w.v -= eta*qrsqrt(w.sg2)*g;
+                }
+                else
+                {
+                    tp2 += w.v*spmat.v;
+                }
+            }
 
             if(do_update)
             {

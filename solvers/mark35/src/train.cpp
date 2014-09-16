@@ -163,6 +163,33 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
     }
 }
 
+void scan(SpMat const &Tr, Model &model)
+{
+    for(uint32_t i = 0; i < Tr.nr_instance; ++i)
+    {
+        for(uint32_t f1 = 0; f1 < Tr.nr_field; ++f1)
+        {
+            uint32_t const j1 = Tr.J[i*Tr.nr_field+f1];
+            if(j1 >= model.nr_feature)
+                continue;
+
+            for(uint32_t f2 = f1+1; f2 < Tr.nr_field; ++f2)
+            {
+                uint32_t const j2 = Tr.J[i*Tr.nr_field+f2];
+                if(j2 >= model.nr_feature)
+                    continue;
+
+                uint32_t w_idx = calc_w_idx(j1, j2);
+
+                ++model.WMask[w_idx];
+            }
+        }
+    }
+
+    for(auto &m : model.WMask)
+        m = (m <= 10000)? 0 : 1;
+}
+
 } //unnamed namespace
 
 int main(int const argc, char const * const * const argv)
@@ -196,6 +223,8 @@ int main(int const argc, char const * const * const argv)
     fflush(stdout);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+
+    scan(Tr, model);
 
     train(Tr, Va, model, opt);
 
