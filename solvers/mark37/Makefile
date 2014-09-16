@@ -1,13 +1,13 @@
 CXX = g++
 CXXFLAGS = -Wall -Wconversion -O3 -fPIC -std=c++0x -march=native -fopenmp
-MAIN = mark35
+MAIN = mark37
 FILES = common.cpp timer.cpp
 SRCS = $(FILES:%.cpp=src/%.cpp)
 HEADERS = $(FILES:%.cpp=src/%.h)
 
 all: $(MAIN)
 
-mark35: src/train.cpp $(SRCS) $(HEADERS)
+mark37: src/train.cpp $(SRCS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(SRCS)
 
 clean:
