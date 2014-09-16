@@ -150,7 +150,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
             {
                 if(do_update)
                 {
-                    float const g = lambda*w.v + kappa*spmat.v;
+                    float const g = 2*lambda*w.v + kappa*spmat.v;
 
                     w.sg2 += g*g;
 
