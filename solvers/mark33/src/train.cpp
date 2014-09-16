@@ -16,7 +16,7 @@ namespace {
 struct Option
 {
     Option() 
-        : eta(0.1f), lambda(0.00001f), iter(15), nr_factor(4), 
+        : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(4), 
           nr_factor_real(4), nr_threads(1), do_prediction(true) {}
     std::string Tr_path, Va_path;
     float eta, lambda;
