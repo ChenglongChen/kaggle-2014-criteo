@@ -89,8 +89,8 @@ void write(
 
     for(uint64_t i = 0; i < problem.nr_instance; ++i)
     {
-        std::vector<float> x(kNR_FEATURE);
-        for(uint64_t j = 0; j < kNR_FEATURE; ++j)
+        std::vector<float> x(problem.nr_field);
+        for(uint64_t j = 0; j < problem.nr_field; ++j)
             x[j] = problem.X[j][i];
 
         std::vector<uint64_t> indices = gbdt.get_indices(x.data());

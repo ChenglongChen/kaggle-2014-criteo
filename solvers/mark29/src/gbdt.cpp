@@ -70,8 +70,8 @@ void update_F(DenseColMat const &problem, CART const &tree, std::vector<float> &
 {
     for(uint64_t i = 0; i < problem.nr_instance; ++i)
     {
-        std::vector<float> x(kNR_FEATURE);
-        for(uint64_t j = 0; j < kNR_FEATURE; ++j)
+        std::vector<float> x(problem.nr_field);
+        for(uint64_t j = 0; j < problem.nr_field; ++j)
             x[j] = problem.X[j][i];
         F[i] += tree.predict(x.data()).second;
     }
@@ -124,7 +124,7 @@ void TreeNode::fit(
     double best_ese = sr0*sr0/nr0;
 
     #pragma omp parallel for schedule(dynamic)
-    for(uint64_t j = 0; j < kNR_FEATURE; ++j)
+    for(uint64_t j = 0; j < X.size(); ++j)
     {
         double nl = 0, nr = nr0;
         double sl = 0, sr = sr0;

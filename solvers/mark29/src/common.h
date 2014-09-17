@@ -12,15 +12,13 @@
 
 #include <pmmintrin.h>
 
-uint64_t const kNR_FEATURE = 13;
-
 struct DenseColMat
 {
-    DenseColMat(uint64_t const nr_instance) 
-        : nr_instance(nr_instance), 
-          X(kNR_FEATURE, std::vector<float>(nr_instance)), 
+    DenseColMat(uint64_t const nr_instance, uint64_t const nr_field) 
+        : nr_instance(nr_instance), nr_field(nr_field),
+          X(nr_field, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
-    uint64_t  nr_instance;
+    uint64_t const nr_instance, nr_field;
     std::vector<std::vector<float>> X;
     std::vector<float> Y;
 };

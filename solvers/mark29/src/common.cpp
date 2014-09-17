@@ -5,9 +5,10 @@
 
 namespace {
 
+uint64_t const kMaxLineSize = 1000000;
+
 uint64_t get_nr_line(std::string const &path)
 {
-    int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
@@ -20,16 +21,36 @@ uint64_t get_nr_line(std::string const &path)
     return nr_line;
 }
 
+uint64_t get_nr_field(std::string const &path)
+{
+    FILE *f = open_c_file(path.c_str(), "r");
+    char line[kMaxLineSize];
+
+    fgets(line, kMaxLineSize, f);
+    strtok(line, " \t");
+
+    uint64_t nr_field = 0;
+    while(1)
+    {
+        char *idx_char = strtok(nullptr," \t");
+        if(idx_char == nullptr || *idx_char == '\n')
+            break;
+        ++nr_field;
+    }
+
+    fclose(f);
+
+    return nr_field;
+}
+
 } //unamed namespace
 
 DenseColMat read_dcm(std::string const &path)
 {
     if(path.empty())
-        return DenseColMat(0);
+        return DenseColMat(0, 0);
 
-    DenseColMat problem(get_nr_line(path));
-
-    int const kMaxLineSize = 1000000;
+    DenseColMat problem(get_nr_line(path), get_nr_field(path));
 
     char line[kMaxLineSize];
 
@@ -38,7 +59,7 @@ DenseColMat read_dcm(std::string const &path)
     {
         char *p = strtok(line, " \t");
         problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
-        for(uint64_t j = 0; j < kNR_FEATURE; ++j)
+        for(uint64_t j = 0; j < problem.nr_field; ++j)
         {
             strtok(nullptr,":");
             char *val_char = strtok(nullptr," \t");
