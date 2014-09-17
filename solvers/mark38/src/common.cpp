@@ -83,6 +83,39 @@ SpMat read_data(std::string const path)
     return spmat;
 }
 
+void save_model(Model const &model, std::string const &path)
+{
+    FILE *f = fopen(path.c_str(), "wb");
+
+    fwrite(&model.nr_feature, sizeof(uint32_t), 1, f);
+    fwrite(&model.nr_factor, sizeof(uint32_t), 1, f);
+    fwrite(&model.nr_field, sizeof(uint32_t), 1, f);
+
+    uint64_t const w_size = static_cast<uint64_t>(model.nr_feature)*
+        model.nr_field*model.nr_factor*kW_NODE_SIZE;
+    fwrite(model.W.data(), sizeof(float), w_size, f);
+
+    fclose(f);
+}
+
+Model load_model(std::string const &path)
+{
+    FILE *f = fopen(path.c_str(), "rb");
+    uint32_t nr_factor, nr_feature, nr_field;
+    fread(&nr_feature, sizeof(uint32_t), 1, f);
+    fread(&nr_factor, sizeof(uint32_t), 1, f);
+    fread(&nr_field, sizeof(uint32_t), 1, f);
+
+    Model model(nr_feature, nr_factor, nr_field);
+
+    uint64_t const w_size = static_cast<uint64_t>(model.nr_feature)*
+        model.nr_field*model.nr_factor*kW_NODE_SIZE;
+    fread(model.W.data(), sizeof(float), w_size, f);
+
+    fclose(f);
+    return model;
+}
+
 FILE *open_c_file(std::string const &path, std::string const &mode)
 {
     FILE *f = fopen(path.c_str(), mode.c_str());

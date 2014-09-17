@@ -17,11 +17,10 @@ struct Option
 {
     Option() 
         : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), do_prediction(true) {}
-    std::string Tr_path, Va_path;
+          nr_factor_real(4), nr_threads(1) {}
+    std::string Tr_path, Va_path, model_path;
     float eta, lambda;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
-    bool do_prediction;
 };
 
 std::string train_help()
@@ -81,21 +80,18 @@ Option parse_option(std::vector<std::string> const &args)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
         }
-        else if(args[i].compare("-q") == 0)
-        {
-            opt.do_prediction = false;
-        }
         else
         {
             break;
         }
     }
 
-    if(i >= argc-1)
+    if(i >= argc-2)
         throw std::invalid_argument("training data not specified");
 
     opt.Va_path = args[i++];
     opt.Tr_path = args[i++];
+    opt.model_path = args[i++];
 
     return opt;
 }
@@ -201,11 +197,7 @@ int main(int const argc, char const * const * const argv)
 
 	omp_set_num_threads(1);
 
-    if(opt.do_prediction)
-    {
-        predict(Tr, model, opt.Tr_path+".out");
-        predict(Va, model, opt.Va_path+".out");
-    }
+    save_model(model, opt.model_path);
 
     return EXIT_SUCCESS;
 }
