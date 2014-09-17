@@ -5,8 +5,8 @@ import subprocess, sys, os, time
 UUID = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 LOG_DIR = 'logs/{0}'.format(UUID)
 
-def run(cmd):
-    p = subprocess.Popen(cmd, shell=True)
+def run(cmd, stdout=None):
+    p = subprocess.Popen(cmd, shell=True, stdout=stdout)
     subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
     p.communicate()
 
@@ -20,13 +20,15 @@ start = time.time()
 for size in ["x", "1", "0"]:
     print('size = {size}'.format(size=size))
 
+    f_log = open('{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size), 'w')
+
     cmd = 'converters/parallelizer.py -s 24 converters/num2.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
     run(cmd) 
     cmd = 'converters/parallelizer.py -s 24 converters/num2.py va.r{size}.csv va.r{size}.num'.format(size=size)
     run(cmd) 
 
     cmd = './mark29 -t 30 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
-    run(cmd)
+    run(cmd, f_log)
 
     cmd = 'converters/parallelizer.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
     run(cmd) 
@@ -34,7 +36,9 @@ for size in ["x", "1", "0"]:
     run(cmd) 
 
     cmd = './mark33 -s 24 -t 11 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
-    run(cmd) 
+    run(cmd, f_log) 
+
+    f_log.close()
 
 print('time used = {0:.0f}'.format(time.time()-start))
 
