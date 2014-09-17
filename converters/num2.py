@@ -12,7 +12,7 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-valid_features = read_freqent_feats(10000)
+valid_features = read_freqent_feats(1000000)
 
 def read_pseudo_ctr():
     pseudo_ctr = {}
