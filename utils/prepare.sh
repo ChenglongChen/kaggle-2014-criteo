@@ -101,7 +101,8 @@ ln -sf solvers/mark35/mark35 .
 make -C solvers/mark36/
 ln -sf solvers/mark36/mark36 .
 make -C solvers/mark38/
-ln -sf solvers/mark38/mark38 .
+ln -sf solvers/mark38/mark38-train .
+ln -sf solvers/mark38/mark38-predict .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
