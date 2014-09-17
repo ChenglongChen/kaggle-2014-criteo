@@ -91,6 +91,7 @@ void analyze_acc(SpMat const &spmat, Model &model,
                 static_cast<float>(records[f1*nr_field+f2].correct) / 
                 static_cast<float>(nr_instance);
             printf("%3d %3d %.3f\n", f1, f2, acc);
+            fflush(stdout);
         }
     }
 
