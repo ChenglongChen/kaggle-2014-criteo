@@ -8,12 +8,22 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--cat_feat', type=int, default=int(1))
 parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-frequent_feats = read_freqent_feats(10000)
+valid_features = read_freqent_feats(10000)
+
+def read_pseudo_ctr():
+    pseudo_ctr = {}
+    for row in csv.DictReader(open('fc.tr.t10.txt')):
+        key = row['Field'] + '-' + row['Value']
+        if key not in valid_features:
+            continue
+        pseudo_ctr[key] = row['Ratio']
+    return pseudo_ctr
+
+pseudo_ctr = read_pseudo_ctr()
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
@@ -24,10 +34,12 @@ with open(args['svm_path'], 'w') as f:
                 val = -10 
             feats.append('{0}:{1}'.format(j, val))
         
-        field = 'C{0}'.format(args['cat_feat'])
-        key = field + '-' + row[field]
-        if key in frequent_feats:
-            feats.append('{0}:{1}'.format(14, frequent_feats[key]))
-        else:
-            feats.append('{0}:{1}'.format(14, -1))
+        for j in range(1, 27):
+            field = 'C{0}'.format(j)
+            key = field + '-' + row[field]
+            if key in pseudo_ctr:
+                feats.append('{0}:{1}'.format(13+j, pseudo_ctr[key]))
+            else:
+                feats.append('{0}:{1}'.format(13+j, -1))
+
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
