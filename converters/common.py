@@ -42,11 +42,11 @@ def gen_hashed_svm_feats(feats, nr_bins, coef=None):
     return feats
 
 def read_freqent_feats(threshold=10):
-    frequent_feats = {}
-    for row in csv.DictReader(open('fc.trva.r1.p1.t10.txt')):
+    frequent_feats = set()
+    for row in csv.DictReader(open('fc.trva.t10.txt')):
         if int(row['Total']) < threshold:
             continue
-        frequent_feats[row['Field']+'-'+row['Value']] = float(row['Ratio'])
+        frequent_feats.add(row['Field']+'-'+row['Value'])
     return frequent_feats
 
 def gen_hashed_fm_feats(feats, nr_bins, coef=None):
