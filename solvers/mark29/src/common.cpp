@@ -5,13 +5,13 @@
 
 namespace {
 
-size_t get_nr_line(std::string const &path)
+uint64_t get_nr_line(std::string const &path)
 {
     int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
-    size_t nr_line = 0;
+    uint64_t nr_line = 0;
     while(fgets(line, kMaxLineSize, f) != nullptr)
         ++nr_line;
 
@@ -34,11 +34,11 @@ DenseColMat read_dcm(std::string const &path)
     char line[kMaxLineSize];
 
     FILE *f = open_c_file(path.c_str(), "r");
-    for(size_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
+    for(uint64_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
         char *p = strtok(line, " \t");
         problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
-        for(size_t j = 0; j < kNR_FEATURE; ++j)
+        for(uint64_t j = 0; j < kNR_FEATURE; ++j)
         {
             strtok(nullptr,":");
             char *val_char = strtok(nullptr," \t");

@@ -12,12 +12,12 @@ namespace {
 struct Node
 {
     Node() : i(0), v(0) {}
-    Node(size_t const i, float const v) : i(i), v(v) {}
-    size_t i;
+    Node(uint64_t const i, float const v) : i(i), v(v) {}
+    uint64_t i;
     float v;
 };
 
-inline double partial_sum(std::vector<float> const &R, std::vector<size_t> const &I)
+inline double partial_sum(std::vector<float> const &R, std::vector<uint64_t> const &I)
 {
     double sum = 0;
     for(auto i : I)
@@ -25,10 +25,10 @@ inline double partial_sum(std::vector<float> const &R, std::vector<size_t> const
     return sum;
 }
 
-inline std::vector<size_t> gen_init_I(size_t const nr_instance)
+inline std::vector<uint64_t> gen_init_I(uint64_t const nr_instance)
 {
-    std::vector<size_t> I(nr_instance, 0);
-    for(size_t i = 0; i < nr_instance; ++i)
+    std::vector<uint64_t> I(nr_instance, 0);
+    for(uint64_t i = 0; i < nr_instance; ++i)
         I[i] = i;
     return I;
 }
@@ -41,7 +41,7 @@ float calc_bias(std::vector<float> const &Y)
 }
 
 std::vector<Node> 
-get_ordered_nodes(std::vector<float> const &Xj, std::vector<size_t> const &I)
+get_ordered_nodes(std::vector<float> const &Xj, std::vector<uint64_t> const &I)
 {
     struct sort_by_v
     {
@@ -52,7 +52,7 @@ get_ordered_nodes(std::vector<float> const &Xj, std::vector<size_t> const &I)
     };
 
     std::vector<Node> nodes(I.size());
-    for(size_t ii = 0; ii < I.size(); ++ii)
+    for(uint64_t ii = 0; ii < I.size(); ++ii)
         nodes[ii] = Node(I[ii], Xj[I[ii]]);
     std::sort(nodes.begin(), nodes.end(), sort_by_v());
 
@@ -68,10 +68,10 @@ void clean_vector(std::vector<Type> &vec)
 
 void update_F(DenseColMat const &problem, CART const &tree, std::vector<float> &F)
 {
-    for(size_t i = 0; i < problem.nr_instance; ++i)
+    for(uint64_t i = 0; i < problem.nr_instance; ++i)
     {
         std::vector<float> x(kNR_FEATURE);
-        for(size_t j = 0; j < kNR_FEATURE; ++j)
+        for(uint64_t j = 0; j < kNR_FEATURE; ++j)
             x[j] = problem.X[j][i];
         F[i] += tree.predict(x.data()).second;
     }
@@ -88,8 +88,8 @@ void fit_proxy(
 
 } //unnamed namespace
 
-size_t TreeNode::max_depth = 7;
-size_t TreeNode::nr_thread = 1;
+uint64_t TreeNode::max_depth = 7;
+uint64_t TreeNode::nr_thread = 1;
 std::mutex TreeNode::mtx;
 bool TreeNode::verbose = false;
 
@@ -124,13 +124,13 @@ void TreeNode::fit(
     double best_ese = sr0*sr0/nr0;
 
     #pragma omp parallel for schedule(dynamic)
-    for(size_t j = 0; j < kNR_FEATURE; ++j)
+    for(uint64_t j = 0; j < kNR_FEATURE; ++j)
     {
         double nl = 0, nr = nr0;
         double sl = 0, sr = sr0;
 
         std::vector<Node> nodes = get_ordered_nodes(X[j], I);
-        for(size_t ii = 0; ii < nodes.size()-1; ++ii)
+        for(uint64_t ii = 0; ii < nodes.size()-1; ++ii)
         {
             Node const &node = nodes[ii], &node_next = nodes[ii+1];
             sl += R[node.i]; 
@@ -210,7 +210,7 @@ void TreeNode::fit(
     }
 }
 
-std::pair<size_t, float> TreeNode::predict(float const * const x) const
+std::pair<uint64_t, float> TreeNode::predict(float const * const x) const
 {
     if(is_leaf)
         return std::make_pair(idx, gamma);
@@ -228,7 +228,7 @@ void CART::fit(DenseColMat const &problem, std::vector<float> const &R, std::vec
     root->fit(problem.X, R, F1);
 }
 
-std::pair<size_t, float> CART::predict(float const * const x) const
+std::pair<uint64_t, float> CART::predict(float const * const x) const
 {
     if(!root)
         return std::make_pair(0, 0);
@@ -243,7 +243,7 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
     std::vector<float> F_Tr(Tr.nr_instance, bias), F_Va(Va.nr_instance, bias);
 
     Timer timer;
-    for(size_t t = 0; t < trees.size(); ++t)
+    for(uint64_t t = 0; t < trees.size(); ++t)
     {
         timer.tic();
 
@@ -251,14 +251,14 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
         std::vector<float> R(Tr.nr_instance), F1(Tr.nr_instance);
 
         #pragma omp parallel for schedule(static)
-        for(size_t i = 0; i < Tr.nr_instance; ++i) 
+        for(uint64_t i = 0; i < Tr.nr_instance; ++i) 
             R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
         
         trees[t].fit(Tr, R, F1);
 
         double Tr_loss = 0;
         #pragma omp parallel for schedule(static) reduction(+: Tr_loss)
-        for(size_t i = 0; i < Tr.nr_instance; ++i) 
+        for(uint64_t i = 0; i < Tr.nr_instance; ++i) 
         {
             F_Tr[i] += F1[i];
             Tr_loss += log(1+exp(-Y[i]*F_Tr[i]));
@@ -273,7 +273,7 @@ void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
 
             double Va_loss = 0;
             #pragma omp parallel for schedule(static) reduction(+: Va_loss)
-            for(size_t i = 0; i < Va.nr_instance; ++i) 
+            for(uint64_t i = 0; i < Va.nr_instance; ++i) 
                 Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
 
             printf(" %10.5f", Va_loss/static_cast<double>(Va.nr_instance));
@@ -294,12 +294,12 @@ float GBDT::predict(float const * const x) const
     return s;
 }
 
-std::vector<size_t> GBDT::get_indices(float const * const x) const
+std::vector<uint64_t> GBDT::get_indices(float const * const x) const
 {
-    size_t const nr_tree = trees.size();
+    uint64_t const nr_tree = trees.size();
 
-    std::vector<size_t> indices(nr_tree);
-    for(size_t t = 0; t < nr_tree; ++t)
+    std::vector<uint64_t> indices(nr_tree);
+    for(uint64_t t = 0; t < nr_tree; ++t)
         indices[t] = trees[t].predict(x).first;
     return indices;
 }
