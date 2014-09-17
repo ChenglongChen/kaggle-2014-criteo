@@ -16,7 +16,7 @@ valid_features = read_freqent_feats(1000000)
 
 def read_pseudo_ctr():
     pseudo_ctr = {}
-    for row in csv.DictReader(open('fc.trva.t10.txt')):
+    for row in csv.DictReader(open('fc.tr.t10.txt')):
         key = row['Field'] + '-' + row['Value']
         if key not in valid_features:
             continue
