@@ -40,7 +40,7 @@ def parse_args():
         sys.argv.append('-h')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-n', dest='nr_thread', default=12, type=int)
+    parser.add_argument('-s', dest='nr_thread', default=12, type=int)
     parser.add_argument('-i', dest='ignore_header', action='store_true')
     parser.add_argument('cvt_path')
     parser.add_argument('src_paths', nargs='+')
