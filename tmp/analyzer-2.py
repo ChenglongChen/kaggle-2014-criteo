@@ -9,13 +9,13 @@ if len(sys.argv) == 1:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--accuracy', type=float, default=0.01)
-parser.add_argument('svm_path', type=str)
+parser.add_argument('csv_path', type=str)
 parser.add_argument('out_path', type=str)
 args = vars(parser.parse_args())
 
 records = collections.defaultdict(lambda : [0, 0, 0.0])
-for line_svm, line_out in zip(open(args['svm_path']), open(args['out_path'])):
-    label = line_svm.rstrip().split(' ', 1)[0]
+for line_csv, line_out in zip(csv.DictReader(open(args['csv_path'])), open(args['out_path'])):
+    label = line_csv['Label']
     prob = float(line_out.rstrip())
     bin = int(prob/args['accuracy'])
     if label == '1':
