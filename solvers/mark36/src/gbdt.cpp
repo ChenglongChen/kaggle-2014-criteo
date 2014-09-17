@@ -106,12 +106,14 @@ void TreeNode::fit(
             a += R[i];
             b += fabs(R[i])*(1-fabs(R[i]));
         }
-        gamma = static_cast<float>(a/b);
+        gamma = (b <= 1e-12)? 0 : static_cast<float>(a/b);
 
         for(auto i : I)
             F1[i] = gamma;
 
         clean_vector(I);
+
+        is_leaf = true;
 
         return;
     }
