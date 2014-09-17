@@ -7,7 +7,7 @@ def run(cmd):
     subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
     p.communicate()
 
-cmd = 'git clean -df && utils/prepare.sh && ./converters/dump.py'
+cmd = 'git clean -df && utils/prepare.sh'
 subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 start = time.time()
