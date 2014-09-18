@@ -143,45 +143,50 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 {
     uint32_t const nr_factor = model.nr_factor;
     uint32_t const nr_field = model.nr_field;
+    uint32_t const nr_feature = model.nr_feature;
+    uint64_t const align0 = nr_factor*kW_NODE_SIZE;
+    uint64_t const align1 = nr_field*align0;
+
+    uint32_t const * const J = &spmat.J[i*nr_field];
+    float * const W = model.W.data();
+    float const v = spmat.v;
 
     float t = 0;
-    for(uint32_t idx1 = spmat.P[i]; idx1 < spmat.P[i+1]; ++idx1)
+    for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
-        uint32_t const j1 = spmat.X[idx1].j;
-        uint32_t const f1 = spmat.X[idx1].f;
-        float const v1 = spmat.X[idx1].v;
+        uint32_t const j1 = J[f1];
+        if(j1 >= nr_feature)
+            continue;
 
-        for(uint32_t idx2 = idx1+1; idx2 < spmat.P[i+1]; ++idx2)
+        for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
         {
-            uint32_t const j2 = spmat.X[idx2].j;
-            uint32_t const f2 = spmat.X[idx2].f;
-            float const v2 = spmat.X[idx2].v;
+            uint32_t const j2 = J[f2];
+            if(j2 >= nr_feature)
+                continue;
 
-            float * w1 = 
-                model.W.data()+j1*nr_field*nr_factor*kW_NODE_SIZE+f2*nr_factor*kW_NODE_SIZE;
-            float * w2 = 
-                model.W.data()+j2*nr_field*nr_factor*kW_NODE_SIZE+f1*nr_factor*kW_NODE_SIZE;
+            float * const w1 = W + j1*align1 + f2*align0;
+            float * const w2 = W + j2*align1 + f1*align0;
 
             if(do_update)
             {
                 float * wg1 = w1 + nr_factor; 
                 float * wg2 = w2 + nr_factor; 
-                for(uint32_t d = 0; d < nr_factor; ++d, ++w1, ++w2, ++wg1, ++wg2)
+                for(uint32_t d = 0; d < nr_factor; ++d)
                 {
-                    float const g1 = lambda*(*w1) + kappa*v1*v2*(*w2);
-                    float const g2 = lambda*(*w2) + kappa*v1*v2*(*w1);
+                    float const g1 = lambda*w1[d] + kappa*v*w2[d];
+                    float const g2 = lambda*w2[d] + kappa*v*w1[d];
 
-                    *wg1 += g1*g1;
-                    *wg2 += g2*g2;
+                    wg1[d] += g1*g1;
+                    wg2[d] += g2*g2;
 
-                    *w1 -= eta*qrsqrt(*wg1)*g1;
-                    *w2 -= eta*qrsqrt(*wg2)*g2;
+                    w1[d] -= eta*qrsqrt(wg1[d])*g1;
+                    w2[d] -= eta*qrsqrt(wg2[d])*g2;
                 }
             }
             else
             {
-                for(uint32_t d = 0; d < nr_factor; ++d, ++w1, ++w2)
-                    t += (*w1)*(*w2)*v1*v2;
+                for(uint32_t d = 0; d < nr_factor; ++d)
+                    t += w1[d]*w2[d]*v;
             }
         }
     }
