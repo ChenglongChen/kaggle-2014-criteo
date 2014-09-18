@@ -121,12 +121,6 @@ void init_model(Model &model, uint32_t const nr_factor_real)
     }
 }
 
-struct Regularizer
-{
-    Regularizer(float const lambda) : lambda(lambda), sg2(1) {}
-    float lambda, sg2;
-};
-
 void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const eta)
 {
     uint32_t const nr_factor = model.nr_factor;
@@ -145,7 +139,6 @@ void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const 
 
     float const kappa = -y*expnyt/(1+expnyt);
 
-    float gl = 0;
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
         uint32_t const j1 = Va.J[f1];
@@ -167,18 +160,19 @@ void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const 
             float * const g1 = model.G.data() + j1*align1 + f2*align0;
             float * const g2 = model.G.data() + j2*align1 + f1*align0;
 
+            float lambda = reg.lambdas[f1*nr_field+f2];
+
+            float gl = 0;
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                gl += w1[d]*(w2[d]-eta*qrsqrt(wg2[d])*(reg.lambda*w2[d]+g2[d]));
-                gl += w2[d]*(w1[d]-eta*qrsqrt(wg1[d])*(reg.lambda*w1[d]+g1[d]));
+                gl += w1[d]*(w2[d]-eta*qrsqrt(wg2[d])*(lambda*w2[d]+g2[d]));
+                gl += w2[d]*(w1[d]-eta*qrsqrt(wg1[d])*(lambda*w1[d]+g1[d]));
             }
+            gl *= -Va.v*kappa;
+
+            reg.lambdas[f1*nr_field+f2] -= 0.00001f*gl;
         }
     }
-    gl *= -Va.v*kappa;
-
-    reg.sg2 += gl*gl;
-
-    reg.lambda -= 0.00001f*gl;
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
@@ -210,8 +204,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
             Tr_loss += log(1+expnyt);
                
             float const kappa = -y*expnyt/(1+expnyt);
-
-            wTx(Tr, model, i, kappa, opt.eta, reg.lambda, true);
+            wTx(Tr, model, i, kappa, opt.eta, reg.lambdas.data(), true);
 
             update_lambda(Va, model, reg, opt.eta);
         }
@@ -222,7 +215,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
         if(Va.Y.size() != 0)
             printf(" %10.5f", predict(Va, model));
 
-        printf(" %12.7f \n", reg.lambda);
+        printf("\n");
         fflush(stdout);
     }
 }

@@ -49,8 +49,14 @@ inline float qrsqrt(float x)
     return x;
 }
 
+struct Regularizer
+{
+    Regularizer(float const lambda) : lambdas(1000*1000, lambda) {}
+    std::vector<float> lambdas;
+};
+
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
-    float const kappa=0, float const eta=0, float const lambda=0, 
+    float const kappa=0, float const eta=0, float const * lambdas=nullptr, 
     bool const do_update=false)
 {
     uint32_t const nr_factor = model.nr_factor;
@@ -88,6 +94,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
                 float * const g1 = G + j1*align1 + f2*align0;
                 float * const g2 = G + j2*align1 + f1*align0;
 
+                float const lambda = lambdas[f1*nr_field+f2];
                 for(uint32_t d = 0; d < nr_factor; ++d)
                 {
                     g1[d] = kappa*v*w2[d];
