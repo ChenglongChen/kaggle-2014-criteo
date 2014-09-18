@@ -42,8 +42,9 @@ void analyze_acc(SpMat const &spmat, Model &model,
 {
     struct Info
     {
-        Info() : correct(0), total(0) {}
-        uint32_t correct, total;
+        Info() : correct(0), norm(0) {}
+        uint32_t correct;
+        double norm;
     };
 
     uint32_t const nr_factor = model.nr_factor;
@@ -73,12 +74,18 @@ void analyze_acc(SpMat const &spmat, Model &model,
                 float * const w1 = model.W.data() + j1*align1 + f2*align0;
                 float * const w2 = model.W.data() + j2*align1 + f1*align0;
 
+                Info &info = records[f1*nr_field+f2];
+
                 float t1 = 0;
                 for(uint32_t d = 0; d < nr_factor; ++d)
-                    t1 += w1[d]*w2[d]*spmat.v;
+                {
+                    float const w1w2 = w1[d]*w2[d];
+                    t1 += w1w2*spmat.v;
+                    info.norm +=  w1w2*w1w2;
+                }
 
                 if(y * t1 > 0)
-                    ++records[f1*nr_field+f2].correct;
+                    ++info.correct;
             }
         }
     }
@@ -87,10 +94,13 @@ void analyze_acc(SpMat const &spmat, Model &model,
     {
         for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
         {
+            Info &info = records[f1*nr_field+f2];
             float const acc = 
-                static_cast<float>(records[f1*nr_field+f2].correct) / 
+                static_cast<float>(info.correct) / 
                 static_cast<float>(nr_instance);
-            printf("%3d %3d %.3f\n", f1+1, f2+1, acc);
+            float const norm = static_cast<float>(
+                sqrt(info.norm / static_cast<double>(nr_instance)));
+            printf("%3d %3d %.3f %.3f\n", f1+1, f2+1, acc, norm);
             fflush(stdout);
         }
     }
