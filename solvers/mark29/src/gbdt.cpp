@@ -178,6 +178,7 @@ void TreeNode::fit(
         std::lock_guard<std::mutex> lock(mtx);
         printf("depth = %-10ld   feature = %-10ld   threshold = %-10.0f   left = %-10ld   right = %-10ld\n",
             depth, feature, threshold, left->I.size(), right->I.size());
+        fflush(stdout);
     }
 
     bool do_parallel;
