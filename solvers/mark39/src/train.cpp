@@ -16,8 +16,8 @@ namespace {
 struct Option
 {
     Option() 
-        : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), do_prediction(true) {}
+        : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(1), 
+          nr_factor_real(1), nr_threads(1), do_prediction(true) {}
     std::string Tr_path, Va_path;
     float eta, lambda;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
@@ -61,7 +61,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<uint32_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = opt.nr_factor_real;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -178,7 +178,7 @@ void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const 
 
     reg.sg2 += gl*gl;
 
-    reg.lambda -= 0.0001f*gl;
+    reg.lambda -= 0.00001f*gl;
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
@@ -222,7 +222,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
         if(Va.Y.size() != 0)
             printf(" %10.5f", predict(Va, model));
 
-        printf(" %.3f \n", reg.lambda);
+        printf(" %12.7f \n", reg.lambda);
         fflush(stdout);
     }
 }
