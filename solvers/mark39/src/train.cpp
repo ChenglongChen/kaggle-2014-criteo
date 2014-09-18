@@ -169,8 +169,8 @@ void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const 
 
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                gl += w1[d]*(w2[d]-eta*qrsqrt(wg2[d])*g2[d]);
-                gl += w2[d]*(w1[d]-eta*qrsqrt(wg1[d])*g1[d]);
+                gl += w1[d]*(w2[d]-eta*qrsqrt(wg2[d])*(reg.lambda*w2[d]+g2[d]));
+                gl += w2[d]*(w1[d]-eta*qrsqrt(wg1[d])*(reg.lambda*w1[d]+g1[d]));
             }
         }
     }
@@ -178,7 +178,7 @@ void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const 
 
     reg.sg2 += gl*gl;
 
-    reg.lambda -= eta*qrsqrt(reg.sg2)*gl;
+    reg.lambda -= 0.0001f*gl;
 }
 
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)

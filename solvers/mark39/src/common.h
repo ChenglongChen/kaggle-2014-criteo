@@ -90,14 +90,17 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
                 for(uint32_t d = 0; d < nr_factor; ++d)
                 {
-                    g1[d] = lambda*w1[d] + kappa*v*w2[d];
-                    g2[d] = lambda*w2[d] + kappa*v*w1[d];
+                    g1[d] = kappa*v*w2[d];
+                    g2[d] = kappa*v*w1[d];
 
-                    wg1[d] += g1[d]*g1[d];
-                    wg2[d] += g2[d]*g2[d];
+                    float const g1_ = lambda*w1[d] + g1[d];
+                    float const g2_ = lambda*w2[d] + g2[d];
 
-                    w1[d] -= eta*qrsqrt(wg1[d])*g1[d];
-                    w2[d] -= eta*qrsqrt(wg2[d])*g2[d];
+                    wg1[d] += g1_*g1_;
+                    wg2[d] += g2_*g2_;
+
+                    w1[d] -= eta*qrsqrt(wg1[d])*g1_;
+                    w2[d] -= eta*qrsqrt(wg2[d])*g2_;
                 }
             }
             else
