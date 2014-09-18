@@ -58,6 +58,9 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     uint64_t const align0 = nr_factor*kW_NODE_SIZE;
     uint64_t const align1 = nr_field*align0;
 
+    uint32_t const * const J = &spmat.J[i*nr_field];
+    float * const W = model.W.data();
+
     __m128 const XMMv = _mm_set1_ps(spmat.v);
     __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
     __m128 const XMMeta = _mm_load1_ps(&eta);
@@ -66,18 +69,18 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 XMMt = _mm_setzero_ps();
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
-        uint32_t const j1 = spmat.J[i*spmat.nr_field+f1];
+        uint32_t const j1 = J[f1];
         if(j1 >= nr_feature)
             continue;
 
         for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
         {
-            uint32_t const j2 = spmat.J[i*spmat.nr_field+f2];
+            uint32_t const j2 = J[f2];
             if(j2 >= nr_feature)
                 continue;
 
-            float * const w1 = model.W.data() + j1*align1 + f2*align0;
-            float * const w2 = model.W.data() + j2*align1 + f1*align0;
+            float * const w1 = W + j1*align1 + f2*align0;
+            float * const w2 = W + j2*align1 + f1*align0;
 
             if(do_update)
             {
