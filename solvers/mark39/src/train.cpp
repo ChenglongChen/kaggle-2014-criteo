@@ -16,8 +16,8 @@ namespace {
 struct Option
 {
     Option() 
-        : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(4), 
-          nr_factor_real(4), nr_threads(1), do_prediction(true) {}
+        : eta(0.1f), lambda(0.00002f), iter(15), nr_factor(1), 
+          nr_factor_real(1), nr_threads(1), do_prediction(true) {}
     std::string Tr_path, Va_path;
     float eta, lambda;
     uint32_t iter, nr_factor, nr_factor_real, nr_threads;
@@ -61,7 +61,7 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_factor_real = std::stoi(args[++i]);
-            opt.nr_factor = static_cast<uint32_t>(ceil(static_cast<float>(opt.nr_factor_real)/4.0f))*4;
+            opt.nr_factor = opt.nr_factor_real;
         }
         else if(args[i].compare("-r") == 0)
         {
@@ -121,11 +121,73 @@ void init_model(Model &model, uint32_t const nr_factor_real)
     }
 }
 
+struct Regularizer
+{
+    Regularizer(float const lambda) : lambda(lambda), sg2(1) {}
+    float lambda, sg2;
+};
+
+void update_lambda(SpMat const &Va, Model &model, Regularizer &reg, float const eta)
+{
+    uint32_t const nr_factor = model.nr_factor;
+    uint32_t const nr_field = model.nr_field;
+    uint32_t const nr_feature = model.nr_feature;
+    uint64_t const align0 = nr_factor*kW_NODE_SIZE;
+    uint64_t const align1 = nr_field*align0;
+
+    uint32_t const i = rand() % static_cast<uint32_t>(Va.Y.size());
+
+    float const y = Va.Y[i];
+
+    float const t = wTx(Va, model, i);
+
+    float const expnyt = static_cast<float>(exp(-y*t));
+
+    float const kappa = -y*expnyt/(1+expnyt);
+
+    float gl = 0;
+    for(uint32_t f1 = 0; f1 < nr_field; ++f1)
+    {
+        uint32_t const j1 = Va.J[f1];
+        if(j1 >= nr_feature)
+            continue;
+
+        for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
+        {
+            uint32_t const j2 = Va.J[f2];
+            if(j2 >= nr_feature)
+                continue;
+
+            float * const w1 = model.W.data() + j1*align1 + f2*align0;
+            float * const w2 = model.W.data() + j2*align1 + f1*align0;
+
+            float * const wg1 = w1 + nr_factor;
+            float * const wg2 = w2 + nr_factor;
+
+            float * const g1 = model.G.data() + j1*align1 + f2*align0;
+            float * const g2 = model.G.data() + j2*align1 + f1*align0;
+
+            for(uint32_t d = 0; d < nr_factor; ++d)
+            {
+                gl += w1[d]*(w2[d]-eta*qrsqrt(wg2[d])*(reg.lambda*w2[d]+g2[d]));
+                gl += w2[d]*(w1[d]-eta*qrsqrt(wg1[d])*(reg.lambda*w1[d]+g1[d]));
+            }
+        }
+    }
+    gl *= -Va.v*kappa;
+
+    reg.sg2 += gl*gl;
+
+    reg.lambda -= 0.00001f*gl;
+}
+
 void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 {
     std::vector<uint32_t> order(Tr.Y.size());
     for(uint32_t i = 0; i < Tr.Y.size(); ++i)
         order[i] = i;
+
+    Regularizer reg(opt.lambda);
 
     Timer timer;
     for(uint32_t iter = 0; iter < opt.iter; ++iter)
@@ -149,7 +211,9 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, kappa, opt.eta, reg.lambda, true);
+
+            update_lambda(Va, model, reg, opt.eta);
         }
 
         printf("%3d %8.2f %10.5f", iter, timer.toc(), 
@@ -158,7 +222,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
         if(Va.Y.size() != 0)
             printf(" %10.5f", predict(Va, model));
 
-        printf("\n");
+        printf(" %12.7f \n", reg.lambda);
         fflush(stdout);
     }
 }
