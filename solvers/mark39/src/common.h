@@ -32,8 +32,9 @@ struct Model
 {
     Model(uint32_t const nr_feature, uint32_t const nr_factor, uint32_t const nr_field) 
         : W(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
+          G(static_cast<uint64_t>(nr_feature)*nr_field*nr_factor*kW_NODE_SIZE, 0), 
           nr_feature(nr_feature), nr_factor(nr_factor), nr_field(nr_field) {}
-    std::vector<float> W;
+    std::vector<float> W, G;
     const uint32_t nr_feature, nr_factor, nr_field;
 };
 
@@ -48,8 +49,14 @@ inline float qrsqrt(float x)
     return x;
 }
 
+struct Regularizer
+{
+    Regularizer(float const lambda) : lambdas(1000*1000, lambda) {}
+    std::vector<float> lambdas;
+};
+
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
-    float const kappa=0, float const eta=0, float const lambda=0, 
+    float const kappa=0, float const eta=0, float const * lambdas=nullptr, 
     bool const do_update=false)
 {
     uint32_t const nr_factor = model.nr_factor;
@@ -60,6 +67,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
     uint32_t const * const J = &spmat.J[i*nr_field];
     float * const W = model.W.data();
+    float * const G = model.G.data();
     float const v = spmat.v;
 
     float t = 0;
@@ -80,18 +88,26 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
             if(do_update)
             {
-                float * wg1 = w1 + nr_factor; 
-                float * wg2 = w2 + nr_factor; 
+                float * const wg1 = w1 + nr_factor;
+                float * const wg2 = w2 + nr_factor;
+
+                float * const g1 = G + j1*align1 + f2*align0;
+                float * const g2 = G + j2*align1 + f1*align0;
+
+                float const lambda = lambdas[f1*nr_field+f2];
                 for(uint32_t d = 0; d < nr_factor; ++d)
                 {
-                    float const g1 = lambda*w1[d] + kappa*v*w2[d];
-                    float const g2 = lambda*w2[d] + kappa*v*w1[d];
+                    g1[d] = kappa*v*w2[d];
+                    g2[d] = kappa*v*w1[d];
 
-                    wg1[d] += g1*g1;
-                    wg2[d] += g2*g2;
+                    float const g1_ = lambda*w1[d] + g1[d];
+                    float const g2_ = lambda*w2[d] + g2[d];
 
-                    w1[d] -= eta*qrsqrt(wg1[d])*g1;
-                    w2[d] -= eta*qrsqrt(wg2[d])*g2;
+                    wg1[d] += g1_*g1_;
+                    wg2[d] += g2_*g2_;
+
+                    w1[d] -= eta*qrsqrt(wg1[d])*g1_;
+                    w2[d] -= eta*qrsqrt(wg2[d])*g2_;
                 }
             }
             else
