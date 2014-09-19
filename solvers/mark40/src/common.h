@@ -48,9 +48,10 @@ inline float qrsqrt(float x)
     return x;
 }
 
+extern std::vector<float> lambdas;
+
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
-    float const kappa=0, float const eta=0, float const lambda=0, 
-    bool const do_update=false)
+    float const kappa=0, float const eta=0, bool const do_update=false)
 {
     uint32_t const nr_factor = model.nr_factor;
     uint32_t const nr_field = model.nr_field;
@@ -64,7 +65,6 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 const XMMv = _mm_set1_ps(spmat.v);
     __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
     __m128 const XMMeta = _mm_load1_ps(&eta);
-    __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
@@ -86,6 +86,9 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
             {
                 float * const wg1 = w1 + nr_factor;
                 float * const wg2 = w2 + nr_factor;
+
+                __m128 const XMMlambda = _mm_load1_ps(&lambdas[f1*nr_field+f2]);
+
                 for(uint32_t d = 0; d < nr_factor; d += 4)
                 {
                     __m128 XMMw1 = _mm_load_ps(w1+d);

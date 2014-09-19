@@ -73,7 +73,12 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.lambda = std::stof(args[++i]);
+            char buffer[1000];
+            strcpy(buffer, args[++i].c_str());
+            int32_t const f1 = std::stoi(strtok(buffer, ","))-1;
+            int32_t const f2 = std::stoi(strtok(nullptr, " \t"))-1;
+            lambdas[f1*39+f2] = std::stof(args[++i]);
+            printf("DB1: %d, %d, %lf\n", f1, f2, lambdas[f1*39+f2]);
         }
         else if(args[i].compare("-s") == 0)
         {
@@ -149,7 +154,7 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, kappa, opt.eta, true);
         }
 
         printf("%3d %8.2f %10.5f", iter, timer.toc(), 
