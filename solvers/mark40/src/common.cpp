@@ -51,7 +51,7 @@ uint32_t get_nr_field(std::string const &path)
 
 } //unamed namespace
 
-std::vector<float> lambdas(39*39, 0.00002f);
+std::vector<float> lambdas(10000, 0.00002f);
 
 SpMat read_data(std::string const path)
 {
