@@ -14,9 +14,9 @@ start = time.time()
 for size in ["x", "1"]:
     print('size = {size}'.format(size=size))
 
-    cmd = 'converters/parallelizer.py -s 24 converters/num2.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer.py -s 24 converters/num.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer.py -s 24 converters/num2.py va.r{size}.csv va.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer.py -s 24 converters/num.py va.r{size}.csv va.r{size}.num'.format(size=size)
     run(cmd) 
 
     cmd = './mark29 -t 30 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
