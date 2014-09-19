@@ -96,15 +96,11 @@ make -C solvers/mark29/
 ln -sf solvers/mark29/mark29 .
 make -C solvers/mark33/
 ln -sf solvers/mark33/mark33 .
-make -C solvers/mark35/
-ln -sf solvers/mark35/mark35 .
-make -C solvers/mark36/
-ln -sf solvers/mark36/mark36 .
 make -C solvers/mark38/
 ln -sf solvers/mark38/mark38-train .
 ln -sf solvers/mark38/mark38-analyze .
-make -C solvers/mark39/
-ln -sf solvers/mark39/mark39 .
+make -C solvers/mark40/
+ln -sf solvers/mark40/mark40 .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
