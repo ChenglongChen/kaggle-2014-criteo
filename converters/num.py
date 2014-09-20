@@ -12,7 +12,7 @@ parser.add_argument('csv_path', type=str)
 parser.add_argument('svm_path', type=str)
 args = vars(parser.parse_args())
 
-target_cat_feats = ['C9-a73ee510', 'C22-', 'C5-25c83c98', 'C8-0b153874', 'C1-05db9164', 'C17-e5ba7672', 'C26-', 'C25-', 'C19-', 'C20-', 'C23-32c7478e', 'C6-7e0ccccf', 'C14-b28479f6', 'C19-21ddcdc9', 'C14-07d13a8f', 'C10-3b08e48b', 'C6-fbad5c96', 'C23-3a171ecb', 'C20-b1252a9d', 'C20-5840adea', 'C6-fe6b92e5', 'C20-a458ea53', 'C1-68fd1e64', 'C8-5b392875', 'C5-4cf72387', 'C14-1adce6ef', 'C25-001f3601', 'C22-ad3062eb', 'C17-07c540c4', 'C6-', 'C23-423fab69', 'C17-d4bb7bd8', 'C2-38a947a1', 'C25-e8b83407', 'C9-7cc72ec2']
+target_cat_feats = ['C9-a73ee510', 'C22-', 'C17-e5ba7672', 'C26-', 'C23-32c7478e', 'C6-7e0ccccf', 'C14-b28479f6', 'C19-21ddcdc9', 'C14-07d13a8f', 'C10-3b08e48b', 'C6-fbad5c96', 'C23-3a171ecb', 'C20-b1252a9d', 'C20-5840adea', 'C6-fe6b92e5', 'C20-a458ea53', 'C14-1adce6ef', 'C25-001f3601', 'C22-ad3062eb', 'C17-07c540c4', 'C6-', 'C23-423fab69', 'C17-d4bb7bd8', 'C2-38a947a1', 'C25-e8b83407', 'C9-7cc72ec2']
 
 with open(args['svm_path'], 'w') as f:
     for row in csv.DictReader(open(args['csv_path'])):
