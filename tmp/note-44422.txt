@@ -6,3 +6,6 @@ d=8: 0.44420
 ct=3m: 0.44431
 ct=5m: 0.44430
 ct=6m: 0.44438
+
+add 'C3-': 0.44430
+seperate NA to a new field: 0.44460
