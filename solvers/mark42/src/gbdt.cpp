@@ -90,6 +90,7 @@ void fit_proxy(
 
 uint64_t TreeNode::max_depth = 7;
 uint64_t TreeNode::nr_thread = 1;
+float TreeNode::alpha = 1.0f;
 std::mutex TreeNode::mtx;
 bool TreeNode::verbose = false;
 
@@ -121,7 +122,7 @@ void TreeNode::fit(
     is_leaf = false;
 
     double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
-    double best_ese = sr0*sr0/nr0;
+    double best_ese = sr0*sr0/nr0, base_ese = best_ese/alpha;
 
     #pragma omp parallel for schedule(dynamic)
     for(uint64_t j = 0; j < X.size(); ++j)
@@ -142,7 +143,8 @@ void TreeNode::fit(
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
                 #pragma omp critical
                 {
-                    if(current_ese > best_ese || (current_ese == best_ese && static_cast<int>(j) < feature))
+                    if(current_ese > base_ese && (current_ese > best_ese || 
+                        (current_ese == best_ese && static_cast<int>(j) < feature)))
                     {
                         best_ese = current_ese;
                         feature = j;

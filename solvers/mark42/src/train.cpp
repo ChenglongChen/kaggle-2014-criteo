@@ -30,6 +30,7 @@ std::string train_help()
 "-d <depth>: you know\n"
 "-s <nr_threads>: you know\n"
 "-t <nr_tree>: you know\n"
+"-a <alpha>: you know\n"
 "--verbose: you know\n");
 }
 
@@ -62,6 +63,12 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
+        }
+        else if(args[i].compare("-a") == 0)
+        {
+            if(i == argc-1)
+                throw std::invalid_argument("invalid command");
+            TreeNode::alpha = std::stof(args[++i]);
         }
         else if(args[i].compare("--verbose") == 0)
         {

@@ -18,6 +18,7 @@ struct TreeNode
     static uint64_t max_depth, nr_thread;
     static std::mutex mtx;
     static bool verbose;
+    static float alpha;
 
     void fit(
         std::vector<std::vector<float>> const &X, 
