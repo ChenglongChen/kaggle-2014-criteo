@@ -21,7 +21,7 @@ struct SpMat
 {
     SpMat(uint32_t const nr_instance, uint32_t const nr_field) 
         : nr_feature(0), nr_instance(nr_instance), nr_field(nr_field), 
-          v(2.0f/static_cast<float>(nr_field)), J(nr_instance*nr_field), 
+          v(2.0f/69.0f), J(nr_instance*nr_field), 
           Y(nr_instance) {}
     uint32_t nr_feature, nr_instance, nr_field;
     float v;
