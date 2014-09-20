@@ -12,6 +12,11 @@
 
 #include <pmmintrin.h>
 
+struct Node
+{
+    uint32_t j, m;
+};
+
 struct SpMat
 {
     SpMat(uint32_t const nr_instance, uint32_t const nr_field) 
@@ -20,7 +25,7 @@ struct SpMat
           Y(nr_instance) {}
     uint32_t nr_feature, nr_instance, nr_field;
     float v;
-    std::vector<uint32_t> J;
+    std::vector<Node> J;
     std::vector<float> Y;
 };
 
@@ -58,7 +63,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     uint64_t const align0 = nr_factor*kW_NODE_SIZE;
     uint64_t const align1 = nr_field*align0;
 
-    uint32_t const * const J = &spmat.J[i*nr_field];
+    Node const * const J = &spmat.J[i*nr_field];
     float * const W = model.W.data();
 
     __m128 const XMMv = _mm_set1_ps(spmat.v);
@@ -69,14 +74,16 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 XMMt = _mm_setzero_ps();
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
     {
-        uint32_t const j1 = J[f1];
-        if(j1 >= nr_feature)
+        uint32_t const j1 = J[f1].j;
+        uint32_t const m1 = J[f1].m;
+        if(m1 == 0 || j1 >= nr_feature)
             continue;
 
         for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
         {
-            uint32_t const j2 = J[f2];
-            if(j2 >= nr_feature)
+            uint32_t const j2 = J[f2].j;
+            uint32_t const m2 = J[f2].m;
+            if(m2 == 0 || j2 >= nr_feature)
                 continue;
 
             float * const w1 = W + j1*align1 + f2*align0;

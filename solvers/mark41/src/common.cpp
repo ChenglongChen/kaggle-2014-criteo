@@ -38,8 +38,9 @@ uint32_t get_nr_field(std::string const &path)
     uint32_t nr_field = 0;
     while(1)
     {
-        char *idx_char = strtok(nullptr," \t");
-        if(idx_char == nullptr || *idx_char == '\n')
+        strtok(nullptr,":");
+        char *mask_char = strtok(nullptr," \t");
+        if(mask_char == nullptr || *mask_char == '\n')
             break;
         ++nr_field;
     }
@@ -69,12 +70,15 @@ SpMat read_data(std::string const path)
         spmat.Y[i] = y;
         for(; ; ++p)
         {
-            char *idx_char = strtok(nullptr," \t");
-            if(idx_char == nullptr || *idx_char == '\n')
+            char *idx_char = strtok(nullptr,":");
+            char *mask_char = strtok(nullptr," \t");
+            if(mask_char == nullptr || *mask_char == '\n')
                 break;
             uint32_t idx = static_cast<uint32_t>(atoi(idx_char));
+            uint32_t mask = static_cast<uint32_t>(atoi(mask_char));
             spmat.nr_feature = std::max(spmat.nr_feature, idx);
-            spmat.J[p] = idx-1;
+            spmat.J[p].j = idx-1;
+            spmat.J[p].m = mask;
         }
     }
 
