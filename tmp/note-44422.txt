@@ -1,6 +1,7 @@
 <baseline> t=30, d=7, ct=4m, k=4: 0.44422
 ===============
 t=40, k=8: 0.44411
+k=8: 0.44418
 d=6: 0.44438
 d=8: 0.44420
 ct=3m: 0.44431
@@ -22,3 +23,19 @@ t=20: I don't remember, but at least 0.0001 worse
 0.60: 0.44465
 0.55: 0.44460
 0.50: 0.44472
+
+alpha=0.90, ct=1m: 0.44435
+alpha=0.90, ct=2m: 0.44437
+alpha=0.75, ct=1m: 0.44436
+alpha=0.75, ct=2m: 0.44441
+
+t=25: 0.44427
+t=35: 0.44422
+t=40: 0.44415
+t=50: <linux4>
+t=60: <linux1>
+t=70: <linux5>
+t=80: <linux2>
+
+treat NA and less as the same thing: 0.44424
+add two sets of numeric feature: <linux3>
