@@ -46,3 +46,5 @@ remove 'C26-': <linux17>
 remove 'C23-32c7478e': <linux18>
 remove 'C6-7e0ccccf': <linux2>
 remove 'C14-b28479f6': <linux5>
+remove 'C19-21ddcdc9': <schroeder>
+remove 'C14-07d13a8f': <optima>
