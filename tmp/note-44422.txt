@@ -36,7 +36,7 @@ t=50: <linux4>
 t=60: <linux1>
 
 treat NA and less as the same thing: 0.4424
-add two sets of numeric feature: <linux3>
+add two sets of numeric feature: 0.44417
 use smaller lambda and smaller v: 0.44421
 
 remove 'C9-a73ee510': <linux6>
