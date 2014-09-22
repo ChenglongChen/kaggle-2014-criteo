@@ -58,3 +58,14 @@ remove 'C20-a458ea53': 0.44415
 remove 'C14-1adce6ef': 0.44425
 remove 'C25-001f3601': 0.44429
 remove 'C22-ad3062eb': 0.44430
+remove 'C17-07c540c4': <linux2>
+remove 'C6-': <linux3>
+remove 'C23-423fab69': <linux4>
+remove 'C17-d4bb7bd8': <linux5>
+remove 'C2-38a947a1': <linux6>
+remove 'C25-e8b83407': <linux7>
+remove 'C9-7cc72ec2': <linux8>
+remove 'I1': <linux17>
+remove 'I2': <linux18>
+remove 'I3': <schroeder>
+remove 'I4': <optima>
