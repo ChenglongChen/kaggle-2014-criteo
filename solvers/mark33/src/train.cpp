@@ -202,10 +202,7 @@ int main(int const argc, char const * const * const argv)
 	omp_set_num_threads(1);
 
     if(opt.do_prediction)
-    {
-        predict(Tr, model, opt.Tr_path+".out");
         predict(Va, model, opt.Va_path+".out");
-    }
 
     return EXIT_SUCCESS;
 }
