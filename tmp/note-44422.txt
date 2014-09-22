@@ -79,3 +79,5 @@ remove 'I10': <linux8>
 remove 'I11': <linux17>
 remove 'I12': <linux1>
 remove 'I13': <linux2>
+remove 'C17-e5ba7672', 'C6-fbad5c96', 'C6-fe6b92e5', 'C20-a458ea53', 'C17-07c540c4': <linux4>
+remove                 'C6-fbad5c96', 'C6-fe6b92e5', 'C20-a458ea53', 'C17-07c540c4': <linux5>
