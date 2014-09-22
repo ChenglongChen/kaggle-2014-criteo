@@ -39,16 +39,22 @@ treat NA and less as the same thing: 0.4424
 add two sets of numeric feature: 0.44417
 use smaller lambda and smaller v: 0.44421
 
-remove 'C9-a73ee510': <linux6>
-remove 'C22-': <linux7>
-remove 'C17-e5ba7672': <linux8>
-remove 'C26-': <linux17>
-remove 'C23-32c7478e': <linux18>
+remove 'C9-a73ee510': 0.44422
+remove 'C22-': 0.44423
+remove 'C17-e5ba7672': 0.44421
+remove 'C26-': 0.44433
+remove 'C23-32c7478e': 0.44442
 remove 'C6-7e0ccccf': 0.44423
 remove 'C14-b28479f6': 0.44425
-remove 'C19-21ddcdc9': <schroeder>
-remove 'C14-07d13a8f': <optima>
-remove 'C10-3b08e48b': <linux3>
-remove 'C6-fbad5c96': <linux4>
-remote 'C23-3a171ecb': <linux5>
-remove 'C20-b1252a9d': <linux2>
+remove 'C19-21ddcdc9': 0.44427
+remove 'C14-07d13a8f': 0.44429
+remove 'C10-3b08e48b': 0.44431
+remove 'C6-fbad5c96': 0.44418
+remove 'C23-3a171ecb': 0.44426
+remove 'C20-b1252a9d': 0.44430
+remove 'C20-5840adea': 0.44423
+remove 'C6-fe6b92e5': 0.44418
+remove 'C20-a458ea53': 0.44415
+remove 'C14-1adce6ef': 0.44425
+remove 'C25-001f3601': 0.44429
+remove 'C22-ad3062eb': 0.44430
