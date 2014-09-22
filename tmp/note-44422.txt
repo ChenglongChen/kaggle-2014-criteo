@@ -64,12 +64,14 @@ remove 'C23-423fab69': 0.44432
 remove 'C17-d4bb7bd8': 0.44423
 remove 'C2-38a947a1': <linux6>
 remove 'C25-e8b83407': <linux7>
-remove 'C9-7cc72ec2': <linux8>
+remove 'C9-7cc72ec2': 0.44424
 remove 'I1': <linux17>
 remove 'I2': <linux18>
 remove 'I3': <schroeder>
-remove 'I4': <optima>
+remove 'I4': 0.44430
 remove 'I5': <linux2>
 remove 'I6': <linux3>
 remove 'I7': <linux4>
 remove 'I8': <linux5>
+remove 'I9': <optima>
+remove 'I10': <linux8>
