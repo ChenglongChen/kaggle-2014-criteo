@@ -75,8 +75,8 @@ remove 'I6': 0.44433
 remove 'I7': 0.44424
 remove 'I8': 0.44436
 remove 'I9': 0.44428
-remove 'I10': <linux8>
-remove 'I11': <linux17>
+remove 'I10': missing
+remove 'I11': 0.44433
 remove 'I12': 0.44431
 remove 'I13': 0.44420
 remove 'C17-e5ba7672', 'C6-fbad5c96', 'C6-fe6b92e5', 'C20-a458ea53', 'C17-07c540c4': 0.44428
