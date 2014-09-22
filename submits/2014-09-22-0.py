@@ -22,9 +22,9 @@ for size in ["x", "0"]:
 
     f_log = open('{log_dir}/log.r{size}'.format(log_dir=LOG_DIR, size=size), 'w')
 
-    cmd = 'converters/parallelizer.py -s 24 converters/num2.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer2.py -s 24 converters/num2.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer.py -s 24 converters/num2.py va.r{size}.csv va.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer2.py -s 24 converters/num2.py va.r{size}.csv va.r{size}.num'.format(size=size)
     run(cmd) 
 
     cmd = './mark29 -t 50 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
