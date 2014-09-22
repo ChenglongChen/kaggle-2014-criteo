@@ -34,6 +34,7 @@ t=35: 0.44422
 t=40: 0.44415
 t=50: 0.44407@16
 t=60: 0.44403
+t=70:               (about 1000 seconds per iteration on linux1)
 
 treat NA and less as the same thing: 0.4424
 add two sets of numeric feature: 0.44417
@@ -65,7 +66,7 @@ remove 'C17-d4bb7bd8': 0.44423
 remove 'C2-38a947a1': <linux6>
 remove 'C25-e8b83407': <linux7>
 remove 'C9-7cc72ec2': 0.44424
-remove 'I1': <linux17>
+remove 'I1': 0.44434
 remove 'I2': <linux18>
 remove 'I3': <schroeder>
 remove 'I4': 0.44430
@@ -75,3 +76,4 @@ remove 'I7': <linux4>
 remove 'I8': <linux5>
 remove 'I9': <optima>
 remove 'I10': <linux8>
+remove 'I11': <linux17>
