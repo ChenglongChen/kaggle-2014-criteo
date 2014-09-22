@@ -32,8 +32,8 @@ uint64_t get_nr_field(std::string const &path)
     uint64_t nr_field = 0;
     while(1)
     {
-        char *idx_char = strtok(nullptr," \t");
-        if(idx_char == nullptr || *idx_char == '\n')
+        char *val_char = strtok(nullptr," \t");
+        if(val_char == nullptr || *val_char == '\n')
             break;
         ++nr_field;
     }
@@ -61,7 +61,6 @@ DenseColMat read_dcm(std::string const &path)
         problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
         for(uint64_t j = 0; j < problem.nr_field; ++j)
         {
-            strtok(nullptr,":");
             char *val_char = strtok(nullptr," \t");
 
             float const val = static_cast<float>(atof(val_char));
