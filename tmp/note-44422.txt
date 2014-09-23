@@ -81,8 +81,11 @@ remove 'I12': 0.44431
 remove 'I13': 0.44420
 remove 'C17-e5ba7672', 'C6-fbad5c96', 'C6-fe6b92e5', 'C20-a458ea53', 'C17-07c540c4': 0.44428
 remove                 'C6-fbad5c96', 'C6-fe6b92e5', 'C20-a458ea53', 'C17-07c540c4': 0.44431
-remove 'C6-fbad5c96', 'C20-a458ea53': <linux4>
-remove 'C6-fe6b92e5', 'C20-a458ea53': <linux5>
-remove 'C17-07c540c4', 'C20-a458ea53': <linux1>
+remove 'C6-fbad5c96', 'C20-a458ea53': 0.44418
+remove 'C6-fe6b92e5', 'C20-a458ea53': 0.44425
+remove 'C17-07c540c4', 'C20-a458ea53': 0.44420
 
 remove 'C20-a458ea53', t=60: <linux8>
+remove 'C20-a458ea53', t=50: 0.44399
+
+use bias = 0: 0.44426
