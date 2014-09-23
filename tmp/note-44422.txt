@@ -86,3 +86,6 @@ remove 'C6-fe6b92e5', 'C20-a458ea53': 0.44425
 remove 'C17-07c540c4', 'C20-a458ea53': 0.44420
 
 remove 'C20-a458ea53', t=60: <linux8>
+remove 'C20-a458ea53', t=50: 0.44399
+
+use bias = 0: 0.44426
