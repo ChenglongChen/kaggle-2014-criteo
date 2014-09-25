@@ -66,7 +66,7 @@ void clean_vector(std::vector<Type> &vec)
     vec.shrink_to_fit();
 }
 
-void update_F(DenseColMat const &problem, CART const &tree, std::vector<float> &F)
+void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
 {
     for(uint64_t i = 0; i < problem.nr_instance; ++i)
     {
@@ -221,7 +221,7 @@ std::pair<uint64_t, float> TreeNode::predict(float const * const x) const
         return right->predict(x);
 }
 
-void CART::fit(DenseColMat const &problem, std::vector<float> const &R, std::vector<float> &F1)
+void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> &F1)
 {
     root.reset(new TreeNode(0, 1));
     root->I = gen_init_I(problem.nr_instance);
@@ -237,7 +237,7 @@ std::pair<uint64_t, float> CART::predict(float const * const x) const
         return root->predict(x); 
 }
 
-void GBDT::fit(DenseColMat const &Tr, DenseColMat const &Va)
+void GBDT::fit(Problem const &Tr, Problem const &Va)
 {
     bias = calc_bias(Tr.Y);
 

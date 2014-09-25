@@ -12,9 +12,9 @@
 
 #include <pmmintrin.h>
 
-struct DenseColMat
+struct Problem
 {
-    DenseColMat(uint64_t const nr_instance, uint64_t const nr_field) 
+    Problem(uint64_t const nr_instance, uint64_t const nr_field) 
         : nr_instance(nr_instance), nr_field(nr_field),
           X(nr_field, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
@@ -23,7 +23,7 @@ struct DenseColMat
     std::vector<float> Y;
 };
 
-DenseColMat read_dcm(std::string const &path);
+Problem read_dcm(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 

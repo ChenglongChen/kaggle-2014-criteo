@@ -83,7 +83,7 @@ Option parse_option(std::vector<std::string> const &args)
 }
 
 void write(
-    DenseColMat const &problem, GBDT const &gbdt, std::string const &path)
+    Problem const &problem, GBDT const &gbdt, std::string const &path)
 {
     FILE *f = open_c_file(path, "w");
 
@@ -121,8 +121,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    DenseColMat const Tr = read_dcm(opt.Tr_path);
-    DenseColMat const Va = read_dcm(opt.Va_path);
+    Problem const Tr = read_dcm(opt.Tr_path);
+    Problem const Va = read_dcm(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 

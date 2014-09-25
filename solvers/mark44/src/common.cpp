@@ -45,12 +45,12 @@ uint64_t get_nr_field(std::string const &path)
 
 } //unamed namespace
 
-DenseColMat read_dcm(std::string const &path)
+Problem read_dcm(std::string const &path)
 {
     if(path.empty())
-        return DenseColMat(0, 0);
+        return Problem(0, 0);
 
-    DenseColMat problem(get_nr_line(path), get_nr_field(path));
+    Problem problem(get_nr_line(path), get_nr_field(path));
 
     char line[kMaxLineSize];
 

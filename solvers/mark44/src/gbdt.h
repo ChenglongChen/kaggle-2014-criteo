@@ -30,7 +30,7 @@ class CART
 {
 public:
     void fit(
-        DenseColMat const &problem, 
+        Problem const &problem, 
         std::vector<float> const &R, 
         std::vector<float> &F1);
     std::pair<uint64_t, float> predict(float const * const x) const;
@@ -43,7 +43,7 @@ class GBDT
 {
 public:
     GBDT(uint64_t const nr_tree) : trees(nr_tree), bias(0) {}
-    void fit(DenseColMat const &Tr, DenseColMat const &Va);
+    void fit(Problem const &Tr, Problem const &Va);
     float predict(float const * const x) const;
     std::vector<uint64_t> get_indices(float const * const x) const;
 
