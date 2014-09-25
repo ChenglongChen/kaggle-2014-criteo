@@ -17,20 +17,19 @@ namespace {
 struct Option
 {
     Option() : nr_trees(20), nr_threads(1) {}
-    std::string Tr_path, Va_path;
+    std::string TrD_path, TrS_path, VaD_path, VaS_path, out_path;
     uint64_t nr_trees, nr_threads;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: mark26 [<options>] <train_path> \n"
+"usage: mark43 [<options>] <VaD> <VaS> <TrD> <TrS> <out>\n"
 "\n"
 "options:\n"
-"-d <depth>: you know\n"
-"-s <nr_threads>: you know\n"
-"-t <nr_tree>: you know\n"
-"--verbose: you know\n");
+"-d <depth>: set the maximum depth of a tree\n"
+"-s <nr_threads>: set the number of threads OpenMP can use\n"
+"-t <nr_tree>: set the number of trees\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -76,8 +75,11 @@ Option parse_option(std::vector<std::string> const &args)
     if(i >= argc-1)
         throw std::invalid_argument("training data not specified");
 
-    opt.Va_path = args[i++];
-    opt.Tr_path = args[i++];
+    opt.VaD_path = args[i++];
+    opt.VaS_path = args[i++];
+    opt.TrD_path = args[i++];
+    opt.TrS_path = args[i++];
+    opt.out_path = args[i++];
 
     return opt;
 }
@@ -121,18 +123,19 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    DenseColMat const Tr = read_dcm(opt.Tr_path);
-    DenseColMat const Va = read_dcm(opt.Va_path);
+    DenseColMat const TrD = read_dcm(opt.TrD_path);
+    SparseColMat const TrS = read_scm(opt.TrS_path);
+    DenseColMat const VaD = read_dcm(opt.VaD_path);
+    SparseColMat const VaS = read_scm(opt.VaS_path);
     printf("done\n");
     fflush(stdout);
 
 	omp_set_num_threads(static_cast<int>(opt.nr_threads));
 
     GBDT gbdt(opt.nr_trees);
-    gbdt.fit(Tr, Va);
+    gbdt.fit(TrD, VaD);
 
-    write(Tr, gbdt, opt.Tr_path+".out");
-    write(Va, gbdt, opt.Va_path+".out");
+    write(VaD, gbdt, opt.out_path);
 
     return EXIT_SUCCESS;
 }
