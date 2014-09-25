@@ -43,15 +43,8 @@ uint32_t get_nr_field(std::string const &path)
     return nr_field;
 }
 
-} //unamed namespace
-
-Problem read_dcm(std::string const &path)
+void read_dcm(Problem &problem, std::string const &path)
 {
-    if(path.empty())
-        return Problem(0, 0);
-
-    Problem problem(get_nr_line(path), get_nr_field(path));
-
     char line[kMaxLineSize];
 
     FILE *f = open_c_file(path.c_str(), "r");
@@ -70,6 +63,15 @@ Problem read_dcm(std::string const &path)
     }
 
     fclose(f);
+}
+
+} //unamed namespace
+
+Problem read_data(std::string const &path)
+{
+    Problem problem(get_nr_line(path), get_nr_field(path));
+
+    read_dcm(problem, path);
 
     return problem;
 }

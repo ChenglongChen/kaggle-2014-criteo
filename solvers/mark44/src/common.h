@@ -23,7 +23,7 @@ struct Problem
     std::vector<float> Y;
 };
 
-Problem read_dcm(std::string const &path);
+Problem read_data(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
