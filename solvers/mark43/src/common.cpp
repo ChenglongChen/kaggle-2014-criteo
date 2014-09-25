@@ -57,8 +57,8 @@ DenseColMat read_dcm(std::string const &path)
     FILE *f = open_c_file(path.c_str(), "r");
     for(uint64_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
-        char *p = strtok(line, " \t");
-        problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
+        char *str_ptr = strtok(line, " \t");
+        problem.Y[i] = (atoi(str_ptr)>0)? 1.0f : -1.0f;
         for(uint64_t j = 0; j < problem.nr_field; ++j)
         {
             char *val_char = strtok(nullptr," \t");
@@ -67,6 +67,55 @@ DenseColMat read_dcm(std::string const &path)
 
             problem.X[j][i] = val;
         }
+    }
+
+    fclose(f);
+
+    return problem;
+}
+
+SparseColMat read_scm(std::string const &path)
+{
+    if(path.empty())
+        return SparseColMat(0, 0, 0);
+
+    char line[kMaxLineSize];
+
+    FILE *f = open_c_file(path.c_str(), "r");
+
+    std::vector<std::vector<uint64_t>> buffer;
+
+    uint64_t nnz = 0, nr_instance = 0;
+    for(uint64_t i = 0; fgets(line, kMaxLineSize, f) != nullptr;
+        ++i, ++nr_instance)
+    {
+        strtok(line, " \t");
+        for( ; ; ++nnz)
+        {
+            char *idx_char = strtok(nullptr," \t");
+
+            uint64_t const idx = atol(idx_char);
+            if(idx_char == nullptr || *idx_char == '\n')
+                break;
+
+            buffer.resize(idx);
+
+            buffer[idx-1].push_back(i);
+        }
+    }
+
+    uint64_t const nr_field = buffer.size();
+
+    SparseColMat problem(nr_instance, nr_field, nnz);
+
+    problem.P[0] = 0;
+
+    uint64_t p = 0;
+    for(uint64_t j = 0; j < nr_field; ++j)
+    {
+        for(auto i : buffer[j]) 
+            problem.X[p++] = i;
+        problem.P[j+1] = p;
     }
 
     fclose(f);

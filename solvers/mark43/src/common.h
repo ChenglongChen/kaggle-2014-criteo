@@ -27,15 +27,14 @@ DenseColMat read_dcm(std::string const &path);
 
 struct SparseColMat
 {
-    SparseColMat(uint64_t const nr_instance, uint64_t const nr_field) 
-        : nr_instance(nr_instance), nr_field(nr_field),
-          Y(nr_instance) {}
-    uint64_t const nr_instance, nr_field;
-    std::vector<float> X, Y;
-    std::vector<uint64_t> P;
+    SparseColMat(uint64_t const nr_instance, uint64_t const nr_field, uint64_t const nnz) 
+        : nr_instance(nr_instance), nr_field(nr_field), nnz(nnz), 
+          X(nnz), P(nr_field+1) {}
+    uint64_t const nr_instance, nr_field, nnz;
+    std::vector<uint64_t> X, P;
 };
 
-//SparseColMat read_scm(std::string const &path);
+SparseColMat read_scm(std::string const &path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
