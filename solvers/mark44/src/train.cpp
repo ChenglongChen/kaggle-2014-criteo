@@ -17,31 +17,32 @@ namespace {
 struct Option
 {
     Option() : nr_trees(20), nr_threads(1) {}
-    std::string Tr_path, Va_path, TrS_path, VaS_path, out_path;
-    uint64_t nr_trees, nr_threads;
+    std::string Tr_path, Va_path;
+    uint32_t nr_trees, nr_threads;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: mark43 [<options>] <VaD> <VaS> <TrD> <TrS> <out>\n"
+"usage: mark26 [<options>] <train_path> \n"
 "\n"
 "options:\n"
-"-d <depth>: set the maximum depth of a tree\n"
-"-s <nr_threads>: set the number of threads OpenMP can use\n"
-"-t <nr_tree>: set the number of trees\n");
+"-d <depth>: you know\n"
+"-s <nr_threads>: you know\n"
+"-t <nr_tree>: you know\n"
+"--verbose: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
 {
-    uint64_t const argc = args.size();
+    uint32_t const argc = static_cast<uint32_t>(args.size());
 
     if(argc == 0)
         throw std::invalid_argument(train_help());
 
     Option opt; 
 
-    uint64_t i = 0;
+    uint32_t i = 0;
     for(; i < argc; ++i)
     {
         if(args[i].compare("-d") == 0)
@@ -76,30 +77,27 @@ Option parse_option(std::vector<std::string> const &args)
         throw std::invalid_argument("training data not specified");
 
     opt.Va_path = args[i++];
-    opt.VaS_path = args[i++];
     opt.Tr_path = args[i++];
-    opt.TrS_path = args[i++];
-    opt.out_path = args[i++];
 
     return opt;
 }
 
 void write(
-    DenseColMat const &problem, GBDT const &gbdt, std::string const &path)
+    Problem const &problem, GBDT const &gbdt, std::string const &path)
 {
     FILE *f = open_c_file(path, "w");
 
-    for(uint64_t i = 0; i < problem.nr_instance; ++i)
+    for(uint32_t i = 0; i < problem.nr_instance; ++i)
     {
         std::vector<float> x(problem.nr_field);
-        for(uint64_t j = 0; j < problem.nr_field; ++j)
+        for(uint32_t j = 0; j < problem.nr_field; ++j)
             x[j] = problem.X[j][i];
 
-        std::vector<uint64_t> indices = gbdt.get_indices(x.data());
+        std::vector<uint32_t> indices = gbdt.get_indices(x.data());
 
         fprintf(f, "%d", static_cast<int>(problem.Y[i]));
-        for(uint64_t t = 0; t < indices.size(); ++t)
-            fprintf(f, " %ld:%ld", t+1, indices[t]);
+        for(uint32_t t = 0; t < indices.size(); ++t)
+            fprintf(f, " %d:%d", t+1, indices[t]);
         fprintf(f, "\n");
     }
 
@@ -123,10 +121,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    DenseColMat const Tr = read_dcm(opt.Tr_path);
-    SparseColMat const TrS = read_scm(opt.TrS_path);
-    DenseColMat const Va = read_dcm(opt.Va_path);
-    SparseColMat const VaS = read_scm(opt.VaS_path);
+    Problem const Tr = read_data(opt.Tr_path);
+    Problem const Va = read_data(opt.Va_path);
     printf("done\n");
     fflush(stdout);
 
@@ -135,6 +131,7 @@ int main(int const argc, char const * const * const argv)
     GBDT gbdt(opt.nr_trees);
     gbdt.fit(Tr, Va);
 
+    write(Tr, gbdt, opt.Tr_path+".out");
     write(Va, gbdt, opt.Va_path+".out");
 
     return EXIT_SUCCESS;
