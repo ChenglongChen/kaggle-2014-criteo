@@ -5,14 +5,14 @@
 
 namespace {
 
-uint64_t const kMaxLineSize = 1000000;
+uint32_t const kMaxLineSize = 1000000;
 
-uint64_t get_nr_line(std::string const &path)
+uint32_t get_nr_line(std::string const &path)
 {
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
-    uint64_t nr_line = 0;
+    uint32_t nr_line = 0;
     while(fgets(line, kMaxLineSize, f) != nullptr)
         ++nr_line;
 
@@ -21,7 +21,7 @@ uint64_t get_nr_line(std::string const &path)
     return nr_line;
 }
 
-uint64_t get_nr_field(std::string const &path)
+uint32_t get_nr_field(std::string const &path)
 {
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
@@ -29,7 +29,7 @@ uint64_t get_nr_field(std::string const &path)
     fgets(line, kMaxLineSize, f);
     strtok(line, " \t");
 
-    uint64_t nr_field = 0;
+    uint32_t nr_field = 0;
     while(1)
     {
         char *val_char = strtok(nullptr," \t");
@@ -55,11 +55,11 @@ Problem read_dcm(std::string const &path)
     char line[kMaxLineSize];
 
     FILE *f = open_c_file(path.c_str(), "r");
-    for(uint64_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
+    for(uint32_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
         char *p = strtok(line, " \t");
         problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
-        for(uint64_t j = 0; j < problem.nr_field; ++j)
+        for(uint32_t j = 0; j < problem.nr_field; ++j)
         {
             char *val_char = strtok(nullptr," \t");
 

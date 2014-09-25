@@ -18,7 +18,7 @@ struct Option
 {
     Option() : nr_trees(20), nr_threads(1) {}
     std::string Tr_path, Va_path;
-    uint64_t nr_trees, nr_threads;
+    uint32_t nr_trees, nr_threads;
 };
 
 std::string train_help()
@@ -35,14 +35,14 @@ std::string train_help()
 
 Option parse_option(std::vector<std::string> const &args)
 {
-    uint64_t const argc = args.size();
+    uint32_t const argc = static_cast<uint32_t>(args.size());
 
     if(argc == 0)
         throw std::invalid_argument(train_help());
 
     Option opt; 
 
-    uint64_t i = 0;
+    uint32_t i = 0;
     for(; i < argc; ++i)
     {
         if(args[i].compare("-d") == 0)
@@ -87,17 +87,17 @@ void write(
 {
     FILE *f = open_c_file(path, "w");
 
-    for(uint64_t i = 0; i < problem.nr_instance; ++i)
+    for(uint32_t i = 0; i < problem.nr_instance; ++i)
     {
         std::vector<float> x(problem.nr_field);
-        for(uint64_t j = 0; j < problem.nr_field; ++j)
+        for(uint32_t j = 0; j < problem.nr_field; ++j)
             x[j] = problem.X[j][i];
 
-        std::vector<uint64_t> indices = gbdt.get_indices(x.data());
+        std::vector<uint32_t> indices = gbdt.get_indices(x.data());
 
         fprintf(f, "%d", static_cast<int>(problem.Y[i]));
-        for(uint64_t t = 0; t < indices.size(); ++t)
-            fprintf(f, " %ld:%ld", t+1, indices[t]);
+        for(uint32_t t = 0; t < indices.size(); ++t)
+            fprintf(f, " %d:%d", t+1, indices[t]);
         fprintf(f, "\n");
     }
 

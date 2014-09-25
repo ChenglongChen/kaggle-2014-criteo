@@ -14,11 +14,11 @@
 
 struct Problem
 {
-    Problem(uint64_t const nr_instance, uint64_t const nr_field) 
+    Problem(uint32_t const nr_instance, uint32_t const nr_field) 
         : nr_instance(nr_instance), nr_field(nr_field),
           X(nr_field, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
-    uint64_t const nr_instance, nr_field;
+    uint32_t const nr_instance, nr_field;
     std::vector<std::vector<float>> X;
     std::vector<float> Y;
 };
