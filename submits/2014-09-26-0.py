@@ -35,7 +35,7 @@ for size in ["x", "0"]:
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py va.r{size}.csv va.r{size}.num.out va.r{size}.fm'.format(size=size)
     run(cmd) 
 
-    cmd = './mark33 -k 4 -s 24 -t 15 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
+    cmd = './mark33 -k 4 -s 24 -t 11 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
     run(cmd, f_log) 
 
     f_log.close()
