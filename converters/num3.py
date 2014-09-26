@@ -34,7 +34,5 @@ with open(args['dense_path'], 'w') as f_d, open(args['sparse_path'], 'w') as f_s
         feats = []
         for j, feat in enumerate(target_cat_feats, start=1):
             if feat in cat_feats:
-                feats.append('1')
-            else:
-                feats.append('0')
+                feats.append('{0}:1'.format(j))
         f_s.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
