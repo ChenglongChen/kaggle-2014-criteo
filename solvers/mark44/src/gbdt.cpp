@@ -79,11 +79,11 @@ void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
 
 void fit_proxy(
     TreeNode * const node,
-    std::vector<std::vector<float>> const &X, 
+    Problem const &problem,
     std::vector<float> const &R, 
     std::vector<float> &F1)
 {
-    node->fit(X, R, F1); 
+    node->fit(problem, R, F1); 
 }
 
 } //unnamed namespace
@@ -94,7 +94,7 @@ std::mutex TreeNode::mtx;
 bool TreeNode::verbose = false;
 
 void TreeNode::fit(
-    std::vector<std::vector<float>> const &X, 
+    Problem const &problem,
     std::vector<float> const &R, 
     std::vector<float> &F1)
 {
@@ -123,8 +123,9 @@ void TreeNode::fit(
     double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
     double best_ese = sr0*sr0/nr0;
 
+    std::vector<std::vector<float>> const &X = problem.X;
     #pragma omp parallel for schedule(dynamic)
-    for(uint32_t j = 0; j < X.size(); ++j)
+    for(uint32_t j = 0; j < problem.nr_field; ++j)
     {
         double nl = 0, nr = nr0;
         double sl = 0, sr = sr0;
@@ -156,7 +157,7 @@ void TreeNode::fit(
     if(feature == -1)
     {
         saturated = true;
-        this->fit(X, R, F1);
+        this->fit(problem, R, F1);
         return;
     }
 
@@ -189,14 +190,14 @@ void TreeNode::fit(
 
     if(do_parallel)
     {
-        std::thread thread(fit_proxy, left.get(), std::ref(X), std::ref(R), std::ref(F1));
+        std::thread thread(fit_proxy, left.get(), std::ref(problem), std::ref(R), std::ref(F1));
 
         {
             std::lock_guard<std::mutex> lock(mtx);
             ++nr_thread;
         }
 
-        right->fit(X, R, F1);
+        right->fit(problem, R, F1);
         thread.join();
 
         {
@@ -206,8 +207,8 @@ void TreeNode::fit(
     }
     else
     {
-        left->fit(X, R, F1);
-        right->fit(X, R, F1);
+        left->fit(problem, R, F1);
+        right->fit(problem, R, F1);
     }
 }
 
@@ -226,7 +227,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<
     root.reset(new TreeNode(0, 1));
     root->I = gen_init_I(problem.nr_instance);
 
-    root->fit(problem.X, R, F1);
+    root->fit(problem, R, F1);
 }
 
 std::pair<uint32_t, float> CART::predict(float const * const x) const

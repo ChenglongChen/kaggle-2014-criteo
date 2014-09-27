@@ -20,7 +20,7 @@ struct TreeNode
     static bool verbose;
 
     void fit(
-        std::vector<std::vector<float>> const &X, 
+        Problem const &problem, 
         std::vector<float> const &R, 
         std::vector<float> &F1);
     std::pair<uint32_t, float> predict(float const * const x) const;
