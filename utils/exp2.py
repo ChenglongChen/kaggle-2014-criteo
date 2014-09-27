@@ -20,7 +20,7 @@ for size in ["x"]:
     run(cmd) 
 
     cmd = './mark44 -t 30 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
-    #run(cmd)
+    run(cmd)
 
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
     #run(cmd) 

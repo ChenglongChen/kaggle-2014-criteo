@@ -17,7 +17,7 @@ namespace {
 struct Option
 {
     Option() : nr_trees(20), nr_threads(1) {}
-    std::string Tr_path, Va_path;
+    std::string Tr_path, TrS_path, Va_path, VaS_path, Va_out_path, Tr_out_path;
     uint32_t nr_trees, nr_threads;
 };
 
@@ -77,7 +77,11 @@ Option parse_option(std::vector<std::string> const &args)
         throw std::invalid_argument("training data not specified");
 
     opt.Va_path = args[i++];
+    opt.VaS_path = args[i++];
     opt.Tr_path = args[i++];
+    opt.TrS_path = args[i++];
+    opt.Va_out_path = args[i++];
+    opt.Tr_out_path = args[i++];
 
     return opt;
 }
@@ -121,8 +125,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Problem const Tr = read_data(opt.Tr_path);
-    Problem const Va = read_data(opt.Va_path);
+    Problem const Tr = read_data(opt.Tr_path, opt.TrS_path);
+    Problem const Va = read_data(opt.Va_path, opt.VaS_path);
     printf("done\n");
     fflush(stdout);
 
@@ -131,8 +135,8 @@ int main(int const argc, char const * const * const argv)
     GBDT gbdt(opt.nr_trees);
     gbdt.fit(Tr, Va);
 
-    write(Tr, gbdt, opt.Tr_path+".out");
-    write(Va, gbdt, opt.Va_path+".out");
+    write(Tr, gbdt, opt.Tr_out_path);
+    write(Va, gbdt, opt.Va_out_path);
 
     return EXIT_SUCCESS;
 }

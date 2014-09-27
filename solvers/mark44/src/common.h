@@ -15,15 +15,18 @@
 struct Problem
 {
     Problem(uint32_t const nr_instance, uint32_t const nr_field) 
-        : nr_instance(nr_instance), nr_field(nr_field),
+        : nr_instance(nr_instance), nr_field(nr_field), nr_sparse_field(0),
           X(nr_field, std::vector<float>(nr_instance)), 
           Y(nr_instance) {}
     uint32_t const nr_instance, nr_field;
+    uint32_t nr_sparse_field;
     std::vector<std::vector<float>> X;
+    std::vector<uint32_t> SX;
+    std::vector<uint64_t> SP;
     std::vector<float> Y;
 };
 
-Problem read_data(std::string const &path);
+Problem read_data(std::string const &dense_path, std::string const &sparse_path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 

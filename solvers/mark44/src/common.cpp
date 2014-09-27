@@ -65,13 +65,57 @@ void read_dcm(Problem &problem, std::string const &path)
     fclose(f);
 }
 
+void read_scm(Problem &problem, std::string const &path)
+{
+    char line[kMaxLineSize];
+
+    FILE *f = open_c_file(path.c_str(), "r");
+
+    std::vector<std::vector<uint32_t>> buffer;
+
+    uint64_t nnz = 0; 
+    uint32_t nr_instance = 0;
+    for(; fgets(line, kMaxLineSize, f) != nullptr; ++nr_instance)
+    {
+        strtok(line, " \t");
+        for( ; ; ++nnz)
+        {
+            char *idx_char = strtok(nullptr," \t");
+            if(idx_char == nullptr || *idx_char == '\n')
+                break;
+
+            uint32_t const idx = atoi(idx_char);
+
+            buffer.resize(idx);
+            buffer[idx-1].push_back(nr_instance);
+        }
+    }
+
+    problem.nr_sparse_field = static_cast<uint32_t>(buffer.size());
+    problem.SX.resize(nr_instance);
+    problem.SP.resize(problem.nr_sparse_field+1);
+    problem.SP[0] = 0;
+
+    uint64_t p = 0;
+    for(uint32_t j = 0; j < problem.nr_sparse_field; ++j)
+    {
+        for(auto i : buffer[j]) 
+            problem.SX[p++] = i;
+        problem.SP[j+1] = p;
+    }
+
+    fclose(f);
+}
+
 } //unamed namespace
 
-Problem read_data(std::string const &path)
+Problem read_data(std::string const &dense_path, std::string const &sparse_path)
 {
-    Problem problem(get_nr_line(path), get_nr_field(path));
+    Problem problem(get_nr_line(dense_path), get_nr_field(dense_path));
 
-    read_dcm(problem, path);
+    read_dcm(problem, dense_path);
+
+    read_scm(problem, sparse_path);
 
     return problem;
 }
