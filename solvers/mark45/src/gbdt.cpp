@@ -120,14 +120,15 @@ void TreeNode::fit(
 
     is_leaf = false;
 
-    double const sr0 = partial_sum(R, I), nr0 = static_cast<double>(I.size());
-    double best_ese = sr0*sr0/nr0;
+    double const sr0 = partial_sum(R, I); 
+    uint32_t const nr0 = static_cast<uint32_t>(I.size());
+    double best_ese = sr0*sr0/static_cast<double>(nr0);
 
     std::vector<std::vector<float>> const &X = problem.X;
     #pragma omp parallel for schedule(dynamic)
     for(uint32_t j = 0; j < problem.nr_field; ++j)
     {
-        double nl = 0, nr = nr0;
+        uint32_t nl = 0, nr = nr0;
         double sl = 0, sr = sr0;
 
         std::vector<Node> nodes = get_ordered_nodes(X[j], I);
@@ -136,11 +137,11 @@ void TreeNode::fit(
             Node const &node = nodes[ii], &node_next = nodes[ii+1];
             sl += R[node.i]; 
             sr -= R[node.i]; 
-            nl += 1;
-            nr -= 1;
+            ++nl;
+            --nr;
             if(node.v != node_next.v)
             {
-                double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
+                double const current_ese = (sl*sl)/static_cast<double>(nl) + (sr*sr)/static_cast<double>(nr);
                 #pragma omp critical
                 {
                     if(current_ese > best_ese || (current_ese == best_ese && static_cast<int>(j) < feature))
