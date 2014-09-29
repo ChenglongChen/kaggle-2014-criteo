@@ -23,16 +23,16 @@ with open(args['svm_path'], 'w') as f:
                 val = -10 
             feats.append('{0}'.format(val))
         
-        cat_feats = set()
-        for j in range(1, 27):
-            field = 'C{0}'.format(j)
-            key = field + '-' + row[field]
-            cat_feats.add(key)
+        #cat_feats = set()
+        #for j in range(1, 27):
+        #    field = 'C{0}'.format(j)
+        #    key = field + '-' + row[field]
+        #    cat_feats.add(key)
 
-        for j, feat in enumerate(target_cat_feats, start=1):
-            if feat in cat_feats:
-                feats.append('1')
-            else:
-                feats.append('0')
+        #for j, feat in enumerate(target_cat_feats, start=1):
+        #    if feat in cat_feats:
+        #        feats.append('1')
+        #    else:
+        #        feats.append('0')
 
         f.write(row['Label'] + ' ' + ' '.join(feats) + '\n')
