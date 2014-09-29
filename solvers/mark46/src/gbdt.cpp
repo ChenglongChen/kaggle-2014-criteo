@@ -25,6 +25,7 @@ void clean_vector(std::vector<Type> &vec)
 
 void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
 {
+    #pragma omp parallel for schedule(static)
     for(uint32_t i = 0; i < problem.nr_instance; ++i)
     {
         std::vector<float> x(problem.nr_field);
@@ -129,10 +130,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             }
         }
 
-        uint32_t max_nr_leaf_next = max_nr_leaf*2;
-        uint32_t idx_offset_next = idx_offset*2;
-
-        std::vector<uint32_t> counter(max_nr_leaf_next, 0);
+        #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location &location = locations[i];
@@ -151,12 +149,24 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
                     tnode_idx = 2*tnode_idx; 
                 else
                     tnode_idx = 2*tnode_idx+1; 
-                ++counter[tnode_idx-idx_offset_next];
             }
         }
 
-        for(auto &location : locations)
+        uint32_t max_nr_leaf_next = max_nr_leaf*2;
+        uint32_t idx_offset_next = idx_offset*2;
+        std::vector<uint32_t> counter(max_nr_leaf_next, 0);
+        for(uint32_t i = 0; i < nr_instance; ++i)
         {
+            Location const &location = locations[i];
+            if(location.is_shrinked)
+                continue;
+            ++counter[locations[i].tnode_idx-idx_offset_next];
+        }
+
+        #pragma omp parallel for schedule(static)
+        for(uint32_t i = 0; i < nr_instance; ++i)
+        {
+            Location &location = locations[i]; 
             if(location.is_shrinked)
                 continue;
             if(counter[location.tnode_idx-idx_offset_next] < 100)
@@ -180,6 +190,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         tnodes[tnode_idx].gamma = (b <= 1e-12)? 0 : static_cast<float>(a/b);
     }
 
+    #pragma omp parallel for schedule(static)
     for(uint32_t i = 0; i < nr_instance; ++i)
         F1[i] = tnodes[locations[i].tnode_idx].gamma;
 }
