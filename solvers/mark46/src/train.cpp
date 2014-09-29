@@ -29,8 +29,7 @@ std::string train_help()
 "options:\n"
 "-d <depth>: you know\n"
 "-s <nr_threads>: you know\n"
-"-t <nr_tree>: you know\n"
-"--verbose: you know\n");
+"-t <nr_tree>: you know\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -49,7 +48,7 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            TreeNode::max_depth = std::stoi(args[++i]);
+            CART::max_depth = std::stoi(args[++i]);
         }
         else if(args[i].compare("-t") == 0)
         {
@@ -62,10 +61,6 @@ Option parse_option(std::vector<std::string> const &args)
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
             opt.nr_threads = std::stoi(args[++i]);
-        }
-        else if(args[i].compare("--verbose") == 0)
-        {
-            TreeNode::verbose = true;
         }
         else
         {
@@ -125,8 +120,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Problem Tr = read_data(opt.Tr_path, opt.TrS_path, true);
-    Problem Va = read_data(opt.Va_path, opt.VaS_path, false);
+    Problem const Tr = read_data(opt.Tr_path, opt.TrS_path, true);
+    Problem const Va = read_data(opt.Va_path, opt.VaS_path, false);
     printf("done\n");
     fflush(stdout);
 

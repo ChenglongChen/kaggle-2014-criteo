@@ -27,22 +27,14 @@ struct Problem
         : nr_instance(nr_instance), nr_field(nr_field), nr_sparse_field(0),
           X(nr_field, std::vector<Node>(nr_instance)), 
           Z(nr_field, std::vector<Node>(nr_instance)), 
-          I(nr_instance), Y(nr_instance), R(nr_instance)
-    {
-        for(uint32_t i = 0; i < nr_instance; ++i)             
-            I[i] = i;
-    }
+          Y(nr_instance) {}
     uint32_t const nr_instance, nr_field;
     uint32_t nr_sparse_field;
     std::vector<std::vector<Node>> X, Z;
-    std::vector<uint32_t> I;
     std::vector<uint32_t> SX;
     std::vector<uint64_t> SP;
-    std::vector<float> Y, R;
+    std::vector<float> Y;
 };
-
-std::pair<Problem, Problem> split_problem(Problem const &problem, 
-    uint32_t const feature, float const threshold);
 
 Problem read_data(std::string const &dense_path, std::string const &sparse_path, 
     bool const do_sort);

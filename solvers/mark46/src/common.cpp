@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cassert>
 #include <algorithm>
+#include <omp.h>
 
 #include "common.h"
 
@@ -45,7 +46,7 @@ uint32_t get_nr_field(std::string const &path)
     return nr_field;
 }
 
-void read_dcm(Problem &problem, std::string const &path, bool const do_sort)
+void read_dcm(Problem &problem, std::string const &path)
 {
     char line[kMaxLineSize];
 
@@ -61,26 +62,6 @@ void read_dcm(Problem &problem, std::string const &path, bool const do_sort)
             float const val = static_cast<float>(atof(val_char));
 
             problem.X[j][i] = Node(i, val);
-        }
-    }
-
-    if(do_sort)
-    {
-        struct sort_by_v
-        {
-            bool operator() (Node const lhs, Node const rhs)
-            {
-                return lhs.v < rhs.v;
-            }
-        };
-
-        for(uint32_t j = 0; j < problem.nr_field; ++j)
-        {
-            std::vector<Node> &X1 = problem.X[j];
-            std::vector<Node> &Z1 = problem.Z[j];
-            std::sort(X1.begin(), X1.end(), sort_by_v());
-            for(uint32_t i = 0; i < problem.nr_instance; ++i)
-                Z1[X1[i].i] = Node(i, X1[i].v);
         }
     }
 
@@ -129,112 +110,40 @@ void read_scm(Problem &problem, std::string const &path)
     fclose(f);
 }
 
-} //unamed namespace
-
-std::pair<Problem, Problem> split_problem(Problem const &problem, 
-    uint32_t const feature, float const threshold)
+void sort_problem(Problem &problem)
 {
-    uint32_t const nr_instance = problem.nr_instance;
-    uint32_t const nr_field = problem.nr_field;
-
-    std::vector<int> partition(nr_instance, 0);
-    uint32_t l_size = 0, r_size = 0;
-    for(uint32_t i = 0; i < nr_instance; ++i)
+    struct sort_by_v
     {
-        float const v = problem.Z[feature][i].v;
-        if(v <= threshold)
+        bool operator() (Node const lhs, Node const rhs)
         {
-            partition[i] = -1;
-            ++l_size;
+            return lhs.v < rhs.v;
         }
-        else
-        {
-            partition[i] = 1;
-            ++r_size;
-        }
-    }
+    };
 
-    Problem l_problem(l_size, nr_field), r_problem(r_size, nr_field);
-    #pragma omp parallel for schedule(dynamic)
-    for(uint32_t j = 0; j < nr_field; ++j)
+    #pragma omp parallel for schedule(static)
+    for(uint32_t j = 0; j < problem.nr_field; ++j)
     {
-        std::vector<Node> const &X1 = problem.X[j];
-        std::vector<Node> const &Z1 = problem.Z[j];
-
-        std::vector<int32_t> partition1(nr_instance, 0);
-        std::vector<uint32_t> bridge(nr_instance, 0);
-        for(uint32_t i = 0, l_i = 0, r_i = 0; i < nr_instance; ++i)
-        {
-            if(partition[i] == -1)
-            {
-                l_problem.Z[j][l_i] = Z1[i];
-                bridge[i] = l_i++;
-            }
-            else if(partition[i] == 1)
-            {
-                r_problem.Z[j][r_i] = Z1[i];
-                bridge[i] = r_i++;
-            }
-            else 
-            {
-                assert(false);
-            }
-            partition1[Z1[i].i] = partition[i];
-        }
-
-        for(uint32_t i = 0, l_i = 0, r_i = 0; i < nr_instance; ++i)
-        {
-            uint32_t const new_i = bridge[X1[i].i];
-            if(partition1[i] == -1)
-            {
-                l_problem.Z[j][new_i].i = l_i;
-                l_problem.X[j][l_i] = Node(new_i, X1[i].v);
-                ++l_i;
-            }
-            else if(partition1[i] == 1)
-            {
-                r_problem.Z[j][new_i].i = r_i;
-                r_problem.X[j][r_i] = Node(new_i, X1[i].v);
-                ++r_i;
-            }
-            else 
-            {
-                assert(false);
-            }
-        }
+        std::vector<Node> &X1 = problem.X[j];
+        std::vector<Node> &Z1 = problem.Z[j];
+        std::sort(X1.begin(), X1.end(), sort_by_v());
+        for(uint32_t i = 0; i < problem.nr_instance; ++i)
+            Z1[X1[i].i] = Node(i, X1[i].v);
     }
-
-    for(uint32_t i = 0, l_i = 0, r_i = 0; i < nr_instance; ++i)
-    {
-        if(partition[i] == -1)
-        {
-            l_problem.Y[l_i] = problem.Y[i];
-            l_problem.R[l_i] = problem.R[i];
-            l_problem.I[l_i++] = problem.I[i];
-        }
-        else if(partition[i] == 1)
-        {
-            r_problem.Y[r_i] = problem.Y[i];
-            r_problem.R[r_i] = problem.R[i];
-            r_problem.I[r_i++] = problem.I[i];
-        }
-        else 
-        {
-            assert(false);
-        }
-    }
-    
-    return std::make_pair(l_problem, r_problem);
 }
+
+} //unamed namespace
 
 Problem read_data(std::string const &dense_path, std::string const &sparse_path,
     bool const do_sort)
 {
     Problem problem(get_nr_line(dense_path), get_nr_field(dense_path));
 
-    read_dcm(problem, dense_path, do_sort);
+    read_dcm(problem, dense_path);
 
     read_scm(problem, sparse_path);
+
+    if(do_sort)
+        sort_problem(problem);
 
     return problem;
 }
