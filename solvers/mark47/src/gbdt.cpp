@@ -130,14 +130,11 @@ void TreeNode::fit(
         double sl = 0, sr = sr0;
 
         std::vector<Node> nodes = get_ordered_nodes(X[j], I);
-        for(uint64_t ii = 0; ii < nodes.size()-1; ++ii)
+        float v_prev = 0.0f/0.0f;
+        for(uint64_t ii = 0; ii < nodes.size(); ++ii)
         {
-            Node const &node = nodes[ii], &node_next = nodes[ii+1];
-            sl += R[node.i]; 
-            sr -= R[node.i]; 
-            nl += 1;
-            nr -= 1;
-            if(node.v != node_next.v)
+            Node const &node = nodes[ii];
+            if(node.v != v_prev)
             {
                 double const current_ese = (sl*sl)/nl + (sr*sr)/nr;
                 #pragma omp critical
@@ -150,6 +147,11 @@ void TreeNode::fit(
                     }
                 }
             }
+            sl += R[node.i]; 
+            sr -= R[node.i]; 
+            nl += 1;
+            nr -= 1;
+            v_prev = node.v;
         }
     }
 
@@ -165,7 +167,7 @@ void TreeNode::fit(
 
     for(auto i : I)
     {
-        if(X[feature][i] <= threshold)
+        if(X[feature][i] < threshold)
             left->I.push_back(i);
         else
             right->I.push_back(i);
@@ -215,7 +217,7 @@ std::pair<uint64_t, float> TreeNode::predict(float const * const x) const
 {
     if(is_leaf)
         return std::make_pair(idx, gamma);
-    else if(x[feature] <= threshold)
+    else if(x[feature] < threshold)
         return left->predict(x);
     else
         return right->predict(x);
