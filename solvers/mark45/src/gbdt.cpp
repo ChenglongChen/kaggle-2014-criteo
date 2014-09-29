@@ -9,54 +9,11 @@
 
 namespace {
 
-struct Node
-{
-    Node() : i(0), v(0) {}
-    Node(uint32_t const i, float const v) : i(i), v(v) {}
-    uint32_t i;
-    float v;
-};
-
-inline double partial_sum(std::vector<float> const &R, std::vector<uint32_t> const &I)
-{
-    double sum = 0;
-    for(auto i : I)
-        sum += R[i];
-    return sum;
-}
-
-inline std::vector<uint32_t> gen_init_I(uint32_t const nr_instance)
-{
-    std::vector<uint32_t> I(nr_instance, 0);
-    for(uint32_t i = 0; i < nr_instance; ++i)
-        I[i] = i;
-    return I;
-}
-
 float calc_bias(std::vector<float> const &Y)
 {
     float y_bar = static_cast<float>(std::accumulate(Y.begin(), Y.end(), 0.0) /
         static_cast<double>(Y.size()));
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
-}
-
-std::vector<Node> 
-get_ordered_nodes(std::vector<float> const &Xj, std::vector<uint32_t> const &I)
-{
-    struct sort_by_v
-    {
-        bool operator() (Node const lhs, Node const rhs)
-        {
-            return lhs.v < rhs.v;
-        }
-    };
-
-    std::vector<Node> nodes(I.size());
-    for(uint32_t ii = 0; ii < I.size(); ++ii)
-        nodes[ii] = Node(I[ii], Xj[I[ii]]);
-    std::sort(nodes.begin(), nodes.end(), sort_by_v());
-
-    return nodes;
 }
 
 template<typename Type>
@@ -66,24 +23,23 @@ void clean_vector(std::vector<Type> &vec)
     vec.shrink_to_fit();
 }
 
-void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
+void update_F(Problem &problem, CART const &tree, std::vector<float> &F)
 {
     for(uint32_t i = 0; i < problem.nr_instance; ++i)
     {
         std::vector<float> x(problem.nr_field);
         for(uint32_t j = 0; j < problem.nr_field; ++j)
-            x[j] = problem.X[j][i];
+            x[j] = problem.X[j][i].v;
         F[i] += tree.predict(x.data()).second;
     }
 }
 
 void fit_proxy(
     TreeNode * const node,
-    Problem const &problem,
-    std::vector<float> const &R, 
+    Problem &problem,
     std::vector<float> &F1)
 {
-    node->fit(problem, R, F1); 
+    node->fit(problem, F1); 
 }
 
 } //unnamed namespace
@@ -94,24 +50,21 @@ std::mutex TreeNode::mtx;
 bool TreeNode::verbose = false;
 
 void TreeNode::fit(
-    Problem const &problem,
-    std::vector<float> const &R, 
+    Problem &problem,
     std::vector<float> &F1)
 {
-    if(depth >= max_depth || I.size() < 100 || saturated)
+    if(depth >= max_depth || problem.I.size() < 100 || saturated)
     {
         double a = 0, b = 0;
-        for(auto i : I)
+        for(auto r : problem.R)
         {
-            a += R[i];
-            b += fabs(R[i])*(1-fabs(R[i]));
+            a += r;
+            b += fabs(r)*(1-fabs(r));
         }
         gamma = (b <= 1e-12)? 0 : static_cast<float>(a/b);
 
-        for(auto i : I)
+        for(auto i : problem.I)
             F1[i] = gamma;
-
-        clean_vector(I);
 
         is_leaf = true;
 
@@ -120,21 +73,22 @@ void TreeNode::fit(
 
     is_leaf = false;
 
-    double const sr0 = partial_sum(R, I); 
-    uint32_t const nr0 = static_cast<uint32_t>(I.size());
+    std::vector<std::vector<Node>> const &X = problem.X;
+    std::vector<float> const &R = problem.R;
+
+    double const sr0 = std::accumulate(R.begin(), R.end(), 0.0f);
+    uint32_t const nr0 = static_cast<uint32_t>(problem.nr_instance);
     double best_ese = sr0*sr0/static_cast<double>(nr0);
 
-    std::vector<std::vector<float>> const &X = problem.X;
     #pragma omp parallel for schedule(dynamic)
     for(uint32_t j = 0; j < problem.nr_field; ++j)
     {
         uint32_t nl = 0, nr = nr0;
         double sl = 0, sr = sr0;
 
-        std::vector<Node> nodes = get_ordered_nodes(X[j], I);
-        for(uint32_t ii = 0; ii < nodes.size()-1; ++ii)
+        for(uint32_t i = 0; i < problem.nr_instance-1; ++i)
         {
-            Node const &node = nodes[ii], &node_next = nodes[ii+1];
+            Node const &node = X[j][i], &node_next = X[j][i+1];
             sl += R[node.i]; 
             sr -= R[node.i]; 
             ++nl;
@@ -158,28 +112,24 @@ void TreeNode::fit(
     if(feature == -1)
     {
         saturated = true;
-        this->fit(problem, R, F1);
+        this->fit(problem, F1);
         return;
     }
 
     left.reset(new TreeNode(depth+1, idx*2)); 
     right.reset(new TreeNode(depth+1, idx*2+1)); 
 
-    for(auto i : I)
-    {
-        if(X[feature][i] <= threshold)
-            left->I.push_back(i);
-        else
-            right->I.push_back(i);
-    }
+    std::pair<Problem, Problem> sub_problems = 
+        split_problem(problem, feature, threshold);
 
-    clean_vector(I);
+    Problem &l_problem = sub_problems.first;
+    Problem &r_problem = sub_problems.second;
 
     if(verbose)
     {
         std::lock_guard<std::mutex> lock(mtx);
-        printf("depth = %-10d   feature = %-10d   threshold = %-10.0f   left = %-10ld   right = %-10ld\n",
-            depth, feature+1, threshold, left->I.size(), right->I.size());
+        printf("depth = %-10d   feature = %-10d   threshold = %-10.0f   left = %-10d   right = %-10d\n",
+            depth, feature+1, threshold, l_problem.nr_instance, r_problem.nr_instance);
         fflush(stdout);
     }
 
@@ -191,14 +141,14 @@ void TreeNode::fit(
 
     if(do_parallel)
     {
-        std::thread thread(fit_proxy, left.get(), std::ref(problem), std::ref(R), std::ref(F1));
+        std::thread thread(fit_proxy, left.get(), std::ref(l_problem), std::ref(F1));
 
         {
             std::lock_guard<std::mutex> lock(mtx);
             ++nr_thread;
         }
 
-        right->fit(problem, R, F1);
+        right->fit(r_problem, F1);
         thread.join();
 
         {
@@ -208,8 +158,8 @@ void TreeNode::fit(
     }
     else
     {
-        left->fit(problem, R, F1);
-        right->fit(problem, R, F1);
+        left->fit(l_problem, F1);
+        right->fit(r_problem, F1);
     }
 }
 
@@ -223,12 +173,11 @@ std::pair<uint32_t, float> TreeNode::predict(float const * const x) const
         return right->predict(x);
 }
 
-void CART::fit(Problem const &problem, std::vector<float> const &R, std::vector<float> &F1)
+void CART::fit(Problem &problem, std::vector<float> &F1)
 {
     root.reset(new TreeNode(0, 1));
-    root->I = gen_init_I(problem.nr_instance);
 
-    root->fit(problem, R, F1);
+    root->fit(problem, F1);
 }
 
 std::pair<uint32_t, float> CART::predict(float const * const x) const
@@ -239,7 +188,7 @@ std::pair<uint32_t, float> CART::predict(float const * const x) const
         return root->predict(x); 
 }
 
-void GBDT::fit(Problem const &Tr, Problem const &Va)
+void GBDT::fit(Problem &Tr, Problem &Va)
 {
     bias = calc_bias(Tr.Y);
 
@@ -251,13 +200,13 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
         timer.tic();
 
         std::vector<float> const &Y = Tr.Y;
-        std::vector<float> R(Tr.nr_instance), F1(Tr.nr_instance);
+        std::vector<float> F1(Tr.nr_instance);
 
         #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < Tr.nr_instance; ++i) 
-            R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
+            Tr.R[i] = static_cast<float>(Y[i]/(1+exp(Y[i]*F_Tr[i])));
         
-        trees[t].fit(Tr, R, F1);
+        trees[t].fit(Tr, F1);
 
         double Tr_loss = 0;
         #pragma omp parallel for schedule(static) reduction(+: Tr_loss)

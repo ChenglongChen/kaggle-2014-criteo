@@ -95,7 +95,7 @@ void write(
     {
         std::vector<float> x(problem.nr_field);
         for(uint32_t j = 0; j < problem.nr_field; ++j)
-            x[j] = problem.X[j][i];
+            x[j] = problem.X[j][i].v;
 
         std::vector<uint32_t> indices = gbdt.get_indices(x.data());
 
@@ -125,8 +125,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Problem const Tr = read_data(opt.Tr_path, opt.TrS_path);
-    Problem const Va = read_data(opt.Va_path, opt.VaS_path);
+    Problem Tr = read_data(opt.Tr_path, opt.TrS_path, true);
+    Problem Va = read_data(opt.Va_path, opt.VaS_path, false);
     printf("done\n");
     fflush(stdout);
 
