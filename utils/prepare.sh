@@ -35,9 +35,9 @@ fi
 #make -C solvers/superliblinear-poly2/
 #ln -sf solvers/superliblinear-poly2/train supertrain-poly2
 #ln -sf solvers/superliblinear-poly2/predict superpredict-poly2
-make -C solvers/fm
-ln -sf solvers/fm/fm-train .
-ln -sf solvers/fm/fm-predict .
+#make -C solvers/fm
+#ln -sf solvers/fm/fm-train .
+#ln -sf solvers/fm/fm-predict .
 #make -C solvers/fm
 #ln -sf solvers/fm/fm-train .
 #ln -sf solvers/fm/fm-predict .
@@ -96,12 +96,6 @@ make -C solvers/mark29/
 ln -sf solvers/mark29/mark29 .
 make -C solvers/mark33/
 ln -sf solvers/mark33/mark33 .
-make -C solvers/mark44/
-ln -sf solvers/mark44/mark44 .
-make -C solvers/mark46/
-ln -sf solvers/mark46/mark46 .
-make -C solvers/mark47/
-ln -sf solvers/mark47/mark47 .
 make -C solvers/mark48/
 ln -sf solvers/mark48/mark48 .
 
