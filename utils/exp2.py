@@ -19,7 +19,7 @@ for size in ["100"]:
     cmd = 'converters/parallelizer3.py -s 24 converters/num3.py va.r{size}.csv va.r{size}.num.dense va.r{size}.num.sparse'.format(size=size)
     run(cmd) 
 
-    cmd = './mark46 -t 10 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
+    cmd = './mark46 -t 5 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
     run(cmd)
 
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
