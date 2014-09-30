@@ -94,7 +94,7 @@ void write(
     {
         std::vector<float> x(nr_field+nr_sparse_field, 0);
         for(uint32_t j = 0; j < problem.nr_field; ++j)
-            x[j] = problem.X[j][i].v;
+            x[j] = problem.Z[j][i].v;
         for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
             x[SJ[p]+nr_field] = 1;
 
@@ -126,8 +126,8 @@ int main(int const argc, char const * const * const argv)
 
     printf("reading data...");
     fflush(stdout);
-    Problem const Tr = read_data(opt.Tr_path, opt.TrS_path, true);
-    Problem const Va = read_data(opt.Va_path, opt.VaS_path, false);
+    Problem const Tr = read_data(opt.Tr_path, opt.TrS_path);
+    Problem const Va = read_data(opt.Va_path, opt.VaS_path);
     printf("done\n");
     fflush(stdout);
 

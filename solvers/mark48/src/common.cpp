@@ -68,6 +68,27 @@ void read_dcm(Problem &problem, std::string const &path)
     fclose(f);
 }
 
+void sort_problem(Problem &problem)
+{
+    struct sort_by_v
+    {
+        bool operator() (Node const lhs, Node const rhs)
+        {
+            return lhs.v < rhs.v;
+        }
+    };
+
+    #pragma omp parallel for schedule(static)
+    for(uint32_t j = 0; j < problem.nr_field; ++j)
+    {
+        std::vector<Node> &X1 = problem.X[j];
+        std::vector<Node> &Z1 = problem.Z[j];
+        std::sort(X1.begin(), X1.end(), sort_by_v());
+        for(uint32_t i = 0; i < problem.nr_instance; ++i)
+            Z1[X1[i].i] = Node(i, X1[i].v);
+    }
+}
+
 void read_scm(Problem &problem, std::string const &path)
 {
     char line[kMaxLineSize];
@@ -113,42 +134,19 @@ void read_scm(Problem &problem, std::string const &path)
     }
 
     fclose(f);
-}
 
-void sort_problem(Problem &problem)
-{
-    struct sort_by_v
-    {
-        bool operator() (Node const lhs, Node const rhs)
-        {
-            return lhs.v < rhs.v;
-        }
-    };
-
-    #pragma omp parallel for schedule(static)
-    for(uint32_t j = 0; j < problem.nr_field; ++j)
-    {
-        std::vector<Node> &X1 = problem.X[j];
-        std::vector<Node> &Z1 = problem.Z[j];
-        std::sort(X1.begin(), X1.end(), sort_by_v());
-        for(uint32_t i = 0; i < problem.nr_instance; ++i)
-            Z1[X1[i].i] = Node(i, X1[i].v);
-    }
+    sort_problem(problem);
 }
 
 } //unamed namespace
 
-Problem read_data(std::string const &dense_path, std::string const &sparse_path,
-    bool const do_sort)
+Problem read_data(std::string const &dense_path, std::string const &sparse_path)
 {
     Problem problem(get_nr_line(dense_path), get_nr_field(dense_path));
 
     read_dcm(problem, dense_path);
 
     read_scm(problem, sparse_path);
-
-    if(do_sort)
-        sort_problem(problem);
 
     return problem;
 }

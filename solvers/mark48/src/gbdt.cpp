@@ -35,7 +35,7 @@ void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
     {
         std::vector<float> x(nr_field+nr_sparse_field, 0);
         for(uint32_t j = 0; j < nr_field; ++j)
-            x[j] = problem.X[j][i].v;
+            x[j] = problem.Z[j][i].v;
         for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
             x[SJ[p]+nr_field] = 1;
         F[i] += tree.predict(x.data()).second;

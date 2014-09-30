@@ -36,8 +36,7 @@ struct Problem
     std::vector<float> Y;
 };
 
-Problem read_data(std::string const &dense_path, std::string const &sparse_path, 
-    bool const do_sort);
+Problem read_data(std::string const &dense_path, std::string const &sparse_path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
