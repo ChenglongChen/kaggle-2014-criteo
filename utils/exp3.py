@@ -4,7 +4,7 @@ import subprocess, sys, os, time
 
 def run(cmd):
     p = subprocess.Popen(cmd, shell=True)
-    #subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
+    subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
     p.communicate()
 
 cmd = 'git clean -df && utils/prepare.sh'
@@ -14,9 +14,9 @@ start = time.time()
 for size in ["100"]:
     print('size = {size}'.format(size=size))
 
-    cmd = 'converters/parallelizer.py -s 24 converters/num4.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer.py -s 24 converters/num.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer.py -s 24 converters/num4.py va.r{size}.csv va.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer.py -s 24 converters/num.py va.r{size}.csv va.r{size}.num'.format(size=size)
     run(cmd) 
 
     cmd = './mark29 -t 10 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
