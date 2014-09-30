@@ -47,9 +47,10 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
 {
     struct Location
     {
-        Location() : tnode_idx(1), is_shrinked(0), r(0) {}
-        uint32_t tnode_idx, is_shrinked;
+        Location() : tnode_idx(1), r(0), shrinked(false) {}
+        uint32_t tnode_idx;
         float r;
+        bool shrinked;
     };
 
     uint32_t const nr_field = problem.nr_field;
@@ -75,7 +76,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location &location = locations[i];
-            if(location.is_shrinked)
+            if(location.shrinked)
                 continue;
 
             Meta &meta = metas0[location.tnode_idx-idx_offset];
@@ -99,7 +100,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             {
                 Node const &dnode = problem.X[j][i];
                 Location const &location = locations[dnode.i];
-                if(location.is_shrinked)
+                if(location.shrinked)
                     continue;
 
                 TreeNode &tnode = tnodes[location.tnode_idx];
@@ -138,14 +139,14 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location &location = locations[i];
-            if(location.is_shrinked)
+            if(location.shrinked)
                 continue;
 
             uint32_t &tnode_idx = location.tnode_idx;
             TreeNode &tnode = tnodes[tnode_idx];
             if(tnode.feature == -1)
             {
-                location.is_shrinked = true;
+                location.shrinked = true;
             }
             else
             {
@@ -162,7 +163,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location const &location = locations[i];
-            if(location.is_shrinked)
+            if(location.shrinked)
                 continue;
             ++counter[locations[i].tnode_idx-idx_offset_next];
         }
@@ -171,10 +172,10 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location &location = locations[i]; 
-            if(location.is_shrinked)
+            if(location.shrinked)
                 continue;
             if(counter[location.tnode_idx-idx_offset_next] < 100)
-                location.is_shrinked = true;
+                location.shrinked = true;
         }
     }
 
