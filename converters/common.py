@@ -73,8 +73,8 @@ def split(path, nr_thread, has_header):
     def calc_nr_lines_per_thread():
         nr_lines = int(list(subprocess.Popen('wc -l {0}'.format(path), shell=True, 
             stdout=subprocess.PIPE).stdout)[0].split()[0])
-        if has_header:
-            nr_lines -= 1 
+        if not has_header:
+            nr_lines += 1 
         return math.ceil(float(nr_lines)/nr_thread)
 
     header = open(path).readline()
