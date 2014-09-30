@@ -64,9 +64,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
     {
         struct Meta
         {
-            Meta() : sl(0), sr(0), nl(0), nr(0), v(0.0f/0.0f) {}
-            double sl, sr;
-            uint32_t nl, nr;
+            Meta() : sl(0), s(0), nl(0), n(0), v(0.0f/0.0f) {}
+            double sl, s;
+            uint32_t nl, n;
             float v;
         };
 
@@ -80,15 +80,15 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
                 continue;
 
             Meta &meta = metas0[location.tnode_idx-idx_offset];
-            meta.sr += location.r;
-            ++meta.nr;
+            meta.s += location.r;
+            ++meta.n;
         }
 
         std::vector<double> best_eses(max_nr_leaf, 0);
         for(uint32_t idx = 0; idx < max_nr_leaf; ++idx)
         {
             Meta const &meta = metas0[idx];
-            best_eses[idx] = meta.sr*meta.sr/static_cast<double>(meta.nr);
+            best_eses[idx] = meta.s*meta.s/static_cast<double>(meta.n);
         }
 
         #pragma omp parallel for schedule(dynamic)
@@ -108,9 +108,11 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
 
                 if(dnode.v != meta.v)
                 {
+                    double const sr = meta.s - meta.sl;
+                    uint32_t const nr = meta.n - meta.nl;
                     double const current_ese = 
                         (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
-                        (meta.sr*meta.sr)/static_cast<double>(meta.nr);
+                        (sr*sr)/static_cast<double>(nr);
 
                     #pragma omp critical
                     {
@@ -128,9 +130,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
                 }
 
                 meta.sl += location.r;
-                meta.sr -= location.r;
                 ++meta.nl;
-                --meta.nr;
                 meta.v = dnode.v;
             }
         }
