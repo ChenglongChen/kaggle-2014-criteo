@@ -4,7 +4,7 @@ import subprocess, sys, os, time
 
 def run(cmd):
     p = subprocess.Popen(cmd, shell=True)
-    #subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
+    subprocess.call('renice -n 10 -u r01922136', shell=True, stdout=subprocess.PIPE)
     p.communicate()
 
 #cmd = 'git clean -df && utils/prepare.sh'
@@ -19,7 +19,7 @@ for size in ["100"]:
     cmd = 'converters/parallelizer3.py -s 24 converters/num3.py va.r{size}.csv va.r{size}.num.dense va.r{size}.num.sparse'.format(size=size)
     run(cmd) 
 
-    cmd = './mark46 -t 5 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
+    cmd = './mark48 -t 5 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
     run(cmd)
 
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
