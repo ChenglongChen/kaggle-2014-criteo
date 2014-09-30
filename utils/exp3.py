@@ -19,7 +19,7 @@ for size in ["100"]:
     cmd = 'converters/parallelizer.py -s 24 converters/num.py va.r{size}.csv va.r{size}.num'.format(size=size)
     run(cmd) 
 
-    cmd = './mark29 -t 10 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
+    cmd = './mark29 -t 5 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
     run(cmd)
 
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
