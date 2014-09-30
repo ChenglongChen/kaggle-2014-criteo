@@ -47,14 +47,18 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
 {
     struct Location
     {
-        Location() : tnode_idx(1), is_shrinked(0) {}
+        Location() : tnode_idx(1), is_shrinked(0), r(0) {}
         uint32_t tnode_idx, is_shrinked;
+        float r;
     };
 
     uint32_t const nr_field = problem.nr_field;
     uint32_t const nr_instance = problem.nr_instance;
 
     std::vector<Location> locations(nr_instance);
+    #pragma omp parallel for schedule(static)
+    for(uint32_t i = 0; i < nr_instance; ++i)
+        locations[i].r = R[i];
     for(uint32_t d = 0, idx_offset = 1; d < max_depth; ++d, idx_offset *= 2)
     {
         struct Meta
@@ -75,7 +79,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
                 continue;
 
             Meta &meta = metas0[location.tnode_idx-idx_offset];
-            meta.sr += R[i];
+            meta.sr += location.r;
             ++meta.nr;
         }
 
@@ -122,8 +126,8 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
                     }
                 }
 
-                meta.sl += R[dnode.i];
-                meta.sr -= R[dnode.i];
+                meta.sl += location.r;
+                meta.sr -= location.r;
                 ++meta.nl;
                 --meta.nr;
                 meta.v = dnode.v;
@@ -179,8 +183,8 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
     for(uint32_t i = 0; i < nr_instance; ++i)
     {
         Location const &location = locations[i];
-        tmp[location.tnode_idx].first += R[i];
-        tmp[location.tnode_idx].second += fabs(R[i])*(1-fabs(R[i]));
+        tmp[location.tnode_idx].first += location.r;
+        tmp[location.tnode_idx].second += fabs(location.r)*(1-fabs(location.r));
     }
 
     for(uint32_t tnode_idx = 1; tnode_idx <= max_tnodes; ++tnode_idx)
