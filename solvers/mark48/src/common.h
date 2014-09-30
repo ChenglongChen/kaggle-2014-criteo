@@ -31,8 +31,8 @@ struct Problem
     uint32_t const nr_instance, nr_field;
     uint32_t nr_sparse_field;
     std::vector<std::vector<Node>> X, Z;
-    std::vector<uint32_t> SX;
-    std::vector<uint64_t> SP;
+    std::vector<uint32_t> SI, SJ;
+    std::vector<uint64_t> SIP, SJP;
     std::vector<float> Y;
 };
 

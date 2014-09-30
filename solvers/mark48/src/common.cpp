@@ -78,6 +78,7 @@ void read_scm(Problem &problem, std::string const &path)
 
     uint64_t nnz = 0; 
     uint32_t nr_instance = 0;
+    problem.SJP.push_back(0);
     for(; fgets(line, kMaxLineSize, f) != nullptr; ++nr_instance)
     {
         strtok(line, " \t");
@@ -88,23 +89,27 @@ void read_scm(Problem &problem, std::string const &path)
                 break;
 
             uint32_t const idx = atoi(idx_char);
-
-            buffer.resize(idx);
+            if(idx > buffer.size())
+                buffer.resize(idx);
             buffer[idx-1].push_back(nr_instance);
+            problem.SJ.push_back(idx-1);
         }
+        problem.SJP.push_back(problem.SJ.size());
     }
+    problem.SJ.shrink_to_fit();
+    problem.SJP.shrink_to_fit();
 
     problem.nr_sparse_field = static_cast<uint32_t>(buffer.size());
-    problem.SX.resize(nr_instance);
-    problem.SP.resize(problem.nr_sparse_field+1);
-    problem.SP[0] = 0;
+    problem.SI.resize(nnz);
+    problem.SIP.resize(problem.nr_sparse_field+1);
+    problem.SIP[0] = 0;
 
     uint64_t p = 0;
     for(uint32_t j = 0; j < problem.nr_sparse_field; ++j)
     {
         for(auto i : buffer[j]) 
-            problem.SX[p++] = i;
-        problem.SP[j+1] = p;
+            problem.SI[p++] = i;
+        problem.SIP[j+1] = p;
     }
 
     fclose(f);
