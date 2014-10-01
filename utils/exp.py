@@ -27,7 +27,7 @@ for size in ["x", "1"]:
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py va.r{size}.csv va.r{size}.num.out va.r{size}.fm'.format(size=size)
     run(cmd) 
 
-    cmd = './mark33 -s 24 -t 15 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
+    cmd = './mark33 -s 24 -t 11 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
     run(cmd) 
 
 print('time used = {0:.0f}'.format(time.time()-start))
