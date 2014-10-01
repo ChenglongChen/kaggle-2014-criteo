@@ -266,7 +266,8 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
         float * const w1 = W + j1*align1 + 39*align0;
 
-        std::vector<float> sum(nr_factor, 0);
+        std::vector<float> sv(nr_factor, 0);
+        float * const s = sv.data();
         for(uint32_t f2 = 39; f2 < nr_field; ++f2)
         {
             uint32_t const j2 = J[f2];
@@ -275,7 +276,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                sum[d] += w2[d];
+                s[d] += w2[d];
                 if(!do_update)
                     continue;
                 float const g2 = lambda*w2[d] + kappa*v*w1[d];
@@ -285,14 +286,14 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
         }
 
         for(uint32_t d = 0; d < nr_factor; ++d)
-            sum[d] /= 30;
+            s[d] /= 30;
 
         if(do_update)
         {
             float * const wg1 = w1 + nr_factor; 
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                float const g1 = lambda*w1[d] + kappa*v*sum[d];
+                float const g1 = lambda*w1[d] + kappa*v*s[d];
                 wg1[d] += g1*g1;
                 w1[d] -= eta*qrsqrt(wg1[d])*g1;
             }
@@ -300,7 +301,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
         else
         {
             for(uint32_t d = 0; d < nr_factor; ++d)
-                t += w1[d]*sum[d]*v;
+                t += w1[d]*s[d]*v;
         }
     }
 
