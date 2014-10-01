@@ -46,7 +46,7 @@ uint32_t get_nr_field(std::string const &path)
     return nr_field;
 }
 
-void read_dcm(Problem &prob, std::string const &path)
+void read_dense(Problem &prob, std::string const &path)
 {
     char line[kMaxLineSize];
 
@@ -89,7 +89,7 @@ void sort_problem(Problem &prob)
     }
 }
 
-void read_scm(Problem &prob, std::string const &path)
+void read_sparse(Problem &prob, std::string const &path)
 {
     char line[kMaxLineSize];
 
@@ -144,9 +144,9 @@ Problem read_data(std::string const &dense_path, std::string const &sparse_path)
 {
     Problem prob(get_nr_line(dense_path), get_nr_field(dense_path));
 
-    read_dcm(prob, dense_path);
+    read_dense(prob, dense_path);
 
-    read_scm(prob, sparse_path);
+    read_sparse(prob, sparse_path);
 
     return prob;
 }
