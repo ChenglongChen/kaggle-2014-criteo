@@ -147,6 +147,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
                 __m128 XMMw1 = _mm_load_ps(w1+d);
                 __m128 XMMw2 = _mm_load_ps(w2+d);
                 XMMsum = _mm_add_ps(XMMsum, XMMw2);
+                _mm_store_ps(sum+d, XMMsum);
                 if(!do_update)
                     continue;
                 __m128 XMMwg2 = _mm_load_ps(wg2+d);
