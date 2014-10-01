@@ -104,6 +104,8 @@ make -C solvers/mark50/
 ln -sf solvers/mark50/mark50 .
 make -C solvers/mark51/
 ln -sf solvers/mark51/mark51 .
+make -C solvers/mark52/
+ln -sf solvers/mark52/mark52 .
 
 ln -sf trva.csv tr.r0.csv
 ln -sf te.csv va.r0.csv
