@@ -50,6 +50,7 @@ inline float qrsqrt(float x)
 }
 
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
+    uint32_t const start, uint32_t const end, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -68,13 +69,13 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
-    for(uint32_t f1 = 0; f1 < nr_field; ++f1)
+    for(uint32_t f1 = start; f1 < end; ++f1)
     {
         uint32_t const j1 = J[f1];
         if(j1 >= nr_feature)
             continue;
 
-        for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
+        for(uint32_t f2 = f1+1; f2 < end; ++f2)
         {
             uint32_t const j2 = J[f2];
             if(j2 >= nr_feature)
