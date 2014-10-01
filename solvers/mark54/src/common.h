@@ -321,6 +321,56 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
         }
     }
 
+    std::vector<float> sv(nr_factor, 0);
+    float * const s = sv.data();
+
+    for(uint32_t f = 39; f < nr_field; ++f)
+    {
+        uint32_t const j = J[f];
+        if(j >= nr_feature)
+            continue;
+
+        float * const w = W + j*align1 + 40*align0;
+        for(uint32_t d = 0; d < nr_factor; ++d)
+            s[d] += w[d];
+    }
+
+    for(uint32_t d = 0; d < nr_factor; ++d)
+        s[d] /= 30.0f;
+
+    if(do_update)
+    {
+        for(uint32_t f = 39; f < nr_field; ++f)
+        {
+            uint32_t const j = J[f];
+            if(j >= nr_feature)
+                continue;
+
+            float * const w = W + j*align1 + 40*align0;
+            float * const wg = w + nr_factor; 
+            for(uint32_t d = 0; d < nr_factor; ++d)
+            {
+                float g = 0;
+                g = lambda*w[d] + kappa*v*(s[d]-w[d]);
+                wg[d] += g*g;
+                w[d] -= eta*qrsqrt(wg[d])*g;
+            }
+        }
+    }
+    else
+    {
+        for(uint32_t f = 39; f < nr_field; ++f)
+        {
+            uint32_t const j = J[f];
+            if(j >= nr_feature)
+                continue;
+
+            float * const w = W + j*align1 + 40*align0;
+            for(uint32_t d = 0; d < nr_factor; ++d)
+                t += w[d]*(s[d]-w[d])*v;
+        }
+    }
+
     return t;
 }
 
