@@ -143,48 +143,48 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             }
         }
 
-        #pragma omp parallel for schedule(dynamic)
-        for(uint32_t j = 0; j < nr_sparse_field; ++j)
-        {
-            std::vector<Meta> metas = metas0;
-            for(uint64_t p = problem.SIP[j]; p < problem.SIP[j+1]; ++p)
-            {
-                Location const &location = locations[problem.SI[p]];
-                if(location.shrinked)
-                    continue;
-                Meta &meta = metas[location.tnode_idx-idx_offset];
-                meta.sl += location.r;
-                ++meta.nl;
-            }
+        //#pragma omp parallel for schedule(dynamic)
+        //for(uint32_t j = 0; j < nr_sparse_field; ++j)
+        //{
+        //    std::vector<Meta> metas = metas0;
+        //    for(uint64_t p = problem.SIP[j]; p < problem.SIP[j+1]; ++p)
+        //    {
+        //        Location const &location = locations[problem.SI[p]];
+        //        if(location.shrinked)
+        //            continue;
+        //        Meta &meta = metas[location.tnode_idx-idx_offset];
+        //        meta.sl += location.r;
+        //        ++meta.nl;
+        //    }
 
-            for(uint32_t leaf_idx = 0; leaf_idx < max_nr_leaf; ++leaf_idx)
-            {
-                Meta const &meta = metas[leaf_idx];
-                if(meta.nl == 0)
-                    continue;
-                
-                TreeNode &tnode = tnodes[idx_offset+leaf_idx];
+        //    for(uint32_t leaf_idx = 0; leaf_idx < max_nr_leaf; ++leaf_idx)
+        //    {
+        //        Meta const &meta = metas[leaf_idx];
+        //        if(meta.nl == 0)
+        //            continue;
+        //        
+        //        TreeNode &tnode = tnodes[idx_offset+leaf_idx];
 
-                double const sr = meta.s - meta.sl;
-                uint32_t const nr = meta.n - meta.nl;
-                double const current_ese = 
-                    (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
-                    (sr*sr)/static_cast<double>(nr);
+        //        double const sr = meta.s - meta.sl;
+        //        uint32_t const nr = meta.n - meta.nl;
+        //        double const current_ese = 
+        //            (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
+        //            (sr*sr)/static_cast<double>(nr);
 
-                #pragma omp critical
-                {
-                    double &best_ese = best_eses[leaf_idx];
-                    if((current_ese > best_ese) || 
-                       (current_ese == best_ese && 
-                        static_cast<int>(j+nr_field) < tnode.feature))
-                    {
-                        best_ese = current_ese;
-                        tnode.feature = j+nr_field;
-                        tnode.threshold = 1;
-                    }
-                }
-            }
-        }
+        //        #pragma omp critical
+        //        {
+        //            double &best_ese = best_eses[leaf_idx];
+        //            if((current_ese > best_ese) || 
+        //               (current_ese == best_ese && 
+        //                static_cast<int>(j+nr_field) < tnode.feature))
+        //            {
+        //                best_ese = current_ese;
+        //                tnode.feature = j+nr_field;
+        //                tnode.threshold = 1;
+        //            }
+        //        }
+        //    }
+        //}
 
         #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < nr_instance; ++i)
