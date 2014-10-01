@@ -12,9 +12,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', dest='nr_thread', default=12, type=int)
     parser.add_argument('cvt_path')
-    parser.add_argument('src1_path')
-    parser.add_argument('src2_path')
-    parser.add_argument('dst_path')
+    parser.add_argument('src_path')
+    parser.add_argument('dst1_path')
+    parser.add_argument('dst2_path')
     args = vars(parser.parse_args())
 
     return args
@@ -25,18 +25,18 @@ def main():
 
     nr_thread = args['nr_thread']
     
-    split(args['src1_path'], nr_thread, True)
+    split(args['src_path'], nr_thread, True)
 
-    split(args['src2_path'], nr_thread, False)
+    parallel_convert(args['cvt_path'], [args['src_path'], args['dst1_path'], args['dst2_path']], nr_thread)
 
-    parallel_convert(args['cvt_path'], [args['src1_path'], args['src2_path'], args['dst_path']], nr_thread)
+    cat(args['dst1_path'], nr_thread)
 
-    cat(args['dst_path'], nr_thread)
+    cat(args['dst2_path'], nr_thread)
 
-    delete(args['src1_path'], nr_thread)
+    delete(args['src_path'], nr_thread)
 
-    delete(args['src2_path'], nr_thread)
+    delete(args['dst1_path'], nr_thread)
 
-    delete(args['dst_path'], nr_thread)
+    delete(args['dst2_path'], nr_thread)
 
 main()
