@@ -84,20 +84,11 @@ Option parse_option(std::vector<std::string> const &args)
 void write(
     Problem const &prob, GBDT const &gbdt, std::string const &path)
 {
-    uint32_t const nr_field = prob.nr_field; 
-    uint32_t const nr_sparse_field = prob.nr_sparse_field;
-    std::vector<uint32_t> const &SJ = prob.SJ;
-    std::vector<uint64_t> const &SJP = prob.SJP;
     FILE *f = open_c_file(path, "w");
 
     for(uint32_t i = 0; i < prob.nr_instance; ++i)
     {
-        std::vector<float> x(nr_field+nr_sparse_field, 0);
-        for(uint32_t j = 0; j < prob.nr_field; ++j)
-            x[j] = prob.Z[j][i].v;
-        for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
-            x[SJ[p]+nr_field] = 1;
-
+        std::vector<float> x = construct_instance(prob, i);
         std::vector<uint32_t> indices = gbdt.get_indices(x.data());
 
         fprintf(f, "%d", static_cast<int>(prob.Y[i]));

@@ -16,25 +16,6 @@ float calc_bias(std::vector<float> const &Y)
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
 }
 
-void update_F(Problem const &prob, CART const &tree, std::vector<float> &F)
-{
-    uint32_t const nr_field = prob.nr_field; 
-    uint32_t const nr_sparse_field = prob.nr_sparse_field;
-    std::vector<uint32_t> const &SJ = prob.SJ;
-    std::vector<uint64_t> const &SJP = prob.SJP;
-
-    #pragma omp parallel for schedule(static)
-    for(uint32_t i = 0; i < prob.nr_instance; ++i)
-    {
-        std::vector<float> x(nr_field+nr_sparse_field, 0);
-        for(uint32_t j = 0; j < nr_field; ++j)
-            x[j] = prob.Z[j][i].v;
-        for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
-            x[SJ[p]+nr_field] = 1;
-        F[i] += tree.predict(x.data()).second;
-    }
-}
-
 } //unnamed namespace
 
 uint32_t CART::max_depth = 7;
@@ -311,7 +292,12 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
 
         if(Va.nr_instance != 0)
         {
-            update_F(Va, trees[t], F_Va);
+            #pragma omp parallel for schedule(static)
+            for(uint32_t i = 0; i < Va.nr_instance; ++i)
+            {
+                std::vector<float> x = construct_instance(Va, i);
+                F_Va[i] += trees[t].predict(x.data()).second;
+            }
 
             double Va_loss = 0;
             #pragma omp parallel for schedule(static) reduction(+: Va_loss)
