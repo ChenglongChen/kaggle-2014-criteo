@@ -16,13 +16,6 @@ float calc_bias(std::vector<float> const &Y)
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
 }
 
-template<typename Type>
-void clean_vector(std::vector<Type> &vec)
-{
-    vec.clear();
-    vec.shrink_to_fit();
-}
-
 void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
 {
     uint32_t const nr_field = problem.nr_field; 
