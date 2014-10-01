@@ -49,7 +49,6 @@ inline float qrsqrt(float x)
     return x;
 }
 
-/*
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -69,13 +68,13 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
     __m128 const XMMlambda = _mm_load1_ps(&lambda);
 
     __m128 XMMt = _mm_setzero_ps();
-    for(uint32_t f1 = 0; f1 < nr_field; ++f1)
+    for(uint32_t f1 = 0; f1 < 39; ++f1)
     {
         uint32_t const j1 = J[f1];
         if(j1 >= nr_feature)
             continue;
 
-        for(uint32_t f2 = f1+1; f2 < nr_field; ++f2)
+        for(uint32_t f2 = f1+1; f2 < 39; ++f2)
         {
             uint32_t const j2 = J[f2];
             if(j2 >= nr_feature)
@@ -131,6 +130,74 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
                 }
             }
         }
+
+        float * const w1 = W + j1*align1 + 39*align0;
+
+        std::vector<float> sum_vec(nr_factor, 0);
+        float * const sum = sum_vec.data();
+        for(uint32_t f2 = 39; f2 < nr_field; ++f2)
+        {
+            uint32_t const j2 = J[f2];
+            float * const w2 = W + j2*align1 + f1*align0;
+            float * const wg2 = w2 + nr_factor; 
+
+            for(uint32_t d = 0; d < nr_factor; d += 4)
+            {
+                __m128 XMMsum = _mm_load_ps(sum+d);
+                __m128 XMMw1 = _mm_load_ps(w1+d);
+                __m128 XMMw2 = _mm_load_ps(w2+d);
+                XMMsum = _mm_add_ps(XMMsum, XMMw2);
+                if(!do_update)
+                    continue;
+                __m128 XMMwg2 = _mm_load_ps(wg2+d);
+
+                __m128 XMMg2 = _mm_add_ps(
+                    _mm_mul_ps(XMMlambda, XMMw2),
+                    _mm_mul_ps(XMMkappav, XMMw1));
+                XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
+                XMMw2 = _mm_sub_ps(XMMw2,
+                    _mm_mul_ps(XMMeta, 
+                    _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
+                _mm_store_ps(w2+d, XMMw2);
+                _mm_store_ps(wg2+d, XMMwg2);
+            }
+        }
+
+        for(uint32_t d = 0; d < nr_factor; ++d)
+            sum[d] /= 30;
+
+        if(do_update)
+        {
+            float * const wg1 = w1 + nr_factor; 
+            for(uint32_t d = 0; d < nr_factor; d += 4)
+            {
+                __m128 XMMsum = _mm_load_ps(sum+d);
+                __m128 XMMw1 = _mm_load_ps(w1+d);
+                __m128 XMMwg1 = _mm_load_ps(wg1+d);
+                __m128 XMMg1 = _mm_add_ps(
+                    _mm_mul_ps(XMMlambda, XMMw1),
+                    _mm_mul_ps(XMMkappav, XMMsum));
+
+                XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
+                XMMw1 = _mm_sub_ps(XMMw1,
+                    _mm_mul_ps(XMMeta, 
+                    _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
+
+                _mm_store_ps(w1+d, XMMw1);
+
+                _mm_store_ps(wg1+d, XMMwg1);
+            }
+        }
+        else
+        {
+            for(uint32_t d = 0; d < nr_factor; d += 4)
+            {
+                __m128 const XMMsum = _mm_load_ps(sum+d);
+                __m128 const XMMw1 = _mm_load_ps(w1+d);
+
+                XMMt = _mm_add_ps(XMMt, _mm_mul_ps(_mm_mul_ps(XMMw1, XMMsum), XMMv));
+            }
+        }
     }
 
     XMMt = _mm_hadd_ps(XMMt, XMMt);
@@ -140,8 +207,8 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
     return t;
 }
-*/
 
+/*
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -237,6 +304,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
     return t;
 }
+*/
 
 float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
