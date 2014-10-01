@@ -265,43 +265,54 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
         }
 
         float * const w1 = W + j1*align1 + 39*align0;
+        float * const wg1 = w1 + nr_factor; 
 
         std::vector<float> sv(nr_factor, 0);
         float * const s = sv.data();
+        for(uint32_t d = 0; d < nr_factor; ++d)
+            s[d] = w1[d];
+
         for(uint32_t f2 = 39; f2 < nr_field; ++f2)
         {
             uint32_t const j2 = J[f2];
             float * const w2 = W + j2*align1 + f1*align0;
-            float * const wg2 = w2 + nr_factor; 
-
             for(uint32_t d = 0; d < nr_factor; ++d)
-            {
                 s[d] += w2[d];
-                if(!do_update)
-                    continue;
-                float const g2 = lambda*w2[d] + kappa*v*w1[d];
-                wg2[d] += g2*g2;
-                w2[d] -= eta*qrsqrt(wg2[d])*g2;
-            }
         }
-
-        for(uint32_t d = 0; d < nr_factor; ++d)
-            s[d] /= 30;
 
         if(do_update)
         {
-            float * const wg1 = w1 + nr_factor; 
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                float const g1 = lambda*w1[d] + kappa*v*s[d];
+                float const g1 = lambda*w1[d] + kappa*v*(s[d]-w1[d]);
                 wg1[d] += g1*g1;
                 w1[d] -= eta*qrsqrt(wg1[d])*g1;
+            }
+
+            for(uint32_t f2 = 39; f2 < nr_field; ++f2)
+            {
+                uint32_t const j2 = J[f2];
+                float * const w2 = W + j2*align1 + f1*align0;
+                float * const wg2 = w2 + nr_factor; 
+                for(uint32_t d = 0; d < nr_factor; ++d)
+                {
+                    float const g2 = lambda*w2[d] + kappa*v*(s[d]-w2[d]);
+                    wg2[d] += g2*g2;
+                    w2[d] -= eta*qrsqrt(wg2[d])*g2;
+                }
             }
         }
         else
         {
             for(uint32_t d = 0; d < nr_factor; ++d)
-                t += w1[d]*s[d]*v;
+                t += w1[d]*(s[d]-w1[d])*v;
+            for(uint32_t f2 = 39; f2 < nr_field; ++f2)
+            {
+                uint32_t const j2 = J[f2];
+                float * const w2 = W + j2*align1 + f1*align0;
+                for(uint32_t d = 0; d < nr_factor; ++d)
+                    t += w2[d]*(s[d]-w2[d])*v;
+            }
         }
     }
 
