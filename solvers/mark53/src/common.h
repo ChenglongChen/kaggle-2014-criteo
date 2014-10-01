@@ -49,6 +49,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
+/*
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -208,8 +209,8 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
     return t;
 }
+*/
 
-/*
 inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
@@ -305,7 +306,6 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 
     return t;
 }
-*/
 
 float predict(SpMat const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
