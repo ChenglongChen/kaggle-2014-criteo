@@ -14,12 +14,12 @@ start = time.time()
 for size in ["x", "1"]:
     print('size = {size}'.format(size=size))
 
-    cmd = 'converters/parallelizer.py -s 24 converters/num.py tr.r{size}.csv tr.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer3.py -s 24 converters/num3.py tr.r{size}.csv tr.r{size}.num.dense tr.r{size}.num.sparse'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer.py -s 24 converters/num.py va.r{size}.csv va.r{size}.num'.format(size=size)
+    cmd = 'converters/parallelizer3.py -s 24 converters/num3.py va.r{size}.csv va.r{size}.num.dense va.r{size}.num.sparse'.format(size=size)
     run(cmd) 
 
-    cmd = './mark29 -t 30 -s 24 va.r{size}.num tr.r{size}.num'.format(size=size) 
+    cmd = './mark48 -t 30 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
     run(cmd)
 
     cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
