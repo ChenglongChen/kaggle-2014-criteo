@@ -141,7 +141,9 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
 
             float const y = Tr.Y[i];
             
-            float const t = wTx(Tr, model, i, 0, model.nr_field);
+            float const t1 = wTx(Tr, model, i, 0, 39);
+            float const t2 = wTx(Tr, model, i, 39, model.nr_field);
+            float const t = t1 + t2;
 
             float const expnyt = static_cast<float>(exp(-y*t));
 
@@ -149,7 +151,8 @@ void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
                
             float const kappa = -y*expnyt/(1+expnyt);
 
-            wTx(Tr, model, i, 0, model.nr_field, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, 0, 39, kappa, opt.eta, opt.lambda, true);
+            wTx(Tr, model, i, 39, model.nr_field, kappa, opt.eta, opt.lambda, true);
         }
 
         printf("%3d %8.2f %10.5f", iter, timer.toc(), 
