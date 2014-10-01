@@ -16,19 +16,19 @@ float calc_bias(std::vector<float> const &Y)
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
 }
 
-void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
+void update_F(Problem const &prob, CART const &tree, std::vector<float> &F)
 {
-    uint32_t const nr_field = problem.nr_field; 
-    uint32_t const nr_sparse_field = problem.nr_sparse_field;
-    std::vector<uint32_t> const &SJ = problem.SJ;
-    std::vector<uint64_t> const &SJP = problem.SJP;
+    uint32_t const nr_field = prob.nr_field; 
+    uint32_t const nr_sparse_field = prob.nr_sparse_field;
+    std::vector<uint32_t> const &SJ = prob.SJ;
+    std::vector<uint64_t> const &SJP = prob.SJP;
 
     #pragma omp parallel for schedule(static)
-    for(uint32_t i = 0; i < problem.nr_instance; ++i)
+    for(uint32_t i = 0; i < prob.nr_instance; ++i)
     {
         std::vector<float> x(nr_field+nr_sparse_field, 0);
         for(uint32_t j = 0; j < nr_field; ++j)
-            x[j] = problem.Z[j][i].v;
+            x[j] = prob.Z[j][i].v;
         for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
             x[SJ[p]+nr_field] = 1;
         F[i] += tree.predict(x.data()).second;
@@ -42,7 +42,7 @@ uint32_t CART::max_tnodes = static_cast<uint32_t>(pow(2, CART::max_depth+1));
 std::mutex CART::mtx;
 bool CART::verbose = false;
 
-void CART::fit(Problem const &problem, std::vector<float> const &R, 
+void CART::fit(Problem const &prob, std::vector<float> const &R, 
     std::vector<float> &F1)
 {
     struct Location
@@ -53,9 +53,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         bool shrinked;
     };
 
-    uint32_t const nr_field = problem.nr_field;
-    uint32_t const nr_sparse_field = problem.nr_sparse_field;
-    uint32_t const nr_instance = problem.nr_instance;
+    uint32_t const nr_field = prob.nr_field;
+    uint32_t const nr_sparse_field = prob.nr_sparse_field;
+    uint32_t const nr_instance = prob.nr_instance;
 
     std::vector<Location> locations(nr_instance);
     #pragma omp parallel for schedule(static)
@@ -99,7 +99,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
 
             for(uint32_t i = 0; i < nr_instance; ++i)
             {
-                Node const &dnode = problem.X[j][i];
+                Node const &dnode = prob.X[j][i];
                 Location const &location = locations[dnode.i];
                 if(location.shrinked)
                     continue;
@@ -140,9 +140,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t j = 0; j < nr_sparse_field; ++j)
         {
             std::vector<Meta> metas = metas0;
-            for(uint64_t p = problem.SIP[j]; p < problem.SIP[j+1]; ++p)
+            for(uint64_t p = prob.SIP[j]; p < prob.SIP[j+1]; ++p)
             {
-                Location const &location = locations[problem.SI[p]];
+                Location const &location = locations[prob.SI[p]];
                 if(location.shrinked)
                     continue;
                 Meta &meta = metas[location.tnode_idx-idx_offset];
@@ -194,7 +194,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             }
             else if(static_cast<uint32_t>(tnode.feature) < nr_field)
             {
-                if(problem.Z[tnode.feature][i].v < tnode.threshold)
+                if(prob.Z[tnode.feature][i].v < tnode.threshold)
                     tnode_idx = 2*tnode_idx; 
                 else
                     tnode_idx = 2*tnode_idx+1; 
@@ -202,9 +202,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             else
             {
                 bool is_one = false;
-                for(uint64_t p = problem.SJP[i]; p < problem.SJP[i+1]; ++p) 
+                for(uint64_t p = prob.SJP[i]; p < prob.SJP[i+1]; ++p) 
                 {
-                    if(problem.SJ[p] == static_cast<uint32_t>(tnode.feature-nr_field))
+                    if(prob.SJ[p] == static_cast<uint32_t>(tnode.feature-nr_field))
                     {
                         is_one = true;
                         break;

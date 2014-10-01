@@ -46,7 +46,7 @@ uint32_t get_nr_field(std::string const &path)
     return nr_field;
 }
 
-void read_dcm(Problem &problem, std::string const &path)
+void read_dcm(Problem &prob, std::string const &path)
 {
     char line[kMaxLineSize];
 
@@ -54,21 +54,21 @@ void read_dcm(Problem &problem, std::string const &path)
     for(uint32_t i = 0; fgets(line, kMaxLineSize, f) != nullptr; ++i)
     {
         char *p = strtok(line, " \t");
-        problem.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
-        for(uint32_t j = 0; j < problem.nr_field; ++j)
+        prob.Y[i] = (atoi(p)>0)? 1.0f : -1.0f;
+        for(uint32_t j = 0; j < prob.nr_field; ++j)
         {
             char *val_char = strtok(nullptr," \t");
 
             float const val = static_cast<float>(atof(val_char));
 
-            problem.X[j][i] = Node(i, val);
+            prob.X[j][i] = Node(i, val);
         }
     }
 
     fclose(f);
 }
 
-void sort_problem(Problem &problem)
+void sort_problem(Problem &prob)
 {
     struct sort_by_v
     {
@@ -79,17 +79,17 @@ void sort_problem(Problem &problem)
     };
 
     #pragma omp parallel for schedule(static)
-    for(uint32_t j = 0; j < problem.nr_field; ++j)
+    for(uint32_t j = 0; j < prob.nr_field; ++j)
     {
-        std::vector<Node> &X1 = problem.X[j];
-        std::vector<Node> &Z1 = problem.Z[j];
+        std::vector<Node> &X1 = prob.X[j];
+        std::vector<Node> &Z1 = prob.Z[j];
         std::sort(X1.begin(), X1.end(), sort_by_v());
-        for(uint32_t i = 0; i < problem.nr_instance; ++i)
+        for(uint32_t i = 0; i < prob.nr_instance; ++i)
             Z1[X1[i].i] = Node(i, X1[i].v);
     }
 }
 
-void read_scm(Problem &problem, std::string const &path)
+void read_scm(Problem &prob, std::string const &path)
 {
     char line[kMaxLineSize];
 
@@ -99,7 +99,7 @@ void read_scm(Problem &problem, std::string const &path)
 
     uint64_t nnz = 0; 
     uint32_t nr_instance = 0;
-    problem.SJP.push_back(0);
+    prob.SJP.push_back(0);
     for(; fgets(line, kMaxLineSize, f) != nullptr; ++nr_instance)
     {
         strtok(line, " \t");
@@ -113,42 +113,42 @@ void read_scm(Problem &problem, std::string const &path)
             if(idx > buffer.size())
                 buffer.resize(idx);
             buffer[idx-1].push_back(nr_instance);
-            problem.SJ.push_back(idx-1);
+            prob.SJ.push_back(idx-1);
         }
-        problem.SJP.push_back(problem.SJ.size());
+        prob.SJP.push_back(prob.SJ.size());
     }
-    problem.SJ.shrink_to_fit();
-    problem.SJP.shrink_to_fit();
+    prob.SJ.shrink_to_fit();
+    prob.SJP.shrink_to_fit();
 
-    problem.nr_sparse_field = static_cast<uint32_t>(buffer.size());
-    problem.SI.resize(nnz);
-    problem.SIP.resize(problem.nr_sparse_field+1);
-    problem.SIP[0] = 0;
+    prob.nr_sparse_field = static_cast<uint32_t>(buffer.size());
+    prob.SI.resize(nnz);
+    prob.SIP.resize(prob.nr_sparse_field+1);
+    prob.SIP[0] = 0;
 
     uint64_t p = 0;
-    for(uint32_t j = 0; j < problem.nr_sparse_field; ++j)
+    for(uint32_t j = 0; j < prob.nr_sparse_field; ++j)
     {
         for(auto i : buffer[j]) 
-            problem.SI[p++] = i;
-        problem.SIP[j+1] = p;
+            prob.SI[p++] = i;
+        prob.SIP[j+1] = p;
     }
 
     fclose(f);
 
-    sort_problem(problem);
+    sort_problem(prob);
 }
 
 } //unamed namespace
 
 Problem read_data(std::string const &dense_path, std::string const &sparse_path)
 {
-    Problem problem(get_nr_line(dense_path), get_nr_field(dense_path));
+    Problem prob(get_nr_line(dense_path), get_nr_field(dense_path));
 
-    read_dcm(problem, dense_path);
+    read_dcm(prob, dense_path);
 
-    read_scm(problem, sparse_path);
+    read_scm(prob, sparse_path);
 
-    return problem;
+    return prob;
 }
 
 FILE *open_c_file(std::string const &path, std::string const &mode)
