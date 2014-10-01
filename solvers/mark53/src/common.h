@@ -263,45 +263,61 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
                     t += w1[d]*w2[d]*v;
             }
         }
+    }
 
-        float * const w1 = W + j1*align1 + 39*align0;
+    std::vector<float> sav(nr_factor, 0), sbv(nr_factor, 0);
+    float * const sa = sav.data(), * const sb = sbv.data();
 
-        std::vector<float> sv(nr_factor, 0);
-        float * const s = sv.data();
-        for(uint32_t f2 = 39; f2 < nr_field; ++f2)
-        {
-            uint32_t const j2 = J[f2];
-            float * const w2 = W + j2*align1 + f1*align0;
-            float * const wg2 = w2 + nr_factor; 
+    for(uint32_t f = 0; f < nr_field; ++f)
+    {
+        uint32_t const j = J[f];
+        if(j >= nr_feature)
+            continue;
 
-            for(uint32_t d = 0; d < nr_factor; ++d)
-            {
-                s[d] += w2[d];
-                if(!do_update)
-                    continue;
-                float const g2 = lambda*w2[d] + kappa*v*w1[d];
-                wg2[d] += g2*g2;
-                w2[d] -= eta*qrsqrt(wg2[d])*g2;
-            }
-        }
-
+        float * const w = W + j*align1 + 39*align0;
+        float * const s = (f<39)? sa : sb;
         for(uint32_t d = 0; d < nr_factor; ++d)
-            s[d] /= 30;
+                s[d] += w[d];
+    }
 
-        if(do_update)
+    for(uint32_t d = 0; d < nr_factor; ++d)
+    {
+        sa[d] /= 39.0f;
+        sb[d] /= 30.0f;
+    }
+
+    if(do_update)
+    {
+        for(uint32_t f = 0; f < nr_field; ++f)
         {
-            float * const wg1 = w1 + nr_factor; 
+            uint32_t const j = J[f];
+            if(j >= nr_feature)
+                continue;
+
+            float * const w = W + j*align1 + 39*align0;
+            float * const wg = w + nr_factor; 
+            float * const s = (f<39)? sa : sb;
             for(uint32_t d = 0; d < nr_factor; ++d)
             {
-                float const g1 = lambda*w1[d] + kappa*v*s[d];
-                wg1[d] += g1*g1;
-                w1[d] -= eta*qrsqrt(wg1[d])*g1;
+                float g = 0;
+                g = lambda*w[d] + kappa*v*s[d];
+                wg[d] += g*g;
+                w[d] -= eta*qrsqrt(wg[d])*g;
             }
         }
-        else
+    }
+    else
+    {
+        for(uint32_t f = 0; f < nr_field; ++f)
         {
+            uint32_t const j = J[f];
+            if(j >= nr_feature)
+                continue;
+
+            float * const w = W + j*align1 + 39*align0;
+            float * const s = (f<39)? sa : sb;
             for(uint32_t d = 0; d < nr_factor; ++d)
-                t += w1[d]*s[d]*v;
+                t += w[d]*s[d]*v;
         }
     }
 
