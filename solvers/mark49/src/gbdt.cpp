@@ -182,10 +182,12 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             }
             else
             {
+                uint32_t const target_feature 
+                    = static_cast<uint32_t>(tnode.feature-nr_field);
                 bool is_one = false;
                 for(uint64_t p = prob.SJP[i]; p < prob.SJP[i+1]; ++p) 
                 {
-                    if(prob.SJ[p] == static_cast<uint32_t>(tnode.feature-nr_field))
+                    if(prob.SJ[p] == target_feature)
                     {
                         is_one = true;
                         break;
@@ -224,9 +226,10 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         tmp(max_tnodes, std::make_pair(0, 0));
     for(uint32_t i = 0; i < nr_instance; ++i)
     {
-        Location const &location = locations[i];
-        tmp[location.tnode_idx].first += location.r;
-        tmp[location.tnode_idx].second += fabs(location.r)*(1-fabs(location.r));
+        float const r = locations[i].r;
+        uint32_t const tnode_idx = locations[i].tnode_idx;
+        tmp[tnode_idx].first += r;
+        tmp[tnode_idx].second += fabs(r)*(1-fabs(r));
     }
 
     for(uint32_t tnode_idx = 1; tnode_idx <= max_tnodes; ++tnode_idx)

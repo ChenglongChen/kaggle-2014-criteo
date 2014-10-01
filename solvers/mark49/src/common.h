@@ -53,7 +53,8 @@ construct_instance(Problem const &prob, uint32_t const i)
     return x;
 }
 
-Problem read_data(std::string const &dense_path, std::string const &sparse_path);
+Problem read_data(std::string const &dense_path, 
+    std::string const &sparse_path);
 
 FILE *open_c_file(std::string const &path, std::string const &mode);
 
