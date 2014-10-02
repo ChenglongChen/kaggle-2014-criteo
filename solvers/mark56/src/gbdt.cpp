@@ -57,7 +57,7 @@ void scan(
 
         for(uint32_t i_bar = 0; i_bar < nr_instance; ++i_bar)
         {
-            uint32_t const i = forward? i_bar : nr_instance-i_bar;
+            uint32_t const i = forward? i_bar : nr_instance-i_bar-1;
 
             Node const &dnode = prob.X[j][i];
             Location const &location = locations[dnode.i];
