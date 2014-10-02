@@ -68,17 +68,21 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
         struct Defender
         {
-            Defender() : ese(0), feature(-1), threshold(0) {}
+            Defender() : ese(0), threshold(0) {}
             double ese;
-            int32_t feature;
             float threshold;
         };
 
-        std::vector<Defender> defenders(nr_leaf);
+        std::vector<Defender> defenders(nr_leaf*nr_field);
+        std::vector<Defender> defenders_sparse(nr_leaf*nr_sparse_field);
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
             Meta const &meta = metas0[f];
-            defenders[f].ese = meta.s*meta.s/static_cast<double>(meta.n);
+            double const ese = meta.s*meta.s/static_cast<double>(meta.n);
+            for(uint32_t j = 0; j < nr_field; ++j)
+                defenders[f*nr_field+j].ese = ese;
+            for(uint32_t j = 0; j < nr_sparse_field; ++j)
+                defenders_sparse[f*nr_sparse_field+j].ese = ese;
         }
 
         #pragma omp parallel for schedule(dynamic)
@@ -104,18 +108,12 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                         (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
                         (sr*sr)/static_cast<double>(nr);
 
-                    #pragma omp critical
+                    Defender &defender = defenders[f*nr_field+j];
+                    double &best_ese = defender.ese;
+                    if(current_ese > best_ese)
                     {
-                        Defender &defender = defenders[f];
-                        double &best_ese = defender.ese;
-                        if((current_ese > best_ese) || 
-                           (current_ese == best_ese && 
-                            static_cast<int>(j) < defender.feature))
-                        {
-                            best_ese = current_ese;
-                            defender.feature = j;
-                            defender.threshold = dnode.v;
-                        }
+                        best_ese = current_ese;
+                        defender.threshold = dnode.v;
                     }
                 }
 
@@ -151,29 +149,38 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                     (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
                     (sr*sr)/static_cast<double>(nr);
 
-                #pragma omp critical
+                Defender &defender = defenders_sparse[f*nr_sparse_field+j];
+                double &best_ese = defender.ese;
+                if(current_ese > best_ese)
                 {
-                    Defender &defender = defenders[f];
-                    double &best_ese = defender.ese;
-                    if((current_ese > best_ese) || 
-                       (current_ese == best_ese && 
-                        static_cast<int>(j+nr_field) < defender.feature))
-                    {
-                        best_ese = current_ese;
-                        defender.feature = j+nr_field;
-                        defender.threshold = 1;
-                    }
+                    best_ese = current_ese;
+                    defender.threshold = 1;
                 }
             }
         }
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
+            Meta const &meta = metas0[f];
+            double best_ese = meta.s*meta.s/static_cast<double>(meta.n);
             TreeNode &tnode = tnodes[f+offset];
-            Defender &defender = defenders[f];
-
-            tnode.feature = defender.feature;
-            tnode.threshold = defender.threshold;
+            for(uint32_t j = 0; j < nr_field; ++j)
+            {
+                Defender &defender = defenders[f*nr_field+j];
+                if(defender.ese <= best_ese)
+                    continue;
+                best_ese = defender.ese;
+                tnode.feature = j;
+                tnode.threshold = defender.threshold;
+            }
+            for(uint32_t j = 0; j < nr_sparse_field; ++j)
+            {
+                Defender &defender = defenders_sparse[f*nr_sparse_field+j];
+                if(defender.ese <= best_ese)
+                    continue;
+                tnode.feature = nr_field + j;
+                tnode.threshold = defender.threshold;
+            }
         }
 
         #pragma omp parallel for schedule(static)
