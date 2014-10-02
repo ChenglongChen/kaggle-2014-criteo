@@ -16,32 +16,6 @@ float calc_bias(std::vector<float> const &Y)
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
 }
 
-template<typename Type>
-void clean_vector(std::vector<Type> &vec)
-{
-    vec.clear();
-    vec.shrink_to_fit();
-}
-
-void update_F(Problem const &problem, CART const &tree, std::vector<float> &F)
-{
-    uint32_t const nr_field = problem.nr_field; 
-    uint32_t const nr_sparse_field = problem.nr_sparse_field;
-    std::vector<uint32_t> const &SJ = problem.SJ;
-    std::vector<uint64_t> const &SJP = problem.SJP;
-
-    #pragma omp parallel for schedule(static)
-    for(uint32_t i = 0; i < problem.nr_instance; ++i)
-    {
-        std::vector<float> x(nr_field+nr_sparse_field, 0);
-        for(uint32_t j = 0; j < nr_field; ++j)
-            x[j] = problem.Z[j][i].v;
-        for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
-            x[SJ[p]+nr_field] = 1;
-        F[i] += tree.predict(x.data()).second;
-    }
-}
-
 } //unnamed namespace
 
 uint32_t CART::max_depth = 7;
@@ -49,7 +23,7 @@ uint32_t CART::max_tnodes = static_cast<uint32_t>(pow(2, CART::max_depth+1));
 std::mutex CART::mtx;
 bool CART::verbose = false;
 
-void CART::fit(Problem const &problem, std::vector<float> const &R, 
+void CART::fit(Problem const &prob, std::vector<float> const &R, 
     std::vector<float> &F1)
 {
     struct Location
@@ -60,9 +34,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         bool shrinked;
     };
 
-    uint32_t const nr_field = problem.nr_field;
-    uint32_t const nr_sparse_field = problem.nr_sparse_field;
-    uint32_t const nr_instance = problem.nr_instance;
+    uint32_t const nr_field = prob.nr_field;
+    uint32_t const nr_sparse_field = prob.nr_sparse_field;
+    uint32_t const nr_instance = prob.nr_instance;
 
     std::vector<Location> locations(nr_instance);
     #pragma omp parallel for schedule(static)
@@ -106,7 +80,7 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
 
             for(uint32_t i = 0; i < nr_instance; ++i)
             {
-                Node const &dnode = problem.X[j][i];
+                Node const &dnode = prob.X[j][i];
                 Location const &location = locations[dnode.i];
                 if(location.shrinked)
                     continue;
@@ -147,9 +121,9 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         for(uint32_t j = 0; j < nr_sparse_field; ++j)
         {
             std::vector<Meta> metas = metas0;
-            for(uint64_t p = problem.SIP[j]; p < problem.SIP[j+1]; ++p)
+            for(uint64_t p = prob.SIP[j]; p < prob.SIP[j+1]; ++p)
             {
-                Location const &location = locations[problem.SI[p]];
+                Location const &location = locations[prob.SI[p]];
                 if(location.shrinked)
                     continue;
                 Meta &meta = metas[location.tnode_idx-idx_offset];
@@ -201,17 +175,19 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
             }
             else if(static_cast<uint32_t>(tnode.feature) < nr_field)
             {
-                if(problem.Z[tnode.feature][i].v < tnode.threshold)
+                if(prob.Z[tnode.feature][i].v < tnode.threshold)
                     tnode_idx = 2*tnode_idx; 
                 else
                     tnode_idx = 2*tnode_idx+1; 
             }
             else
             {
+                uint32_t const target_feature 
+                    = static_cast<uint32_t>(tnode.feature-nr_field);
                 bool is_one = false;
-                for(uint64_t p = problem.SJP[i]; p < problem.SJP[i+1]; ++p) 
+                for(uint64_t p = prob.SJP[i]; p < prob.SJP[i+1]; ++p) 
                 {
-                    if(problem.SJ[p] == static_cast<uint32_t>(tnode.feature-nr_field))
+                    if(prob.SJ[p] == target_feature)
                     {
                         is_one = true;
                         break;
@@ -250,9 +226,10 @@ void CART::fit(Problem const &problem, std::vector<float> const &R,
         tmp(max_tnodes, std::make_pair(0, 0));
     for(uint32_t i = 0; i < nr_instance; ++i)
     {
-        Location const &location = locations[i];
-        tmp[location.tnode_idx].first += location.r;
-        tmp[location.tnode_idx].second += fabs(location.r)*(1-fabs(location.r));
+        float const r = locations[i].r;
+        uint32_t const tnode_idx = locations[i].tnode_idx;
+        tmp[tnode_idx].first += r;
+        tmp[tnode_idx].second += fabs(r)*(1-fabs(r));
     }
 
     for(uint32_t tnode_idx = 1; tnode_idx <= max_tnodes; ++tnode_idx)
@@ -318,7 +295,12 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
 
         if(Va.nr_instance != 0)
         {
-            update_F(Va, trees[t], F_Va);
+            #pragma omp parallel for schedule(static)
+            for(uint32_t i = 0; i < Va.nr_instance; ++i)
+            {
+                std::vector<float> x = construct_instance(Va, i);
+                F_Va[i] += trees[t].predict(x.data()).second;
+            }
 
             double Va_loss = 0;
             #pragma omp parallel for schedule(static) reduction(+: Va_loss)

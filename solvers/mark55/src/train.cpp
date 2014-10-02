@@ -1,11 +1,4 @@
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <cmath>
-#include <algorithm>
 #include <omp.h>
 
 #include "common.h"
@@ -16,20 +9,20 @@ namespace {
 
 struct Option
 {
-    Option() : nr_trees(20), nr_threads(1) {}
+    Option() : nr_tree(30), nr_thread(1) {}
     std::string Tr_path, TrS_path, Va_path, VaS_path, Va_out_path, Tr_out_path;
-    uint32_t nr_trees, nr_threads;
+    uint32_t nr_tree, nr_thread;
 };
 
 std::string train_help()
 {
     return std::string(
-"usage: mark26 [<options>] <train_path> \n"
+"usage: mark49 [<options>] <train_path> \n"
 "\n"
 "options:\n"
-"-d <depth>: you know\n"
-"-s <nr_threads>: you know\n"
-"-t <nr_tree>: you know\n");
+"-d <depth>: set the maximum depth of a tree\n"
+"-s <nr_thread>: set maximum number of threads used\n"
+"-t <nr_tree>: set number of trees\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -54,13 +47,13 @@ Option parse_option(std::vector<std::string> const &args)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.nr_trees = std::stoi(args[++i]);
+            opt.nr_tree = std::stoi(args[++i]);
         }
         else if(args[i].compare("-s") == 0)
         {
             if(i == argc-1)
                 throw std::invalid_argument("invalid command");
-            opt.nr_threads = std::stoi(args[++i]);
+            opt.nr_thread = std::stoi(args[++i]);
         }
         else
         {
@@ -68,8 +61,8 @@ Option parse_option(std::vector<std::string> const &args)
         }
     }
 
-    if(i >= argc-1)
-        throw std::invalid_argument("training data not specified");
+    if(i != argc-6)
+        throw std::invalid_argument("invalid command");
 
     opt.Va_path = args[i++];
     opt.VaS_path = args[i++];
@@ -81,26 +74,16 @@ Option parse_option(std::vector<std::string> const &args)
     return opt;
 }
 
-void write(
-    Problem const &problem, GBDT const &gbdt, std::string const &path)
+void write(Problem const &prob, GBDT const &gbdt, std::string const &path)
 {
-    uint32_t const nr_field = problem.nr_field; 
-    uint32_t const nr_sparse_field = problem.nr_sparse_field;
-    std::vector<uint32_t> const &SJ = problem.SJ;
-    std::vector<uint64_t> const &SJP = problem.SJP;
     FILE *f = open_c_file(path, "w");
 
-    for(uint32_t i = 0; i < problem.nr_instance; ++i)
+    for(uint32_t i = 0; i < prob.nr_instance; ++i)
     {
-        std::vector<float> x(nr_field+nr_sparse_field, 0);
-        for(uint32_t j = 0; j < problem.nr_field; ++j)
-            x[j] = problem.Z[j][i].v;
-        for(uint64_t p = SJP[i]; p < SJP[i+1]; ++p)
-            x[SJ[p]+nr_field] = 1;
-
+        std::vector<float> x = construct_instance(prob, i);
         std::vector<uint32_t> indices = gbdt.get_indices(x.data());
 
-        fprintf(f, "%d", static_cast<int>(problem.Y[i]));
+        fprintf(f, "%d", static_cast<int>(prob.Y[i]));
         for(uint32_t t = 0; t < indices.size(); ++t)
             fprintf(f, " %d:%d", t+1, indices[t]);
         fprintf(f, "\n");
@@ -131,9 +114,9 @@ int main(int const argc, char const * const * const argv)
     printf("done\n");
     fflush(stdout);
 
-	omp_set_num_threads(static_cast<int>(opt.nr_threads));
+	omp_set_num_threads(static_cast<int>(opt.nr_thread));
 
-    GBDT gbdt(opt.nr_trees);
+    GBDT gbdt(opt.nr_tree);
     gbdt.fit(Tr, Va);
 
     write(Tr, gbdt, opt.Tr_out_path);
