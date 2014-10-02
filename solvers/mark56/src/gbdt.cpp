@@ -189,7 +189,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         std::vector<Defender> defenders_inv = defenders;
 
         scan(prob, locations, metas0, defenders, offset, true);
-        scan(prob, locations, metas0, defenders, offset, false);
+        scan(prob, locations, metas0, defenders_inv, offset, false);
         scan_sparse(prob, locations, metas0, defenders_sparse, offset, true);
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
