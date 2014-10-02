@@ -74,7 +74,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             float threshold;
         };
 
-        Defender defenders[nr_leaf];
+        std::vector<Defender> defenders(nr_leaf);
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
             Meta const &meta = metas0[f];
