@@ -16,6 +16,127 @@ float calc_bias(std::vector<float> const &Y)
     return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
 }
 
+struct Location
+{
+    Location() : tnode_idx(1), r(0), shrinked(false) {}
+    uint32_t tnode_idx;
+    float r;
+    bool shrinked;
+};
+
+struct Meta
+{
+    Meta() : sl(0), s(0), nl(0), n(0), v(0.0f/0.0f) {}
+    double sl, s;
+    uint32_t nl, n;
+    float v;
+};
+
+struct Defender
+{
+    Defender() : ese(0), threshold(0) {}
+    double ese;
+    float threshold;
+};
+
+void scan(
+    Problem const &prob,
+    std::vector<Location> const &locations,
+    std::vector<Meta> const &metas0,
+    std::vector<Defender> &defenders,
+    uint32_t const offset,
+    bool const forward)
+{
+    uint32_t const nr_field = prob.nr_field;
+    uint32_t const nr_instance = prob.nr_instance;
+
+    #pragma omp parallel for schedule(dynamic)
+    for(uint32_t j = 0; j < nr_field; ++j)
+    {
+        std::vector<Meta> metas = metas0;
+
+        for(uint32_t i = 0; i < nr_instance; ++i)
+        {
+            Node const &dnode = prob.X[j][i];
+            Location const &location = locations[dnode.i];
+            if(location.shrinked)
+                continue;
+
+            uint32_t const f = location.tnode_idx-offset;
+            Meta &meta = metas[f];
+
+            if(dnode.v != meta.v)
+            {
+                double const sr = meta.s - meta.sl;
+                uint32_t const nr = meta.n - meta.nl;
+                double const current_ese = 
+                    (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
+                    (sr*sr)/static_cast<double>(nr);
+
+                Defender &defender = defenders[f*nr_field+j];
+                double &best_ese = defender.ese;
+                if(current_ese > best_ese)
+                {
+                    best_ese = current_ese;
+                    defender.threshold = dnode.v;
+                }
+            }
+
+            meta.sl += location.r;
+            ++meta.nl;
+            meta.v = dnode.v;
+        }
+    }
+}
+
+void scan_sparse(
+    Problem const &prob,
+    std::vector<Location> const &locations,
+    std::vector<Meta> const &metas0,
+    std::vector<Defender> &defenders,
+    uint32_t const offset,
+    bool const forward)
+{
+    uint32_t const nr_sparse_field = prob.nr_sparse_field;
+    uint32_t const nr_leaf = offset;
+
+    #pragma omp parallel for schedule(dynamic)
+    for(uint32_t j = 0; j < nr_sparse_field; ++j)
+    {
+        std::vector<Meta> metas = metas0;
+        for(uint64_t p = prob.SIP[j]; p < prob.SIP[j+1]; ++p)
+        {
+            Location const &location = locations[prob.SI[p]];
+            if(location.shrinked)
+                continue;
+            Meta &meta = metas[location.tnode_idx-offset];
+            meta.sl += location.r;
+            ++meta.nl;
+        }
+
+        for(uint32_t f = 0; f < nr_leaf; ++f)
+        {
+            Meta const &meta = metas[f];
+            if(meta.nl == 0)
+                continue;
+            
+            double const sr = meta.s - meta.sl;
+            uint32_t const nr = meta.n - meta.nl;
+            double const current_ese = 
+                (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
+                (sr*sr)/static_cast<double>(nr);
+
+            Defender &defender = defenders[f*nr_sparse_field+j];
+            double &best_ese = defender.ese;
+            if(current_ese > best_ese)
+            {
+                best_ese = current_ese;
+                defender.threshold = 1;
+            }
+        }
+    }
+}
+
 } //unnamed namespace
 
 uint32_t CART::max_depth = 7;
@@ -26,14 +147,6 @@ bool CART::verbose = false;
 void CART::fit(Problem const &prob, std::vector<float> const &R, 
     std::vector<float> &F1)
 {
-    struct Location
-    {
-        Location() : tnode_idx(1), r(0), shrinked(false) {}
-        uint32_t tnode_idx;
-        float r;
-        bool shrinked;
-    };
-
     uint32_t const nr_field = prob.nr_field;
     uint32_t const nr_sparse_field = prob.nr_sparse_field;
     uint32_t const nr_instance = prob.nr_instance;
@@ -44,14 +157,6 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         locations[i].r = R[i];
     for(uint32_t d = 0, offset = 1; d < max_depth; ++d, offset *= 2)
     {
-        struct Meta
-        {
-            Meta() : sl(0), s(0), nl(0), n(0), v(0.0f/0.0f) {}
-            double sl, s;
-            uint32_t nl, n;
-            float v;
-        };
-
         uint32_t const nr_leaf = static_cast<uint32_t>(pow(2, d));
         std::vector<Meta> metas0(nr_leaf);
 
@@ -66,13 +171,6 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             ++meta.n;
         }
 
-        struct Defender
-        {
-            Defender() : ese(0), threshold(0) {}
-            double ese;
-            float threshold;
-        };
-
         std::vector<Defender> defenders(nr_leaf*nr_field);
         std::vector<Defender> defenders_sparse(nr_leaf*nr_sparse_field);
         for(uint32_t f = 0; f < nr_leaf; ++f)
@@ -86,79 +184,8 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         }
         std::vector<Defender> defenders_inv = defenders;
 
-        #pragma omp parallel for schedule(dynamic)
-        for(uint32_t j = 0; j < nr_field; ++j)
-        {
-            std::vector<Meta> metas = metas0;
-
-            for(uint32_t i = 0; i < nr_instance; ++i)
-            {
-                Node const &dnode = prob.X[j][i];
-                Location const &location = locations[dnode.i];
-                if(location.shrinked)
-                    continue;
-
-                uint32_t const f = location.tnode_idx-offset;
-                Meta &meta = metas[f];
-
-                if(dnode.v != meta.v)
-                {
-                    double const sr = meta.s - meta.sl;
-                    uint32_t const nr = meta.n - meta.nl;
-                    double const current_ese = 
-                        (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
-                        (sr*sr)/static_cast<double>(nr);
-
-                    Defender &defender = defenders[f*nr_field+j];
-                    double &best_ese = defender.ese;
-                    if(current_ese > best_ese)
-                    {
-                        best_ese = current_ese;
-                        defender.threshold = dnode.v;
-                    }
-                }
-
-                meta.sl += location.r;
-                ++meta.nl;
-                meta.v = dnode.v;
-            }
-        }
-
-        #pragma omp parallel for schedule(dynamic)
-        for(uint32_t j = 0; j < nr_sparse_field; ++j)
-        {
-            std::vector<Meta> metas = metas0;
-            for(uint64_t p = prob.SIP[j]; p < prob.SIP[j+1]; ++p)
-            {
-                Location const &location = locations[prob.SI[p]];
-                if(location.shrinked)
-                    continue;
-                Meta &meta = metas[location.tnode_idx-offset];
-                meta.sl += location.r;
-                ++meta.nl;
-            }
-
-            for(uint32_t f = 0; f < nr_leaf; ++f)
-            {
-                Meta const &meta = metas[f];
-                if(meta.nl == 0)
-                    continue;
-                
-                double const sr = meta.s - meta.sl;
-                uint32_t const nr = meta.n - meta.nl;
-                double const current_ese = 
-                    (meta.sl*meta.sl)/static_cast<double>(meta.nl) + 
-                    (sr*sr)/static_cast<double>(nr);
-
-                Defender &defender = defenders_sparse[f*nr_sparse_field+j];
-                double &best_ese = defender.ese;
-                if(current_ese > best_ese)
-                {
-                    best_ese = current_ese;
-                    defender.threshold = 1;
-                }
-            }
-        }
+        scan(prob, locations, metas0, defenders, offset, true);
+        scan_sparse(prob, locations, metas0, defenders_sparse, offset, true);
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
