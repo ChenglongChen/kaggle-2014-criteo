@@ -66,11 +66,19 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             ++meta.n;
         }
 
-        std::vector<double> best_eses(max_nr_leaf, 0);
+        struct Defender
+        {
+            Defender() : ese(0), feature(-1), threshold(0) {}
+            double ese;
+            int32_t feature;
+            float threshold;
+        };
+
+        Defender defenders[max_nr_leaf];
         for(uint32_t idx = 0; idx < max_nr_leaf; ++idx)
         {
             Meta const &meta = metas0[idx];
-            best_eses[idx] = meta.s*meta.s/static_cast<double>(meta.n);
+            defenders[idx].ese = meta.s*meta.s/static_cast<double>(meta.n);
         }
 
         #pragma omp parallel for schedule(dynamic)
@@ -85,8 +93,8 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 if(location.shrinked)
                     continue;
 
-                TreeNode &tnode = tnodes[location.tnode_idx];
-                Meta &meta = metas[location.tnode_idx-idx_offset];
+                uint32_t const leaf_idx = location.tnode_idx-idx_offset;
+                Meta &meta = metas[leaf_idx];
 
                 if(dnode.v != meta.v)
                 {
@@ -98,15 +106,15 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
                     #pragma omp critical
                     {
-                        double &best_ese = 
-                            best_eses[location.tnode_idx-idx_offset];
+                        Defender &defender = defenders[leaf_idx];
+                        double &best_ese = defender.ese;
                         if((current_ese > best_ese) || 
                            (current_ese == best_ese && 
-                            static_cast<int>(j) < tnode.feature))
+                            static_cast<int>(j) < defender.feature))
                         {
                             best_ese = current_ese;
-                            tnode.feature = j;
-                            tnode.threshold = dnode.v;
+                            defender.feature = j;
+                            defender.threshold = dnode.v;
                         }
                     }
                 }
@@ -137,8 +145,6 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 if(meta.nl == 0)
                     continue;
                 
-                TreeNode &tnode = tnodes[idx_offset+leaf_idx];
-
                 double const sr = meta.s - meta.sl;
                 uint32_t const nr = meta.n - meta.nl;
                 double const current_ese = 
@@ -147,17 +153,27 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
                 #pragma omp critical
                 {
-                    double &best_ese = best_eses[leaf_idx];
+                    Defender &defender = defenders[leaf_idx];
+                    double &best_ese = defender.ese;
                     if((current_ese > best_ese) || 
                        (current_ese == best_ese && 
-                        static_cast<int>(j+nr_field) < tnode.feature))
+                        static_cast<int>(j+nr_field) < defender.feature))
                     {
                         best_ese = current_ese;
-                        tnode.feature = j+nr_field;
-                        tnode.threshold = 1;
+                        defender.feature = j+nr_field;
+                        defender.threshold = 1;
                     }
                 }
             }
+        }
+
+        for(uint32_t leaf_idx = 0; leaf_idx < max_nr_leaf; ++leaf_idx)
+        {
+            TreeNode &tnode = tnodes[leaf_idx+idx_offset];
+            Defender &defender = defenders[leaf_idx];
+
+            tnode.feature = defender.feature;
+            tnode.threshold = defender.threshold;
         }
 
         #pragma omp parallel for schedule(static)
