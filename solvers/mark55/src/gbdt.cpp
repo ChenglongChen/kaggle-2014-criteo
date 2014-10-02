@@ -42,7 +42,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
     #pragma omp parallel for schedule(static)
     for(uint32_t i = 0; i < nr_instance; ++i)
         locations[i].r = R[i];
-    for(uint32_t d = 0, idx_offset = 1; d < max_depth; ++d, idx_offset *= 2)
+    for(uint32_t d = 0, offset = 1; d < max_depth; ++d, offset *= 2)
     {
         struct Meta
         {
@@ -61,7 +61,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             if(location.shrinked)
                 continue;
 
-            Meta &meta = metas0[location.tnode_idx-idx_offset];
+            Meta &meta = metas0[location.tnode_idx-offset];
             meta.s += location.r;
             ++meta.n;
         }
@@ -93,7 +93,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 if(location.shrinked)
                     continue;
 
-                uint32_t const f = location.tnode_idx-idx_offset;
+                uint32_t const f = location.tnode_idx-offset;
                 Meta &meta = metas[f];
 
                 if(dnode.v != meta.v)
@@ -134,7 +134,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 Location const &location = locations[prob.SI[p]];
                 if(location.shrinked)
                     continue;
-                Meta &meta = metas[location.tnode_idx-idx_offset];
+                Meta &meta = metas[location.tnode_idx-offset];
                 meta.sl += location.r;
                 ++meta.nl;
             }
@@ -169,7 +169,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
-            TreeNode &tnode = tnodes[f+idx_offset];
+            TreeNode &tnode = tnodes[f+offset];
             Defender &defender = defenders[f];
 
             tnode.feature = defender.feature;
@@ -217,14 +217,14 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         }
 
         uint32_t nr_leaf_next = nr_leaf*2;
-        uint32_t idx_offset_next = idx_offset*2;
+        uint32_t offset_next = offset*2;
         std::vector<uint32_t> counter(nr_leaf_next, 0);
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location const &location = locations[i];
             if(location.shrinked)
                 continue;
-            ++counter[locations[i].tnode_idx-idx_offset_next];
+            ++counter[locations[i].tnode_idx-offset_next];
         }
 
         #pragma omp parallel for schedule(static)
@@ -233,7 +233,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             Location &location = locations[i]; 
             if(location.shrinked)
                 continue;
-            if(counter[location.tnode_idx-idx_offset_next] < 100)
+            if(counter[location.tnode_idx-offset_next] < 100)
                 location.shrinked = true;
         }
     }
