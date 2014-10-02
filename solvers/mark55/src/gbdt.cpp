@@ -52,8 +52,8 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             float v;
         };
 
-        uint32_t const max_nr_leaf = static_cast<uint32_t>(pow(2, d));
-        std::vector<Meta> metas0(max_nr_leaf);
+        uint32_t const nr_leaf = static_cast<uint32_t>(pow(2, d));
+        std::vector<Meta> metas0(nr_leaf);
 
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
@@ -74,11 +74,11 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             float threshold;
         };
 
-        Defender defenders[max_nr_leaf];
-        for(uint32_t idx = 0; idx < max_nr_leaf; ++idx)
+        Defender defenders[nr_leaf];
+        for(uint32_t f = 0; f < nr_leaf; ++f)
         {
-            Meta const &meta = metas0[idx];
-            defenders[idx].ese = meta.s*meta.s/static_cast<double>(meta.n);
+            Meta const &meta = metas0[f];
+            defenders[f].ese = meta.s*meta.s/static_cast<double>(meta.n);
         }
 
         #pragma omp parallel for schedule(dynamic)
@@ -93,8 +93,8 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 if(location.shrinked)
                     continue;
 
-                uint32_t const leaf_idx = location.tnode_idx-idx_offset;
-                Meta &meta = metas[leaf_idx];
+                uint32_t const f = location.tnode_idx-idx_offset;
+                Meta &meta = metas[f];
 
                 if(dnode.v != meta.v)
                 {
@@ -106,7 +106,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
                     #pragma omp critical
                     {
-                        Defender &defender = defenders[leaf_idx];
+                        Defender &defender = defenders[f];
                         double &best_ese = defender.ese;
                         if((current_ese > best_ese) || 
                            (current_ese == best_ese && 
@@ -139,9 +139,9 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                 ++meta.nl;
             }
 
-            for(uint32_t leaf_idx = 0; leaf_idx < max_nr_leaf; ++leaf_idx)
+            for(uint32_t f = 0; f < nr_leaf; ++f)
             {
-                Meta const &meta = metas[leaf_idx];
+                Meta const &meta = metas[f];
                 if(meta.nl == 0)
                     continue;
                 
@@ -153,7 +153,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
 
                 #pragma omp critical
                 {
-                    Defender &defender = defenders[leaf_idx];
+                    Defender &defender = defenders[f];
                     double &best_ese = defender.ese;
                     if((current_ese > best_ese) || 
                        (current_ese == best_ese && 
@@ -167,10 +167,10 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             }
         }
 
-        for(uint32_t leaf_idx = 0; leaf_idx < max_nr_leaf; ++leaf_idx)
+        for(uint32_t f = 0; f < nr_leaf; ++f)
         {
-            TreeNode &tnode = tnodes[leaf_idx+idx_offset];
-            Defender &defender = defenders[leaf_idx];
+            TreeNode &tnode = tnodes[f+idx_offset];
+            Defender &defender = defenders[f];
 
             tnode.feature = defender.feature;
             tnode.threshold = defender.threshold;
@@ -216,9 +216,9 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             }
         }
 
-        uint32_t max_nr_leaf_next = max_nr_leaf*2;
+        uint32_t nr_leaf_next = nr_leaf*2;
         uint32_t idx_offset_next = idx_offset*2;
-        std::vector<uint32_t> counter(max_nr_leaf_next, 0);
+        std::vector<uint32_t> counter(nr_leaf_next, 0);
         for(uint32_t i = 0; i < nr_instance; ++i)
         {
             Location const &location = locations[i];
