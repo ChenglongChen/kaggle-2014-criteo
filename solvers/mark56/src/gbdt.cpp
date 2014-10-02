@@ -188,9 +188,13 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         }
         std::vector<Defender> defenders_inv = defenders;
 
-        scan(prob, locations, metas0, defenders, offset, true);
-        scan(prob, locations, metas0, defenders_inv, offset, false);
+        std::thread thread_f(scan, std::ref(prob), std::ref(locations),
+            std::ref(metas0), std::ref(defenders), offset, true);
+        std::thread thread_b(scan, std::ref(prob), std::ref(locations),
+            std::ref(metas0), std::ref(defenders_inv), offset, false);
         scan_sparse(prob, locations, metas0, defenders_sparse, offset, true);
+        thread_f.join();
+        thread_b.join();
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
         {
