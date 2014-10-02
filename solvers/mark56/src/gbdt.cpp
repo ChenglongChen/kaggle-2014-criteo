@@ -55,8 +55,10 @@ void scan(
     {
         std::vector<Meta> metas = metas0;
 
-        for(uint32_t i = 0; i < nr_instance; ++i)
+        for(uint32_t i_bar = 0; i_bar < nr_instance; ++i_bar)
         {
+            uint32_t const i = forward? i_bar : nr_instance-i_bar;
+
             Node const &dnode = prob.X[j][i];
             Location const &location = locations[dnode.i];
             if(location.shrinked)
@@ -78,8 +80,10 @@ void scan(
                 if(current_ese > best_ese)
                 {
                     best_ese = current_ese;
-                    defender.threshold = dnode.v;
+                    defender.threshold = forward? dnode.v : meta.v;
                 }
+                if(i_bar > nr_instance/2)
+                    break;
             }
 
             meta.sl += location.r;
@@ -185,6 +189,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
         std::vector<Defender> defenders_inv = defenders;
 
         scan(prob, locations, metas0, defenders, offset, true);
+        scan(prob, locations, metas0, defenders, offset, false);
         scan_sparse(prob, locations, metas0, defenders_sparse, offset, true);
 
         for(uint32_t f = 0; f < nr_leaf; ++f)
