@@ -84,6 +84,7 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             for(uint32_t j = 0; j < nr_sparse_field; ++j)
                 defenders_sparse[f*nr_sparse_field+j].ese = ese;
         }
+        std::vector<Defender> defenders_inv = defenders;
 
         #pragma omp parallel for schedule(dynamic)
         for(uint32_t j = 0; j < nr_field; ++j)
@@ -166,20 +167,31 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
             TreeNode &tnode = tnodes[f+offset];
             for(uint32_t j = 0; j < nr_field; ++j)
             {
-                Defender &defender = defenders[f*nr_field+j];
-                if(defender.ese <= best_ese)
-                    continue;
-                best_ese = defender.ese;
-                tnode.feature = j;
-                tnode.threshold = defender.threshold;
+                Defender defender = defenders[f*nr_field+j];
+                if(defender.ese > best_ese)
+                {
+                    best_ese = defender.ese;
+                    tnode.feature = j;
+                    tnode.threshold = defender.threshold;
+                }
+
+                defender = defenders_inv[f*nr_field+j];
+                if(defender.ese > best_ese)
+                {
+                    best_ese = defender.ese;
+                    tnode.feature = j;
+                    tnode.threshold = defender.threshold;
+                }
             }
             for(uint32_t j = 0; j < nr_sparse_field; ++j)
             {
-                Defender &defender = defenders_sparse[f*nr_sparse_field+j];
-                if(defender.ese <= best_ese)
-                    continue;
-                tnode.feature = nr_field + j;
-                tnode.threshold = defender.threshold;
+                Defender defender = defenders_sparse[f*nr_sparse_field+j];
+                if(defender.ese > best_ese)
+                {
+                    best_ese = defender.ese;
+                    tnode.feature = nr_field + j;
+                    tnode.threshold = defender.threshold;
+                }
             }
         }
 
