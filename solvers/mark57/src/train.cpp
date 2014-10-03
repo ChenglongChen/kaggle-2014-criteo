@@ -85,7 +85,7 @@ void write(Problem const &prob, GBDT const &gbdt, std::string const &path)
 
         fprintf(f, "%d", static_cast<int>(prob.Y[i]));
         for(uint32_t t = 0; t < indices.size(); ++t)
-            fprintf(f, " %d:%d", t+1, indices[t]);
+            fprintf(f, " %d", indices[t]);
         fprintf(f, "\n");
     }
 
