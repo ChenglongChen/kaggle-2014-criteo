@@ -270,27 +270,6 @@ void CART::fit(Problem const &prob, std::vector<float> const &R,
                     tnode_idx = 2*tnode_idx+1; 
             }
         }
-
-        uint32_t nr_leaf_next = nr_leaf*2;
-        uint32_t offset_next = offset*2;
-        std::vector<uint32_t> counter(nr_leaf_next, 0);
-        for(uint32_t i = 0; i < nr_instance; ++i)
-        {
-            Location const &location = locations[i];
-            if(location.shrinked)
-                continue;
-            ++counter[locations[i].tnode_idx-offset_next];
-        }
-
-        #pragma omp parallel for schedule(static)
-        for(uint32_t i = 0; i < nr_instance; ++i)
-        {
-            Location &location = locations[i]; 
-            if(location.shrinked)
-                continue;
-            if(counter[location.tnode_idx-offset_next] < 100)
-                location.shrinked = true;
-        }
     }
 
     std::vector<std::pair<double, double>> 
