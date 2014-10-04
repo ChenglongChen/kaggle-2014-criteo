@@ -61,8 +61,8 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
 
     __m128 const XMMv = _mm_set1_ps(spmat.v);
     __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
-    __m128 const XMMeta = _mm_load1_ps(&eta);
-    __m128 const XMMlambda = _mm_load1_ps(&lambda);
+    __m128 const XMMeta = _mm_set1_ps(eta);
+    __m128 const XMMlambda = _mm_set1_ps(lambda);
 
     __m128 XMMt = _mm_setzero_ps();
     for(uint32_t f1 = 0; f1 < nr_field; ++f1)
@@ -93,21 +93,19 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
                     __m128 XMMwg2 = _mm_load_ps(wg2+d);
 
                     __m128 XMMg1 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw1),
-                        _mm_mul_ps(XMMkappav, XMMw2));
+                                   _mm_mul_ps(XMMlambda, XMMw1),
+                                   _mm_mul_ps(XMMkappav, XMMw2));
                     __m128 XMMg2 = _mm_add_ps(
-                        _mm_mul_ps(XMMlambda, XMMw2),
-                        _mm_mul_ps(XMMkappav, XMMw1));
+                                   _mm_mul_ps(XMMlambda, XMMw2),
+                                   _mm_mul_ps(XMMkappav, XMMw1));
 
                     XMMwg1 = _mm_add_ps(XMMwg1, _mm_mul_ps(XMMg1, XMMg1));
                     XMMwg2 = _mm_add_ps(XMMwg2, _mm_mul_ps(XMMg2, XMMg2));
 
-                    XMMw1 = _mm_sub_ps(XMMw1,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
-                    XMMw2 = _mm_sub_ps(XMMw2,
-                        _mm_mul_ps(XMMeta, 
-                        _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
+                    XMMw1 = _mm_sub_ps(XMMw1, _mm_mul_ps(XMMeta, 
+                            _mm_mul_ps(_mm_rsqrt_ps(XMMwg1), XMMg1)));
+                    XMMw2 = _mm_sub_ps(XMMw2, _mm_mul_ps(XMMeta, 
+                            _mm_mul_ps(_mm_rsqrt_ps(XMMwg2), XMMg2)));
 
                     _mm_store_ps(w1+d, XMMw1);
                     _mm_store_ps(w2+d, XMMw2);
@@ -123,7 +121,8 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
                     __m128 const XMMw1 = _mm_load_ps(w1+d);
                     __m128 const XMMw2 = _mm_load_ps(w2+d);
 
-                    XMMt = _mm_add_ps(XMMt, _mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMv));
+                    XMMt = _mm_add_ps(XMMt, 
+                           _mm_mul_ps(_mm_mul_ps(XMMw1, XMMw2), XMMv));
                 }
             }
         }
