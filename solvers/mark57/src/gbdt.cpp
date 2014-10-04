@@ -11,9 +11,9 @@ namespace {
 
 float calc_bias(std::vector<float> const &Y)
 {
-    float y_bar = static_cast<float>(std::accumulate(Y.begin(), Y.end(), 0.0) /
-        static_cast<double>(Y.size()));
-    return static_cast<float>(log((1.0f+y_bar)/(1.0f-y_bar)));
+    double y_bar = std::accumulate(Y.begin(), Y.end(), 0.0);
+    y_bar /= static_cast<double>(Y.size());
+    return static_cast<float>(log((1.0+y_bar)/(1.0-y_bar)));
 }
 
 struct Location
