@@ -5,11 +5,8 @@
 
 #define flag { printf("\nLINE: %d\n", __LINE__); fflush(stdout); }
 
-#include <cstdio>
-#include <string>
 #include <vector>
 #include <cmath>
-
 #include <pmmintrin.h>
 
 struct SpMat
