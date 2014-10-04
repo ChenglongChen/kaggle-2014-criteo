@@ -176,8 +176,8 @@ int main(int const argc, char const * const * const argv)
     }
 
     std::cout << "reading data..." << std::flush;
-    Problem const Va = read_data(opt.Va_path);
-    Problem const Tr = read_data(opt.Tr_path);
+    Problem const Va = read_problem(opt.Va_path);
+    Problem const Tr = read_problem(opt.Tr_path);
     std::cout << "done\n" << std::flush;
 
     std::cout << "initializing model..." << std::flush;

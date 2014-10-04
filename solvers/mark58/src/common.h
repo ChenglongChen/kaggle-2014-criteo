@@ -22,7 +22,7 @@ struct Problem
     std::vector<float> Y;
 };
 
-Problem read_data(std::string const path);
+Problem read_problem(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
 

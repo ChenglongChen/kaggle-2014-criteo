@@ -51,7 +51,7 @@ uint32_t get_nr_field(std::string const &path)
 
 } //unamed namespace
 
-Problem read_data(std::string const path)
+Problem read_problem(std::string const path)
 {
     if(path.empty())
         return Problem(0, 0);
