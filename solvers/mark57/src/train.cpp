@@ -107,12 +107,10 @@ int main(int const argc, char const * const * const argv)
         return EXIT_FAILURE;
     }
 
-    printf("reading data...");
-    fflush(stdout);
+    std::cout << "reading data..." << std::flush;
     Problem const Tr = read_data(opt.Tr_path, opt.TrS_path);
     Problem const Va = read_data(opt.Va_path, opt.VaS_path);
-    printf("done\n");
-    fflush(stdout);
+    std::cout << "done\n" << std::flush;
 
 	omp_set_num_threads(static_cast<int>(opt.nr_thread));
 
