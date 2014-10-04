@@ -40,7 +40,7 @@ FILE *open_c_file(std::string const &path, std::string const &mode);
 std::vector<std::string> 
 argv_to_args(int const argc, char const * const * const argv);
 
-inline float wTx(Problem const &spmat, Model &model, uint32_t const i, 
+inline float wTx(Problem const &prob, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -50,11 +50,11 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
     uint64_t const align0 = nr_factor*kW_NODE_SIZE;
     uint64_t const align1 = nr_field*align0;
 
-    uint32_t const * const J = &spmat.J[i*nr_field];
+    uint32_t const * const J = &prob.J[i*nr_field];
     float * const W = model.W.data();
 
-    __m128 const XMMv = _mm_set1_ps(spmat.v);
-    __m128 const XMMkappav = _mm_set1_ps(kappa*spmat.v);
+    __m128 const XMMv = _mm_set1_ps(prob.v);
+    __m128 const XMMkappav = _mm_set1_ps(kappa*prob.v);
     __m128 const XMMeta = _mm_set1_ps(eta);
     __m128 const XMMlambda = _mm_set1_ps(lambda);
 
@@ -133,6 +133,6 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
     return t;
 }
 
-float predict(Problem const &spmat, Model &model, 
+float predict(Problem const &prob, Model &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_

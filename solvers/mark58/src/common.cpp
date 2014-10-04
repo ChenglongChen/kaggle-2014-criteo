@@ -50,7 +50,7 @@ Problem read_problem(std::string const path)
 {
     if(path.empty())
         return Problem(0, 0);
-    Problem spmat(get_nr_line(path), get_nr_field(path));
+    Problem prob(get_nr_line(path), get_nr_field(path));
 
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
@@ -60,21 +60,21 @@ Problem read_problem(std::string const path)
     {
         char *y_char = strtok(line, " \t");
         float const y = (atoi(y_char)>0)? 1.0f : -1.0f;
-        spmat.Y[i] = y;
+        prob.Y[i] = y;
         for(; ; ++p)
         {
             char *idx_char = strtok(nullptr," \t");
             if(idx_char == nullptr || *idx_char == '\n')
                 break;
             uint32_t idx = static_cast<uint32_t>(atoi(idx_char));
-            spmat.nr_feature = std::max(spmat.nr_feature, idx);
-            spmat.J[p] = idx-1;
+            prob.nr_feature = std::max(prob.nr_feature, idx);
+            prob.J[p] = idx-1;
         }
     }
 
     fclose(f);
 
-    return spmat;
+    return prob;
 }
 
 FILE *open_c_file(std::string const &path, std::string const &mode)
@@ -94,7 +94,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(Problem const &spmat, Model &model, 
+float predict(Problem const &prob, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;
@@ -103,11 +103,11 @@ float predict(Problem const &spmat, Model &model,
 
     double loss = 0;
     #pragma omp parallel for schedule(static) reduction(+:loss)
-    for(uint32_t i = 0; i < spmat.Y.size(); ++i)
+    for(uint32_t i = 0; i < prob.Y.size(); ++i)
     {
-        float const y = spmat.Y[i];
+        float const y = prob.Y[i];
 
-        float const t = wTx(spmat, model, i);
+        float const t = wTx(prob, model, i);
         
         float const prob = 1/(1+static_cast<float>(exp(-t)));
 
@@ -122,5 +122,5 @@ float predict(Problem const &spmat, Model &model,
     if(f)
         fclose(f);
 
-    return static_cast<float>(loss/static_cast<double>(spmat.Y.size()));
+    return static_cast<float>(loss/static_cast<double>(prob.Y.size()));
 }
