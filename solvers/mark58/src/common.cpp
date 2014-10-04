@@ -51,11 +51,11 @@ uint32_t get_nr_field(std::string const &path)
 
 } //unamed namespace
 
-SpMat read_data(std::string const path)
+Problem read_data(std::string const path)
 {
     if(path.empty())
-        return SpMat(0, 0);
-    SpMat spmat(get_nr_line(path), get_nr_field(path));
+        return Problem(0, 0);
+    Problem spmat(get_nr_line(path), get_nr_field(path));
 
     int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
@@ -100,7 +100,7 @@ argv_to_args(int const argc, char const * const * const argv)
     return args;
 }
 
-float predict(SpMat const &spmat, Model &model, 
+float predict(Problem const &spmat, Model &model, 
     std::string const &output_path)
 {
     FILE *f = nullptr;

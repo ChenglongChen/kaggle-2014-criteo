@@ -9,9 +9,9 @@
 #include <cmath>
 #include <pmmintrin.h>
 
-struct SpMat
+struct Problem
 {
-    SpMat(uint32_t const nr_instance, uint32_t const nr_field) 
+    Problem(uint32_t const nr_instance, uint32_t const nr_field) 
         : nr_feature(0), nr_instance(nr_instance), nr_field(nr_field), 
           v(2.0f/static_cast<float>(nr_field)), 
           J(static_cast<uint64_t>(nr_instance)*nr_field), 
@@ -22,7 +22,7 @@ struct SpMat
     std::vector<float> Y;
 };
 
-SpMat read_data(std::string const path);
+Problem read_data(std::string const path);
 
 uint32_t const kW_NODE_SIZE = 2;
 
@@ -46,7 +46,7 @@ inline float qrsqrt(float x)
     return x;
 }
 
-inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
+inline float wTx(Problem const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -138,7 +138,7 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 }
 
 /*
-inline float wTx(SpMat const &spmat, Model &model, uint32_t const i, 
+inline float wTx(Problem const &spmat, Model &model, uint32_t const i, 
     float const kappa=0, float const eta=0, float const lambda=0, 
     bool const do_update=false)
 {
@@ -196,6 +196,6 @@ inline float wTx(SpMat const &spmat, Model &model, uint32_t const i,
 }
 */
 
-float predict(SpMat const &spmat, Model &model, 
+float predict(Problem const &spmat, Model &model, 
     std::string const &output_path = std::string(""));
 #endif // _COMMON_H_

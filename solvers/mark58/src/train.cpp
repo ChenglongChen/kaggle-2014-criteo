@@ -118,7 +118,7 @@ void init_model(Model &model)
     }
 }
 
-void train(SpMat const &Tr, SpMat const &Va, Model &model, Option const &opt)
+void train(Problem const &Tr, Problem const &Va, Model &model, Option const &opt)
 {
     std::vector<uint32_t> order(Tr.Y.size());
     for(uint32_t i = 0; i < Tr.Y.size(); ++i)
@@ -176,8 +176,8 @@ int main(int const argc, char const * const * const argv)
     }
 
     std::cout << "reading data..." << std::flush;
-    SpMat const Va = read_data(opt.Va_path);
-    SpMat const Tr = read_data(opt.Tr_path);
+    Problem const Va = read_data(opt.Va_path);
+    Problem const Tr = read_data(opt.Tr_path);
     std::cout << "done\n" << std::flush;
 
     std::cout << "initializing model..." << std::flush;
