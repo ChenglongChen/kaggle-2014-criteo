@@ -17,12 +17,12 @@ struct Option
 std::string train_help()
 {
     return std::string(
-"usage: mark49 [<options>] <train_path> \n"
+"usage: gbdt [<options>] <dense_validation_path> <sparse_validation_path> <dense_train_path> <sparse_train_path> <validation_output_path> <train_output_path>\n"
 "\n"
 "options:\n"
 "-d <depth>: set the maximum depth of a tree\n"
-"-s <nr_thread>: set maximum number of threads used\n"
-"-t <nr_tree>: set number of trees\n");
+"-s <nr_thread>: set the maximum number of threads\n"
+"-t <nr_tree>: set the number of trees\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
@@ -103,7 +103,7 @@ int main(int const argc, char const * const * const argv)
     }
     catch(std::invalid_argument const &e)
     {
-        std::cout << "\n" << e.what() << "\n";
+        std::cout << e.what();
         return EXIT_FAILURE;
     }
 
