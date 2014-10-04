@@ -27,15 +27,15 @@ struct Option
 std::string train_help()
 {
     return std::string(
-"usage: mark33 [<options>] <train_path>\n"
+"usage: fm [<options>] <test_path> <train_path>\n"
 "\n"
 "options:\n"
-"-l <lambda>: you know\n"
-"-k <dimension>: you know\n"
-"-t <iteration>: you know\n"
-"-r <eta>: you know\n"
-"-s <nr_threads>: you know\n"
-"-q: you know\n");
+"-l <lambda>: set the regularization penalty\n"
+"-k <factor>: set the number of latent factors\n"
+"-t <iteration>: set the number of iterations\n"
+"-r <eta>: set the learning rate\n"
+"-s <nr_threads>: set the number of threads\n"
+"-q: if this option is set, then nothing will be outputed\n");
 }
 
 Option parse_option(std::vector<std::string> const &args)
