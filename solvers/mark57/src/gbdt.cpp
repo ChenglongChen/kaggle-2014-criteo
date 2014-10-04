@@ -319,6 +319,7 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
     std::vector<float> F_Tr(Tr.nr_instance, bias), F_Va(Va.nr_instance, bias);
 
     Timer timer;
+    printf("iter     time    tr_loss    va_loss\n");
     for(uint32_t t = 0; t < trees.size(); ++t)
     {
         timer.tic();
@@ -339,28 +340,22 @@ void GBDT::fit(Problem const &Tr, Problem const &Va)
             F_Tr[i] += F1[i];
             Tr_loss += log(1+exp(-Y[i]*F_Tr[i]));
         }
+        Tr_loss /= static_cast<double>(Tr.nr_instance);
 
-        printf("%3d %8.2f %10.5f", t, timer.toc(), 
-            Tr_loss/static_cast<double>(Tr.Y.size()));
-
-        if(Va.nr_instance != 0)
+        #pragma omp parallel for schedule(static)
+        for(uint32_t i = 0; i < Va.nr_instance; ++i)
         {
-            #pragma omp parallel for schedule(static)
-            for(uint32_t i = 0; i < Va.nr_instance; ++i)
-            {
-                std::vector<float> x = construct_instance(Va, i);
-                F_Va[i] += trees[t].predict(x.data()).second;
-            }
-
-            double Va_loss = 0;
-            #pragma omp parallel for schedule(static) reduction(+: Va_loss)
-            for(uint32_t i = 0; i < Va.nr_instance; ++i) 
-                Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
-
-            printf(" %10.5f", Va_loss/static_cast<double>(Va.nr_instance));
+            std::vector<float> x = construct_instance(Va, i);
+            F_Va[i] += trees[t].predict(x.data()).second;
         }
 
-        printf("\n");
+        double Va_loss = 0;
+        #pragma omp parallel for schedule(static) reduction(+: Va_loss)
+        for(uint32_t i = 0; i < Va.nr_instance; ++i) 
+            Va_loss += log(1+exp(-Va.Y[i]*F_Va[i]));
+        Va_loss /= static_cast<double>(Va.nr_instance);
+
+        printf("%4d %8.1f %10.5f %10.5f\n", t, timer.toc(), Tr_loss, Va_loss);
         fflush(stdout);
     }
 }
