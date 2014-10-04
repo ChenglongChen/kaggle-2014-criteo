@@ -6,14 +6,10 @@
 
 namespace {
 
-inline float logistic_func(float const t)
-{
-    return 1/(1+static_cast<float>(exp(-t)));
-}
+int const kMaxLineSize = 1000000;
 
 uint32_t get_nr_line(std::string const &path)
 {
-    int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
@@ -28,7 +24,6 @@ uint32_t get_nr_line(std::string const &path)
 
 uint32_t get_nr_field(std::string const &path)
 {
-    int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
@@ -57,7 +52,6 @@ Problem read_problem(std::string const path)
         return Problem(0, 0);
     Problem spmat(get_nr_line(path), get_nr_field(path));
 
-    int const kMaxLineSize = 1000000;
     FILE *f = open_c_file(path.c_str(), "r");
     char line[kMaxLineSize];
 
@@ -108,14 +102,14 @@ float predict(Problem const &spmat, Model &model,
         f = open_c_file(output_path, "w");
 
     double loss = 0;
-#pragma omp parallel for schedule(static) reduction(+:loss)
+    #pragma omp parallel for schedule(static) reduction(+:loss)
     for(uint32_t i = 0; i < spmat.Y.size(); ++i)
     {
         float const y = spmat.Y[i];
 
         float const t = wTx(spmat, model, i);
         
-        float const prob = logistic_func(t);
+        float const prob = 1/(1+static_cast<float>(exp(-t)));
 
         float const expnyt = static_cast<float>(exp(-y*t));
 
