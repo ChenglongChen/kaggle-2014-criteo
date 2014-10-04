@@ -125,6 +125,7 @@ void train(Problem const &Tr, Problem const &Va, Model &model, Option const &opt
         order[i] = i;
 
     Timer timer;
+    printf("iter     time    tr_loss    va_loss\n");
     for(uint32_t iter = 0; iter < opt.iter; ++iter)
     {
         timer.tic();
@@ -148,14 +149,12 @@ void train(Problem const &Tr, Problem const &Va, Model &model, Option const &opt
 
             wTx(Tr, model, i, kappa, opt.eta, opt.lambda, true);
         }
+        Tr_loss /= static_cast<double>(Tr.Y.size());
 
-        printf("%3d %8.2f %10.5f", iter, timer.toc(), 
-            Tr_loss/static_cast<double>(Tr.Y.size()));
+        double const Va_loss = predict(Va, model);
 
-        if(Va.Y.size() != 0)
-            printf(" %10.5f", predict(Va, model));
-
-        printf("\n");
+        printf("%4d %8.1f %10.5f %10.5f\n", 
+               iter, timer.toc(), Tr_loss, Va_loss);
         fflush(stdout);
     }
 }
