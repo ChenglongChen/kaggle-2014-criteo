@@ -31,4 +31,3 @@ float Timer::get()
     tic();
     return time;
 }
-
