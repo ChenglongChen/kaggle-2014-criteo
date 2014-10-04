@@ -14,17 +14,17 @@ start = time.time()
 for size in ["x", "1"]:
     print('size = {size}'.format(size=size))
 
-    cmd = 'converters/parallelizer1.py -s 24 converters/num.py tr.r{size}.csv tr.r{size}.num.dense tr.r{size}.num.sparse'.format(size=size)
+    cmd = 'converters/parallelizer-a.py -s 24 converters/pre-a.py tr.r{size}.csv tr.r{size}.gbdt.dense tr.r{size}.gbdt.sparse'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer1.py -s 24 converters/num.py va.r{size}.csv va.r{size}.num.dense va.r{size}.num.sparse'.format(size=size)
+    cmd = 'converters/parallelizer-a.py -s 24 converters/pre-a.py va.r{size}.csv va.r{size}.gbdt.dense va.r{size}.gbdt.sparse'.format(size=size)
     run(cmd) 
 
-    cmd = './mark57 -t 30 -s 24 va.r{size}.num.dense va.r{size}.num.sparse tr.r{size}.num.dense tr.r{size}.num.sparse va.r{size}.num.out tr.r{size}.num.out'.format(size=size) 
+    cmd = './mark57 -t 30 -s 24 va.r{size}.gbdt.dense va.r{size}.gbdt.sparse tr.r{size}.gbdt.dense tr.r{size}.gbdt.sparse va.r{size}.gbdt.out tr.r{size}.gbdt.out'.format(size=size) 
     run(cmd)
 
-    cmd = 'converters/parallelizer2.py -s 24 converters/combine.py tr.r{size}.csv tr.r{size}.num.out tr.r{size}.fm'.format(size=size)
+    cmd = 'converters/parallelizer-b.py -s 24 converters/pre-b.py tr.r{size}.csv tr.r{size}.gbdt.out tr.r{size}.fm'.format(size=size)
     run(cmd) 
-    cmd = 'converters/parallelizer2.py -s 24 converters/combine.py va.r{size}.csv va.r{size}.num.out va.r{size}.fm'.format(size=size)
+    cmd = 'converters/parallelizer-b.py -s 24 converters/pre-b.py va.r{size}.csv va.r{size}.gbdt.out va.r{size}.fm'.format(size=size)
     run(cmd) 
 
     cmd = './mark58 -s 24 -t 11 va.r{size}.fm tr.r{size}.fm'.format(size=size) 
