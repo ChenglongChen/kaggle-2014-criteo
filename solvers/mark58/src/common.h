@@ -128,6 +128,9 @@ inline float wTx(Problem const &spmat, Model &model, uint32_t const i,
         }
     }
 
+    if(do_update)
+        return 0;
+
     XMMt = _mm_hadd_ps(XMMt, XMMt);
     XMMt = _mm_hadd_ps(XMMt, XMMt);
     float t;
