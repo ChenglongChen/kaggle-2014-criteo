@@ -1,4 +1,4 @@
-all: gbdt fm
+all: gbdt fm tr.csv te.csv fc.trva.t10.txt
 
 gbdt:
 	make -C solvers/gbdt
@@ -7,6 +7,15 @@ gbdt:
 fm:
 	make -C solvers/fm
 	ln -sf solvers/fm/fm
+
+tr.csv:
+	ln -s train.csv tr.csv
+
+te.csv:
+	./utils/add_dummy_label.py test.csv va.csv
+
+fc.trva.t10.txt:
+	./utils/counter.py > fc.trva.t10.txt
 
 clean:
 	rm -f gbdt fm

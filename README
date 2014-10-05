@@ -21,7 +21,7 @@ Step-by-step
 ============
 
 1. Copy the training and test data to this directory, and rename them as
-   "tr.csv" and "te.csv", respectively.
+   "train.csv" and "test.csv", respectively.
 
 2. Run the following command to prepare excutables and csv files. It may take
    several minutes because we add a dummy label to the test file.
