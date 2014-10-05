@@ -20,11 +20,51 @@ System Requirement
 Step-by-step
 ============
 
-1. Copy the training and test data to this directory, and rename them as
-   "train.csv" and "test.csv", respectively.
+This section is divided into two parts. The first part introduce how to run our
+code by using a tiny example. After you finish these part, please follow the
+second part to run with the whole dataset.
 
-2. Run the following command to prepare excutables and csv files. It may take
-   several minutes because we add a dummy label to the test file.
+
+Tiny Example
+------------
+
+1. Create two symbolic links.
+
+     $ ln -s train.tiny.csv train.csv
+     $ ln -s test.tiny.csv test.csv
+
+2. Compile excutables, link files, and scan necessary information from the
+   training data.
+
+     $ make
+
+3. Generate a prediction file.
+
+     $ ./run.py
+
+4. Generate the checksum for submission.csv.
+
+     $ md5sum submission.csv
+     d29c2f9e846a0ea77a6f56e983316360  submission.csv
+
+   If you see the above checksum, congratulations!! Please run the following
+   command and move to the next sub-section.
+
+     $ make clean
+
+
+The Whole Dataset
+-----------------
+
+1. Copy or link the training and test data to this directory. Their name should 
+   be "train.csv" and "test.csv", respectively.
+
+2. Check if your dataset is correct.
+
+     $ ./check.py
+
+2. Compile excutables, link files, and scan necessary information from the
+   training data.
     
      $ make
 

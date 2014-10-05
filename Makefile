@@ -18,6 +18,6 @@ fc.trva.t10.txt:
 	./utils/count.py tr.csv > fc.trva.t10.txt
 
 clean:
-	rm -f gbdt fm
+	rm -f gbdt fm fc.trva.t10.txt submission.csv *.fm* te.csv tr.csv
 	make -C solvers/gbdt clean
 	make -C solvers/fm clean
