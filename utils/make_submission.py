@@ -6,8 +6,8 @@ if len(sys.argv) == 1:
     sys.argv.append('-h')
 
 parser = argparse.ArgumentParser(description='process some integers')
-parser.add_argument('out_path', type=str, help='set path to the liblinear output file')
-parser.add_argument('submission_path', type=str, help='set path to the submission file')
+parser.add_argument('out_path', type=str)
+parser.add_argument('submission_path', type=str)
 args = parser.parse_args()
 
 OUT_PATH, SUB_PATH = args.out_path, args.submission_path

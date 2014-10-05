@@ -1,0 +1,63 @@
+Team 3 Idiots' approach for Display Advertising Challenge
+=========================================================
+
+This README introduces how to run our code up. For the introduction to our
+approach, please see docs/slide.pdf. 
+
+
+System Requirement
+==================
+
+- 64-bit Unix-like operating system (We tested our code on Ubuntu 13.10)
+
+- Python3
+
+- g++ (with C++11 support)
+
+- at least 20GB memory and 50GB disk space
+
+
+Step-by-step
+============
+
+1. Copy the training and test data to this directory, and rename them as
+   "tr.csv" and "te.csv", respectively.
+
+2. Run the following command to prepare excutables and csv files. It may take
+   several minutes because we add a dummy label to the test file.
+    
+     $ make
+
+3. Run the following command to generate a prediction.
+
+     $ run.py
+
+   The final output file is "submission.csv".
+
+
+Miscellaneous
+=============
+
+1. By default we use only one thread, so it may take a long time to train the
+   model. If you have multi-core CPUs, you may want to modify "NR_THREAD" in
+   the script. On our machine with two six-core CPUs (intel E5-2620), it takes
+   around 3.5 hours when all cores are used.
+
+2. Our algorithms is non-deterministic when multiple threads are used. (That
+   is, the results can be slightly different when you run the script two or
+   more times.) In our experience, the variances generally do not exceed
+   0.0001 (LogLoss).
+
+3. This script generates around a prediction with around 0.44490 / 0.44480 on
+   public / private leaderboards. If you want the prediction with around
+   0.44460 / 0.44450, please change:
+
+     ./gbdt -t 30        --->         ./gbdt -t 50  
+
+     ./fm -k 4 -t 11     --->         ./fm -k 8 -t 15
+
+   Training with this setting takes around 9 hours on our machine.
+
+4. If you have any question, please send your email to:
+
+     guestwalk@gmail.com (Yu-Chin's email)
