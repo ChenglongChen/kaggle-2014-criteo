@@ -15,7 +15,7 @@ te.csv:
 	./utils/add_dummy_label.py test.csv va.csv
 
 fc.trva.t10.txt:
-	./utils/counter.py > fc.trva.t10.txt
+	./utils/counter.py tr.csv > fc.trva.t10.txt
 
 clean:
 	rm -f gbdt fm
