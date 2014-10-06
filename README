@@ -22,7 +22,7 @@ System Requirement
 
 - Python3
 
-- g++ (with C++11 support)
+- g++ (with C++11 and OpenMP support)
 
 - at least 20GB memory and 50GB disk space
 
@@ -109,7 +109,7 @@ Miscellaneous
 
      ./fm -k 4 -t 11     --->         ./fm -k 8 -t 15
 
-   Training with this setting takes around 9 hours on our machine.
+   Training with this setting takes around 8 hours on our machine.
 
 4. The dataset used for competiion was officially removed after the end of the
    competiion. Though Criteo released another dataset, the format is different
