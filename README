@@ -67,6 +67,7 @@ Tiny Example
    command and move to the next sub-section.
 
      $ make clean
+     $ rm -f train.csv test.csv
 
 
 The Whole Dataset
